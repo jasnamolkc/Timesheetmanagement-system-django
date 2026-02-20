@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto bg-slate-800 p-8 rounded-2xl border border-slate-700 shadow-2xl">
+<div class="mb-6">
+    <h3 class="text-xl font-bold text-white">
+        {% if form.instance.pk %}Edit{% else %}Create{% endif %}
+        {% if 'project' in request.path %}Project{% elif 'timesheet' in request.path %}Timesheet Entry{% endif %}
+    </h3>
+</div>
+
+<form method="post" action="{{ request.path }}">
+    {% csrf_token %}
+    <div class="space-y-4">
+        {{ form|crispy }}
+    </div>
+
+    <div class="mt-8 flex justify-end space-x-3">
+        <a href="{{ request.META.HTTP_REFERER|default:'/' }}" class="px-6 py-2 bg-slate-700 text-white rounded-lg hover:bg-slate-600 transition-colors">
+            Cancel
+        </a>
+        <button type="submit" class="px-6 py-2 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg font-bold shadow-lg hover:from-blue-600 hover:to-indigo-700 transition-all">
+            Save Changes
+        </button>
+    </div>
+</form>
+</div>
+{% endblock %}
+
+<style>
+    /* Custom styles to match the dark theme for crispy forms */
+    input, select, textarea {
+        background-color: #0f172a !important;
+        border-color: #334155 !important;
+        color: #f8fafc !important;
+        border-radius: 0.5rem !important;
+    }
+    label { color: #94a3b8 !important; font-size: 0.875rem !important; margin-bottom: 0.25rem !important; }
+    .text-danger { color: #f87171 !important; font-size: 0.75rem !important; margin-top: 0.25rem !important; }
+</style>

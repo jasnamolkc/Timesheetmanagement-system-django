@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block title %}Allocations{% endblock %}
+
+{% block content %}
+<div class="flex justify-between items-center mb-8">
+    <h2 class="text-3xl font-bold">Project Allocations</h2>
+    <a href="{% url 'allocation_create' %}" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-semibold transition-colors flex items-center">
+        <i class="fas fa-plus mr-2"></i> New Allocation
+    </a>
+</div>
+
+<div class="bg-slate-800 rounded-2xl border border-slate-700 overflow-hidden shadow-xl">
+    <table class="w-full text-left">
+        <thead class="bg-slate-700/50 text-slate-400 text-xs uppercase tracking-wider">
+            <tr>
+                <th class="px-6 py-4 font-semibold">Employee</th>
+                <th class="px-6 py-4 font-semibold">Project</th>
+                <th class="px-6 py-4 font-semibold text-center">Allocation %</th>
+                <th class="px-6 py-4 font-semibold">Role</th>
+                <th class="px-6 py-4 font-semibold">Period</th>
+                <th class="px-6 py-4 font-semibold text-right">Actions</th>
+            </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-700">
+            {% for allocation in allocations %}
+            <tr class="hover:bg-slate-700/30 transition-colors">
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="flex items-center">
+                        <div class="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center text-xs mr-3">
+                            {{ allocation.employee.user.username|slice:":2"|upper }}
+                        </div>
+                        <span class="font-medium text-slate-200">{{ allocation.employee.user.get_full_name|default:allocation.employee.user.username }}</span>
+                    </div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap font-medium text-blue-400">
+                    {{ allocation.project.project_code }}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-center">
+                    <div class="w-full bg-slate-900 rounded-full h-2 w-24 mx-auto mb-1">
+                        <div class="bg-blue-500 h-2 rounded-full" style="width: {{ allocation.allocation_percentage }}%"></div>
+                    </div>
+                    <span class="text-xs font-bold">{{ allocation.allocation_percentage }}%</span>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-400">
+                    {{ allocation.role_in_project }}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-xs text-slate-400">
+                    {{ allocation.start_date }} - {{ allocation.end_date }}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <a href="{% url 'allocation_edit' allocation.pk %}" class="text-blue-400 hover:text-blue-300 mr-3"><i class="fas fa-edit"></i></a>
+                    <a href="{% url 'allocation_delete' allocation.pk %}" class="text-red-400 hover:text-red-300"><i class="fas fa-trash"></i></a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="6" class="px-6 py-12 text-center text-slate-500 italic">
+                    No allocations found.
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

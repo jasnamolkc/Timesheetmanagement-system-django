@@ -1,0 +1,49 @@
+{% load crispy_forms_tags %}
+<!DOCTYPE html>
+<html lang="en" class="h-full" style="background-color: #0f172a;">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Timesheet Pro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #0f172a; }
+    </style>
+</head>
+<body class="h-full flex items-center justify-center p-6 bg-[#0f172a]">
+    <div class="max-w-md w-full">
+        <div class="text-center mb-10">
+            <h1 class="text-4xl font-black bg-gradient-to-r from-blue-400 to-indigo-500 bg-clip-text text-transparent mb-2">
+                Timesheet Pro
+            </h1>
+            <p class="text-slate-400">Sign in to manage your time and projects</p>
+        </div>
+
+        <div class="bg-slate-800 p-8 rounded-3xl border border-slate-700 shadow-2xl">
+            <form method="post">
+                {% csrf_token %}
+                <div class="space-y-6">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-400 mb-2">Username</label>
+                        <input type="text" name="username" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-400 mb-2">Password</label>
+                        <input type="password" name="password" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all">
+                    </div>
+
+                    <button type="submit" class="w-full py-4 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white rounded-xl font-bold shadow-lg shadow-blue-500/20 transition-all transform hover:-translate-y-1">
+                        Sign In
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <p class="text-center mt-8 text-slate-500 text-sm">
+            &copy; 2025 Timesheet Pro. All rights reserved.
+        </p>
+    </div>
+</body>
+</html>
