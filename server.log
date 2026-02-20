@@ -1,0 +1,7 @@
+Watching for file changes with StatReloader
+[20/Feb/2026 07:33:45] "GET /login/ HTTP/1.1" 200 2641
+[20/Feb/2026 07:33:48] "POST /login/ HTTP/1.1" 302 0
+[20/Feb/2026 07:33:48] "GET / HTTP/1.1" 200 7970
+/home/jules/.pyenv/versions/3.12.12/lib/python3.12/site-packages/django/views/generic/list.py:91: UnorderedObjectListWarning: Pagination may yield inconsistent results with an unordered object_list: <class 'timesheet.models.Project'> QuerySet.
+  return self.paginator_class(
+[20/Feb/2026 07:33:49] "GET /projects/ HTTP/1.1" 200 5973

@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full" style="background-color: #0f172a;">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Timesheet Pro - {% block title %}{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #0f172a; }
+        .sidebar-active { background: linear-gradient(90deg, rgba(59, 130, 246, 0.2) 0%, rgba(59, 130, 246, 0) 100%); border-left: 4px solid #3b82f6; }
+        .bg-dark-navy { background-color: #0f172a; }
+        .bg-slate-800 { background-color: #1e293b; }
+    </style>
+</head>
+<body class="h-full text-slate-200 bg-dark-navy">
+    <div class="flex h-full">
+        <!-- Sidebar -->
+        <aside class="w-64 bg-slate-800 border-r border-slate-700 flex-shrink-0 shadow-2xl">
+            <div class="p-6">
+                <h1 class="text-2xl font-bold bg-gradient-to-r from-blue-400 to-indigo-500 bg-clip-text text-transparent">
+                    Timesheet Pro
+                </h1>
+            </div>
+            <nav class="mt-6 px-4 space-y-2">
+                <a href="{% url 'dashboard' %}" class="flex items-center px-4 py-3 text-sm font-medium rounded-lg hover:bg-slate-700 transition-colors {% if request.resolver_match.url_name == 'dashboard' %}sidebar-active text-blue-400{% endif %}">
+                    <i class="fas fa-chart-line mr-3 w-5"></i> Dashboard
+                </a>
+                <a href="{% url 'project_list' %}" class="flex items-center px-4 py-3 text-sm font-medium rounded-lg hover:bg-slate-700 transition-colors {% if 'project' in request.path %}sidebar-active text-blue-400{% endif %}">
+                    <i class="fas fa-project-diagram mr-3 w-5"></i> Projects
+                </a>
+                {% if request.user.employee.role != 'EMPLOYEE' %}
+                <a href="{% url 'allocation_list' %}" class="flex items-center px-4 py-3 text-sm font-medium rounded-lg hover:bg-slate-700 transition-colors {% if 'allocation' in request.path %}sidebar-active text-blue-400{% endif %}">
+                    <i class="fas fa-user-tag mr-3 w-5"></i> Allocations
+                </a>
+                {% endif %}
+                <a href="{% url 'timesheet_list' %}" class="flex items-center px-4 py-3 text-sm font-medium rounded-lg hover:bg-slate-700 transition-colors {% if 'timesheet' in request.path %}sidebar-active text-blue-400{% endif %}">
+                    <i class="fas fa-clock mr-3 w-5"></i> Timesheets
+                </a>
+                {% if request.user.employee.role != 'EMPLOYEE' %}
+                <a href="{% url 'summary_report' %}" class="flex items-center px-4 py-3 text-sm font-medium rounded-lg hover:bg-slate-700 transition-colors {% if 'report' in request.path %}sidebar-active text-blue-400{% endif %}">
+                    <i class="fas fa-file-alt mr-3 w-5"></i> Reports
+                </a>
+                {% endif %}
+            </nav>
+            <div class="absolute bottom-0 w-64 p-4 border-t border-slate-700">
+                <div class="flex items-center mb-4 px-2">
+                    <div class="w-8 h-8 rounded-full bg-indigo-500 flex items-center justify-center text-xs font-bold mr-3">
+                        {{ request.user.username|slice:":2"|upper }}
+                    </div>
+                    <div>
+                        <p class="text-sm font-medium truncate">{{ request.user.get_full_name|default:request.user.username }}</p>
+                        <p class="text-xs text-slate-400">{{ request.user.employee.role|default:"User" }}</p>
+                    </div>
+                </div>
+                <form action="{% url 'logout' %}" method="post">
+                    {% csrf_token %}
+                    <button type="submit" class="flex items-center w-full px-4 py-2 text-sm text-red-400 hover:bg-red-400/10 rounded-lg transition-colors">
+                        <i class="fas fa-sign-out-alt mr-3"></i> Logout
+                    </button>
+                </form>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 overflow-y-auto p-8">
+            <div class="max-w-7xl mx-auto">
+                {% block content %}{% endblock %}
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal Container -->
+    <div id="modal-container" class="hidden fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <div class="fixed inset-0 bg-slate-950/75 transition-opacity" aria-hidden="true" onclick="closeModal()"></div>
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+            <div class="inline-block align-bottom bg-slate-800 rounded-xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full border border-slate-700">
+                <div id="modal-content" class="p-6">
+                    <!-- Loaded via AJAX or direct include -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function openModal(url) {
+            fetch(url)
+                .then(response => response.text())
+                .then(html => {
+                    document.getElementById('modal-content').innerHTML = html;
+                    document.getElementById('modal-container').classList.remove('hidden');
+                });
+        }
+        function closeModal() {
+            document.getElementById('modal-container').classList.add('hidden');
+        }
+    </script>
+</body>
+</html>
