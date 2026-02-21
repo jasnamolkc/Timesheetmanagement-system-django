@@ -5,7 +5,7 @@
 {% block content %}
 <div class="flex justify-between items-center mb-8">
     <h2 class="text-3xl font-bold">Project Allocations</h2>
-    <a href="{% url 'allocation_create' %}" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-semibold transition-colors flex items-center">
+    <a href="{% url 'allocation_create' %}" onclick="openModal(this.href); return false;" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-semibold transition-colors flex items-center">
         <i class="fas fa-plus mr-2"></i> New Allocation
     </a>
 </div>
@@ -49,7 +49,7 @@
                     {{ allocation.start_date }} - {{ allocation.end_date }}
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <a href="{% url 'allocation_edit' allocation.pk %}" class="text-blue-400 hover:text-blue-300 mr-3"><i class="fas fa-edit"></i></a>
+                    <a href="{% url 'allocation_edit' allocation.pk %}" onclick="openModal(this.href); return false;" class="text-blue-400 hover:text-blue-300 mr-3"><i class="fas fa-edit"></i></a>
                     <a href="{% url 'allocation_delete' allocation.pk %}" class="text-red-400 hover:text-red-300"><i class="fas fa-trash"></i></a>
                 </td>
             </tr>

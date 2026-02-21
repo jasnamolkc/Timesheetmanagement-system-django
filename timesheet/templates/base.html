@@ -86,15 +86,22 @@
 
     <script>
         function openModal(url) {
-            fetch(url)
+            const modalUrl = url.includes('?') ? `${url}&modal=1` : `${url}?modal=1`;
+            fetch(modalUrl, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
                 .then(response => response.text())
                 .then(html => {
                     document.getElementById('modal-content').innerHTML = html;
                     document.getElementById('modal-container').classList.remove('hidden');
+                    document.body.classList.add('overflow-hidden');
                 });
         }
         function closeModal() {
             document.getElementById('modal-container').classList.add('hidden');
+            document.body.classList.remove('overflow-hidden');
         }
     </script>
 </body>
