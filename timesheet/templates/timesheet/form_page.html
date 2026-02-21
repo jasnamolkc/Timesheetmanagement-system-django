@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto bg-slate-800 p-8 rounded-2xl border border-slate-700 shadow-2xl">
+    {% include "timesheet/modal_form.html" %}
+</div>
+
+<script>
+    // Override closeModal for full page view
+    function closeModal() {
+        window.history.back();
+    }
+</script>
+{% endblock %}

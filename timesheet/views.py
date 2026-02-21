@@ -12,6 +12,13 @@ from datetime import datetime, timedelta
 from .models import Project, ProjectAllocation, TimesheetEntry, Employee
 from .forms import ProjectForm, AllocationForm, TimesheetEntryForm, RegistrationForm
 
+# Template Mixins
+class AjaxTemplateMixin:
+    def get_template_names(self):
+        if self.request.headers.get('x-requested-with') == 'XMLHttpRequest' or self.request.GET.get('modal'):
+            return ['timesheet/modal_form.html']
+        return [self.template_name]
+
 # Permission Mixins
 class AdminRequiredMixin(UserPassesTestMixin):
     def test_func(self):
@@ -64,16 +71,16 @@ class ProjectListView(LoginRequiredMixin, ListView):
     context_object_name = 'projects'
     paginate_by = 10
 
-class ProjectCreateView(ManagerRequiredMixin, CreateView):
+class ProjectCreateView(ManagerRequiredMixin, AjaxTemplateMixin, CreateView):
     model = Project
     form_class = ProjectForm
-    template_name = 'timesheet/modal_form.html'
+    template_name = 'timesheet/form_page.html'
     success_url = reverse_lazy('project_list')
 
-class ProjectUpdateView(ManagerRequiredMixin, UpdateView):
+class ProjectUpdateView(ManagerRequiredMixin, AjaxTemplateMixin, UpdateView):
     model = Project
     form_class = ProjectForm
-    template_name = 'timesheet/modal_form.html'
+    template_name = 'timesheet/form_page.html'
     success_url = reverse_lazy('project_list')
 
 # Allocation Views
@@ -85,16 +92,16 @@ class AllocationListView(ManagerRequiredMixin, ListView):
     def get_queryset(self):
         return super().get_queryset().select_related('employee__user', 'project')
 
-class AllocationCreateView(ManagerRequiredMixin, CreateView):
+class AllocationCreateView(ManagerRequiredMixin, AjaxTemplateMixin, CreateView):
     model = ProjectAllocation
     form_class = AllocationForm
-    template_name = 'timesheet/modal_form.html'
+    template_name = 'timesheet/form_page.html'
     success_url = reverse_lazy('allocation_list')
 
-class AllocationUpdateView(ManagerRequiredMixin, UpdateView):
+class AllocationUpdateView(ManagerRequiredMixin, AjaxTemplateMixin, UpdateView):
     model = ProjectAllocation
     form_class = AllocationForm
-    template_name = 'timesheet/modal_form.html'
+    template_name = 'timesheet/form_page.html'
     success_url = reverse_lazy('allocation_list')
 
 class AllocationDeleteView(ManagerRequiredMixin, DeleteView):
@@ -147,10 +154,10 @@ class TimesheetListView(LoginRequiredMixin, ListView):
 
         return context
 
-class TimesheetCreateView(LoginRequiredMixin, CreateView):
+class TimesheetCreateView(LoginRequiredMixin, AjaxTemplateMixin, CreateView):
     model = TimesheetEntry
     form_class = TimesheetEntryForm
-    template_name = 'timesheet/modal_form.html'
+    template_name = 'timesheet/form_page.html'
     success_url = reverse_lazy('timesheet_list')
 
     def get_form_kwargs(self):
@@ -162,10 +169,10 @@ class TimesheetCreateView(LoginRequiredMixin, CreateView):
         form.instance.employee = self.request.user.employee
         return super().form_valid(form)
 
-class TimesheetUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+class TimesheetUpdateView(LoginRequiredMixin, UserPassesTestMixin, AjaxTemplateMixin, UpdateView):
     model = TimesheetEntry
     form_class = TimesheetEntryForm
-    template_name = 'timesheet/modal_form.html'
+    template_name = 'timesheet/form_page.html'
     success_url = reverse_lazy('timesheet_list')
 
     def test_func(self):

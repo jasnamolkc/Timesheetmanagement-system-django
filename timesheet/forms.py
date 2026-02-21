@@ -1,4 +1,5 @@
 from django import forms
+from django.core.exceptions import ValidationError
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import UserCreationForm
 from .models import Project, ProjectAllocation, TimesheetEntry, Employee
@@ -22,6 +23,15 @@ class ProjectForm(forms.ModelForm):
             'description': forms.Textarea(attrs={'rows': 3}),
         }
 
+    def clean(self):
+        cleaned_data = super().clean()
+        instance = Project(**cleaned_data)
+        try:
+            instance.clean()
+        except ValidationError as e:
+            raise forms.ValidationError(e.messages)
+        return cleaned_data
+
 class AllocationForm(forms.ModelForm):
     class Meta:
         model = ProjectAllocation
@@ -30,6 +40,16 @@ class AllocationForm(forms.ModelForm):
             'start_date': forms.DateInput(attrs={'type': 'date'}),
             'end_date': forms.DateInput(attrs={'type': 'date'}),
         }
+
+    def clean(self):
+        cleaned_data = super().clean()
+        if not self.errors:
+            instance = ProjectAllocation(**cleaned_data)
+            try:
+                instance.clean()
+            except ValidationError as e:
+                raise forms.ValidationError(e.messages)
+        return cleaned_data
 
 class TimesheetEntryForm(forms.ModelForm):
     class Meta:
@@ -52,8 +72,13 @@ class TimesheetEntryForm(forms.ModelForm):
 
     def clean(self):
         cleaned_data = super().clean()
-        if self.employee:
-            instance = self.instance
-            instance.employee = self.employee
-            # The model's clean method will be called during full_clean
+        if self.employee and not self.errors:
+            # We need to set the employee on the instance before calling clean
+            self.instance.employee = self.employee
+            self.instance.project = cleaned_data.get('project')
+            self.instance.date = cleaned_data.get('date')
+            try:
+                self.instance.clean()
+            except ValidationError as e:
+                raise forms.ValidationError(e.messages)
         return cleaned_data
