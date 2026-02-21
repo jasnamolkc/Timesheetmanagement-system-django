@@ -1,12 +1,9 @@
-{% extends "base.html" %}
 {% load crispy_forms_tags %}
 
-{% block content %}
-<div class="max-w-2xl mx-auto bg-slate-800 p-8 rounded-2xl border border-slate-700 shadow-2xl">
 <div class="mb-6">
     <h3 class="text-xl font-bold text-white">
         {% if form.instance.pk %}Edit{% else %}Create{% endif %}
-        {% if 'project' in request.path %}Project{% elif 'timesheet' in request.path %}Timesheet Entry{% endif %}
+        {% if 'project' in request.path %}Project{% elif 'timesheet' in request.path %}Timesheet Entry{% elif 'allocation' in request.path %}Allocation{% endif %}
     </h3>
 </div>
 
@@ -17,16 +14,14 @@
     </div>
 
     <div class="mt-8 flex justify-end space-x-3">
-        <a href="{{ request.META.HTTP_REFERER|default:'/' }}" class="px-6 py-2 bg-slate-700 text-white rounded-lg hover:bg-slate-600 transition-colors">
+        <button type="button" onclick="closeModal()" class="px-6 py-2 bg-slate-700 text-white rounded-lg hover:bg-slate-600 transition-colors">
             Cancel
-        </a>
+        </button>
         <button type="submit" class="px-6 py-2 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg font-bold shadow-lg hover:from-blue-600 hover:to-indigo-700 transition-all">
             Save Changes
         </button>
     </div>
 </form>
-</div>
-{% endblock %}
 
 <style>
     /* Custom styles to match the dark theme for crispy forms */
