@@ -5,16 +5,14 @@ from django.utils import timezone
 
 class Employee(models.Model):
     ROLE_CHOICES = (
-        ('admin', 'Admin'),
-        ('manager', 'Manager'),
-        ('employee', 'Employee'),
+        ('ADMIN', 'Admin'),
+        ('MANAGER', 'Manager'),
+        ('EMPLOYEE', 'Employee'),
     )
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='employee')
-    role = models.CharField(max_length=10, choices=ROLE_CHOICES, default='employee')
+    role = models.CharField(max_length=10, choices=ROLE_CHOICES, default='EMPLOYEE')
+    employee_id = models.CharField(max_length=20, unique=True)
     employee_code = models.CharField(max_length=20, unique=True, editable=False)
-    department = models.CharField(max_length=100, blank=True)
-    designation = models.CharField(max_length=100, blank=True)
-    is_active = models.BooleanField(default=True)
 
     def save(self, *args, **kwargs):
         if not self.employee_code:
@@ -37,10 +35,14 @@ class Employee(models.Model):
 
                 self.employee_code = f"{prefix}{new_num:04d}"
 
+                # Also auto-fill employee_id if it's empty to maintain compatibility
+                if not self.employee_id:
+                    self.employee_id = self.employee_code
+
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return f"{self.user.get_full_name() or self.user.username} ({self.employee_code})"
+        return f"{self.user.get_full_name()} ({self.employee_code})"
 
 class Project(models.Model):
     STATUS_CHOICES = (

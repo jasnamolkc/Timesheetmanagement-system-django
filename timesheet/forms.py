@@ -8,24 +8,10 @@ class RegistrationForm(UserCreationForm):
     first_name = forms.CharField(max_length=30, required=True)
     last_name = forms.CharField(max_length=30, required=True)
     email = forms.EmailField(required=True)
-    role = forms.ChoiceField(choices=Employee.ROLE_CHOICES, initial='employee')
-    department = forms.CharField(max_length=100, required=False)
-    designation = forms.CharField(max_length=100, required=False)
 
     class Meta(UserCreationForm.Meta):
         model = User
         fields = UserCreationForm.Meta.fields + ('first_name', 'last_name', 'email')
-
-    def save(self, commit=True):
-        user = super().save(commit=commit)
-        if commit:
-            # Employee profile is created by signal, but we need to update it
-            employee = user.employee
-            employee.role = self.cleaned_data['role']
-            employee.department = self.cleaned_data['department']
-            employee.designation = self.cleaned_data['designation']
-            employee.save()
-        return user
 
 class ProjectForm(forms.ModelForm):
     class Meta:

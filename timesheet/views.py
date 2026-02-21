@@ -1,70 +1,67 @@
+from django.db import models
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView, TemplateView, View
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.urls import reverse_lazy
-from django.db.models import Sum, Q
+from django.db.models import Sum, Count
 from django.utils import timezone
 from django.http import HttpResponse
-from django.contrib.auth.models import User
 import csv
 from datetime import datetime, timedelta
 
 from .models import Project, ProjectAllocation, TimesheetEntry, Employee
 from .forms import ProjectForm, AllocationForm, TimesheetEntryForm, RegistrationForm
-from .permissions import AdminRequiredMixin, ManagerRequiredMixin, EmployeeRequiredMixin
 
-# Auth Views - Central Dashboard Redirection
-class DashboardView(LoginRequiredMixin, View):
-    def get(self, request, *args, **kwargs):
-        if not hasattr(request.user, 'employee'):
-            return HttpResponse("Employee profile missing. Please contact admin.", status=403)
+# Template Mixins
+class AjaxTemplateMixin:
+    def get_template_names(self):
+        if self.request.headers.get('x-requested-with') == 'XMLHttpRequest' or self.request.GET.get('modal'):
+            return ['timesheet/modal_form.html']
+        return [self.template_name]
 
-        role = request.user.employee.role
-        if role == 'admin':
-            return redirect('admin_dashboard')
-        elif role == 'manager':
-            return redirect('manager_dashboard')
-        else:
-            return redirect('employee_dashboard')
+# Permission Mixins
+class AdminRequiredMixin(UserPassesTestMixin):
+    def test_func(self):
+        return self.request.user.is_authenticated and hasattr(self.request.user, 'employee') and self.request.user.employee.role == 'ADMIN'
 
-# Admin Views
-class AdminDashboardView(AdminRequiredMixin, TemplateView):
-    template_name = 'timesheet/dashboard/admin.html'
+class ManagerRequiredMixin(UserPassesTestMixin):
+    def test_func(self):
+        return self.request.user.is_authenticated and hasattr(self.request.user, 'employee') and self.request.user.employee.role in ['ADMIN', 'MANAGER']
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['total_users'] = User.objects.count()
-        context['active_projects'] = Project.objects.filter(status='ACTIVE').count()
-        context['total_hours_month'] = TimesheetEntry.objects.filter(
-            date__month=timezone.now().month
-        ).aggregate(Sum('hours'))['hours__sum'] or 0
-        return context
+# Auth Views
+class RegisterView(CreateView):
+    form_class = RegistrationForm
+    template_name = 'registration/register.html'
+    success_url = reverse_lazy('login')
 
-# Manager Views
-class ManagerDashboardView(ManagerRequiredMixin, TemplateView):
-    template_name = 'timesheet/dashboard/manager.html'
+# Dashboard
+class DashboardView(LoginRequiredMixin, TemplateView):
+    template_name = 'timesheet/dashboard.html'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['team_allocations'] = ProjectAllocation.objects.count()
-        context['active_projects'] = Project.objects.filter(status='ACTIVE').count()
-        return context
+        today = timezone.now().date()
+        first_day_of_month = today.replace(day=1)
 
-# Employee Views
-class EmployeeDashboardView(LoginRequiredMixin, TemplateView):
-    template_name = 'timesheet/dashboard/employee.html'
+        employee = getattr(self.request.user, 'employee', None)
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        employee = self.request.user.employee
-        context['my_hours_month'] = TimesheetEntry.objects.filter(
-            employee=employee,
-            date__month=timezone.now().month
-        ).aggregate(Sum('hours'))['hours__sum'] or 0
-        context['my_projects'] = ProjectAllocation.objects.filter(
-            employee=employee,
-            end_date__gte=timezone.now().date()
-        ).count()
+        if employee:
+            context['total_hours_month'] = TimesheetEntry.objects.filter(
+                employee=employee,
+                date__gte=first_day_of_month
+            ).aggregate(Sum('hours'))['hours__sum'] or 0
+
+            context['active_projects_count'] = ProjectAllocation.objects.filter(
+                employee=employee,
+                end_date__gte=today
+            ).count()
+
+        if self.request.user.employee.role in ['ADMIN', 'MANAGER']:
+            context['total_employees_allocated'] = Employee.objects.filter(
+                allocations__end_date__gte=today
+            ).distinct().count()
+            context['total_active_projects'] = Project.objects.filter(status='ACTIVE').count()
+
         return context
 
 # Project Views
@@ -74,34 +71,17 @@ class ProjectListView(LoginRequiredMixin, ListView):
     context_object_name = 'projects'
     paginate_by = 10
 
-class AjaxTemplateMixin:
-    def get_template_names(self):
-        if self.request.headers.get('x-requested-with') == 'XMLHttpRequest' or self.request.GET.get('modal'):
-            return ['timesheet/modal_form.html']
-        return [self.template_name]
-
-class ProjectCreateView(AdminRequiredMixin, AjaxTemplateMixin, CreateView):
+class ProjectCreateView(ManagerRequiredMixin, AjaxTemplateMixin, CreateView):
     model = Project
     form_class = ProjectForm
     template_name = 'timesheet/form_page.html'
     success_url = reverse_lazy('project_list')
 
-class ProjectUpdateView(AdminRequiredMixin, AjaxTemplateMixin, UpdateView):
+class ProjectUpdateView(ManagerRequiredMixin, AjaxTemplateMixin, UpdateView):
     model = Project
     form_class = ProjectForm
     template_name = 'timesheet/form_page.html'
     success_url = reverse_lazy('project_list')
-
-# User Management (Admin Only)
-class UserListView(AdminRequiredMixin, ListView):
-    model = Employee
-    template_name = 'timesheet/admin/user_list.html'
-    context_object_name = 'employees'
-
-class UserCreateView(AdminRequiredMixin, AjaxTemplateMixin, CreateView):
-    form_class = RegistrationForm
-    template_name = 'timesheet/form_page.html'
-    success_url = reverse_lazy('user_list')
 
 # Allocation Views
 class AllocationListView(ManagerRequiredMixin, ListView):
@@ -140,7 +120,7 @@ class TimesheetListView(LoginRequiredMixin, ListView):
         queryset = super().get_queryset()
         user_employee = self.request.user.employee
 
-        if user_employee.role == 'employee':
+        if user_employee.role == 'EMPLOYEE':
             queryset = queryset.filter(employee=user_employee)
 
         # Filtering
@@ -149,7 +129,7 @@ class TimesheetListView(LoginRequiredMixin, ListView):
             queryset = queryset.filter(project_id=project_id)
 
         employee_id = self.request.GET.get('employee')
-        if employee_id and user_employee.role in ['admin', 'manager']:
+        if employee_id and user_employee.role in ['ADMIN', 'MANAGER']:
             queryset = queryset.filter(employee_id=employee_id)
 
         start_date = self.request.GET.get('start_date')
@@ -166,7 +146,7 @@ class TimesheetListView(LoginRequiredMixin, ListView):
         context = super().get_context_data(**kwargs)
         user_employee = self.request.user.employee
 
-        if user_employee.role in ['admin', 'manager']:
+        if user_employee.role in ['ADMIN', 'MANAGER']:
             context['all_employees'] = Employee.objects.select_related('user').all()
             context['all_projects'] = Project.objects.all()
         else:
@@ -197,7 +177,7 @@ class TimesheetUpdateView(LoginRequiredMixin, UserPassesTestMixin, AjaxTemplateM
 
     def test_func(self):
         obj = self.get_object()
-        return obj.employee == self.request.user.employee or self.request.user.employee.role in ['admin', 'manager']
+        return obj.employee == self.request.user.employee or self.request.user.employee.role in ['ADMIN', 'MANAGER']
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
@@ -211,7 +191,7 @@ class TimesheetDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
 
     def test_func(self):
         obj = self.get_object()
-        return obj.employee == self.request.user.employee or self.request.user.employee.role in ['admin', 'manager']
+        return obj.employee == self.request.user.employee or self.request.user.employee.role in ['ADMIN', 'MANAGER']
 
 # Summary Report
 class SummaryReportView(ManagerRequiredMixin, TemplateView):
@@ -231,8 +211,8 @@ class SummaryReportView(ManagerRequiredMixin, TemplateView):
 
         context['project_summary'] = entries.values('project__name', 'project__project_code').annotate(
             total_hours=Sum('hours'),
-            billable_hours=Sum('hours', filter=Q(billable=True)),
-            non_billable_hours=Sum('hours', filter=Q(billable=False))
+            billable_hours=Sum('hours', filter=models.Q(billable=True)),
+            non_billable_hours=Sum('hours', filter=models.Q(billable=False))
         )
 
         context['employee_summary'] = entries.values('employee__user__first_name', 'employee__user__last_name').annotate(
