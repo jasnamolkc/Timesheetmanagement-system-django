@@ -73,10 +73,6 @@ class Migration(migrations.Migration):
                 ),
                 ("employee_id", models.CharField(max_length=20, unique=True)),
                 (
-                    "employee_code",
-                    models.CharField(editable=False, max_length=20, unique=True),
-                ),
-                (
                     "user",
                     models.OneToOneField(
                         on_delete=django.db.models.deletion.CASCADE,
