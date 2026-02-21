@@ -12,22 +12,48 @@
 </div>
 
 <!-- Filters -->
-<div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 mb-8">
-    <form method="get" class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+<div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 mb-8 shadow-xl">
+    <form method="get" class="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
         <div>
             <label class="block text-sm font-medium text-slate-400 mb-1">Project</label>
-            <select name="project" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 outline-none">
+            <select name="project" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 outline-none text-sm">
                 <option value="">All Projects</option>
-                {% for project in request.user.employee.allocations.all %}
-                <option value="{{ project.project.id }}" {% if request.GET.project == project.project.id|stringformat:"i" %}selected{% endif %}>
-                    {{ project.project.project_code }} - {{ project.project.name }}
+                {% for project in all_projects %}
+                <option value="{{ project.id }}" {% if request.GET.project == project.id|stringformat:"i" %}selected{% endif %}>
+                    {{ project.project_code }}
                 </option>
                 {% endfor %}
             </select>
         </div>
-        <button type="submit" class="bg-slate-700 hover:bg-slate-600 text-white px-6 py-2 rounded-lg transition-colors">
-            Filter
-        </button>
+        {% if request.user.employee.role != 'EMPLOYEE' %}
+        <div>
+            <label class="block text-sm font-medium text-slate-400 mb-1">Employee</label>
+            <select name="employee" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 outline-none text-sm">
+                <option value="">All Employees</option>
+                {% for emp in all_employees %}
+                <option value="{{ emp.id }}" {% if request.GET.employee == emp.id|stringformat:"i" %}selected{% endif %}>
+                    {{ emp.user.get_full_name|default:emp.user.username }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        {% endif %}
+        <div>
+            <label class="block text-sm font-medium text-slate-400 mb-1">From</label>
+            <input type="date" name="start_date" value="{{ request.GET.start_date }}" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 outline-none text-sm">
+        </div>
+        <div>
+            <label class="block text-sm font-medium text-slate-400 mb-1">To</label>
+            <input type="date" name="end_date" value="{{ request.GET.end_date }}" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 outline-none text-sm">
+        </div>
+        <div class="flex space-x-2">
+            <button type="submit" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors font-semibold">
+                Apply
+            </button>
+            <a href="{% url 'timesheet_list' %}" class="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-lg transition-colors">
+                <i class="fas fa-undo"></i>
+            </a>
+        </div>
     </form>
 </div>
 
@@ -37,6 +63,9 @@
         <thead class="bg-slate-700/50 text-slate-400 text-xs uppercase tracking-wider">
             <tr>
                 <th class="px-6 py-4 font-semibold">Date</th>
+                {% if request.user.employee.role != 'EMPLOYEE' %}
+                <th class="px-6 py-4 font-semibold">Employee</th>
+                {% endif %}
                 <th class="px-6 py-4 font-semibold">Project</th>
                 <th class="px-6 py-4 font-semibold text-center">Hours</th>
                 <th class="px-6 py-4 font-semibold">Description</th>
@@ -48,6 +77,11 @@
             {% for entry in entries %}
             <tr class="hover:bg-slate-700/30 transition-colors">
                 <td class="px-6 py-4 whitespace-nowrap text-sm">{{ entry.date }}</td>
+                {% if request.user.employee.role != 'EMPLOYEE' %}
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <span class="text-sm font-medium">{{ entry.employee.user.get_full_name|default:entry.employee.user.username }}</span>
+                </td>
+                {% endif %}
                 <td class="px-6 py-4 whitespace-nowrap">
                     <span class="font-medium text-blue-400">{{ entry.project.project_code }}</span>
                     <p class="text-xs text-slate-400">{{ entry.project.name }}</p>
