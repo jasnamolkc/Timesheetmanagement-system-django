@@ -30,7 +30,7 @@
                 <a href="{% url 'project_list' %}" class="flex items-center px-4 py-3 text-sm font-medium rounded-lg hover:bg-slate-700 transition-colors {% if 'project' in request.path %}sidebar-active text-blue-400{% endif %}">
                     <i class="fas fa-project-diagram mr-3 w-5"></i> Projects
                 </a>
-                {% if request.user.employee.role != 'EMPLOYEE' %}
+                {% if request.user.is_superuser or request.user.employee.role != 'EMPLOYEE' %}
                 <a href="{% url 'allocation_list' %}" class="flex items-center px-4 py-3 text-sm font-medium rounded-lg hover:bg-slate-700 transition-colors {% if 'allocation' in request.path %}sidebar-active text-blue-400{% endif %}">
                     <i class="fas fa-user-tag mr-3 w-5"></i> Allocations
                 </a>
@@ -38,7 +38,7 @@
                 <a href="{% url 'timesheet_list' %}" class="flex items-center px-4 py-3 text-sm font-medium rounded-lg hover:bg-slate-700 transition-colors {% if 'timesheet' in request.path %}sidebar-active text-blue-400{% endif %}">
                     <i class="fas fa-clock mr-3 w-5"></i> Timesheets
                 </a>
-                {% if request.user.employee.role != 'EMPLOYEE' %}
+                {% if request.user.is_superuser or request.user.employee.role != 'EMPLOYEE' %}
                 <a href="{% url 'summary_report' %}" class="flex items-center px-4 py-3 text-sm font-medium rounded-lg hover:bg-slate-700 transition-colors {% if 'report' in request.path %}sidebar-active text-blue-400{% endif %}">
                     <i class="fas fa-file-alt mr-3 w-5"></i> Reports
                 </a>
@@ -51,7 +51,7 @@
                     </div>
                     <div>
                         <p class="text-sm font-medium truncate">{{ request.user.get_full_name|default:request.user.username }}</p>
-                        <p class="text-xs text-slate-400">{{ request.user.employee.role|default:"User" }}</p>
+                        <p class="text-xs text-slate-400">{% if request.user.is_superuser %}Super Admin{% else %}{{ request.user.employee.role|default:"User" }}{% endif %}</p>
                     </div>
                 </div>
                 <form action="{% url 'logout' %}" method="post">

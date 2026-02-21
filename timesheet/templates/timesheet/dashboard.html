@@ -34,7 +34,7 @@
     </div>
 
     <!-- Total Employees (Managers only) -->
-    {% if request.user.employee.role != 'EMPLOYEE' %}
+    {% if request.user.is_superuser or request.user.employee.role != 'EMPLOYEE' %}
     <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-xl">
         <div class="flex items-center justify-between mb-4">
             <div class="p-3 bg-amber-500/10 rounded-xl text-amber-500">
