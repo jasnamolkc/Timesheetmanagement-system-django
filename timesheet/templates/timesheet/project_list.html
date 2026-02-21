@@ -4,7 +4,13 @@
 
 {% block content %}
 <div class="flex justify-between items-center mb-8">
-    <h2 class="text-3xl font-bold">Projects</h2>
+    <div>
+        <h2 class="text-3xl font-bold">Projects</h2>
+        <div class="mt-2 flex space-x-4">
+            <a href="{% url 'project_list' %}" class="text-sm {% if not show_archived %}text-blue-400 font-bold{% else %}text-slate-400 hover:text-slate-300{% endif %}">Active</a>
+            <a href="{% url 'project_list' %}?archived=1" class="text-sm {% if show_archived %}text-blue-400 font-bold{% else %}text-slate-400 hover:text-slate-300{% endif %}">Archived</a>
+        </div>
+    </div>
     {% if request.user.employee.role != 'EMPLOYEE' %}
     <a href="{% url 'project_create' %}" onclick="openModal(this.href); return false;" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-semibold transition-colors flex items-center">
         <i class="fas fa-plus mr-2"></i> New Project
@@ -34,9 +40,15 @@
             </div>
             {% if request.user.employee.role != 'EMPLOYEE' %}
             <div class="flex space-x-2">
-                <a href="{% url 'project_edit' project.pk %}" onclick="openModal(this.href); return false;" class="p-2 text-slate-400 hover:text-blue-400 transition-colors">
+                <a href="{% url 'project_edit' project.pk %}" onclick="openModal(this.href); return false;" title="Edit Project" class="p-2 text-slate-400 hover:text-blue-400 transition-colors">
                     <i class="fas fa-edit"></i>
                 </a>
+                <form action="{% url 'project_archive' project.pk %}" method="post" class="inline">
+                    {% csrf_token %}
+                    <button type="submit" title="{% if project.is_archived %}Unarchive{% else %}Archive{% endif %} Project" class="p-2 text-slate-400 hover:text-amber-400 transition-colors">
+                        <i class="fas {% if project.is_archived %}fa-box-open{% else %}fa-archive{% endif %}"></i>
+                    </button>
+                </form>
             </div>
             {% endif %}
         </div>
