@@ -3,53 +3,64 @@
 {% block title %}Projects{% endblock %}
 
 {% block content %}
-<div class="row mb-4">
-    <div class="col">
-        <h1 class="h2 fw-bold text-white">Projects</h1>
-        <p class="text-secondary">All active and planned projects</p>
-    </div>
-    {% if request.user.employee.role == 'admin' %}
-    <div class="col-auto">
-        <a href="{% url 'project_create' %}" onclick="openModal(this.href); return false;" class="btn btn-primary">
-            <i class="fas fa-plus me-2"></i> New Project
-        </a>
-    </div>
+<div class="flex justify-between items-center mb-8">
+    <h2 class="text-3xl font-bold">Projects</h2>
+    {% if request.user.employee.role != 'EMPLOYEE' %}
+    <a href="{% url 'project_create' %}" onclick="openModal(this.href); return false;" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-semibold transition-colors flex items-center">
+        <i class="fas fa-plus mr-2"></i> New Project
+    </a>
     {% endif %}
 </div>
 
-<div class="row g-4">
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
     {% for project in projects %}
-    <div class="col-md-4">
-        <div class="card h-100 border-0 shadow-sm">
-            <div class="card-body p-4">
-                <div class="d-flex justify-content-between align-items-start mb-3">
-                    <span class="badge {% if project.status == 'ACTIVE' %}bg-success-subtle text-success{% elif project.status == 'PLANNING' %}bg-primary-subtle text-primary{% else %}bg-secondary-subtle text-secondary{% endif %}">
-                        {{ project.status }}
-                    </span>
-                    <small class="text-secondary fw-bold">{{ project.project_code }}</small>
-                </div>
-                <h5 class="card-title fw-bold text-white mb-2">{{ project.name }}</h5>
-                <p class="card-text text-secondary small mb-4 line-clamp-2">{{ project.description }}</p>
-                <div class="d-flex align-items-center justify-content-between pt-3 border-top border-secondary border-opacity-10">
-                    <div class="small text-secondary">
-                        <i class="fas fa-users me-1"></i> {{ project.allocated_employees_count }} Assigned
-                    </div>
-                    {% if request.user.employee.role == 'admin' %}
-                    <a href="{% url 'project_edit' project.pk %}" onclick="openModal(this.href); return false;" class="btn btn-sm btn-link text-secondary p-0">
-                        <i class="fas fa-edit"></i>
-                    </a>
-                    {% endif %}
-                </div>
+    <div class="bg-slate-800 rounded-2xl border border-slate-700 p-6 shadow-xl hover:border-blue-500/50 transition-all group">
+        <div class="flex justify-between items-start mb-4">
+            <span class="px-3 py-1 text-xs font-bold rounded-full
+                {% if project.status == 'ACTIVE' %}bg-emerald-500/10 text-emerald-500
+                {% elif project.status == 'PLANNING' %}bg-blue-500/10 text-blue-500
+                {% else %}bg-slate-500/10 text-slate-500{% endif %}">
+                {{ project.status }}
+            </span>
+            <span class="text-xs text-slate-500 font-mono">{{ project.project_code }}</span>
+        </div>
+
+        <h3 class="text-xl font-bold mb-2 group-hover:text-blue-400 transition-colors">{{ project.name }}</h3>
+        <p class="text-slate-400 text-sm mb-6 line-clamp-2">{{ project.description }}</p>
+
+        <div class="flex items-center justify-between pt-4 border-t border-slate-700/50">
+            <div class="flex items-center text-slate-400 text-xs">
+                <i class="fas fa-users mr-2"></i> {{ project.allocated_employees_count }} Assigned
             </div>
+            {% if request.user.employee.role != 'EMPLOYEE' %}
+            <div class="flex space-x-2">
+                <a href="{% url 'project_edit' project.pk %}" onclick="openModal(this.href); return false;" class="p-2 text-slate-400 hover:text-blue-400 transition-colors">
+                    <i class="fas fa-edit"></i>
+                </a>
+            </div>
+            {% endif %}
         </div>
     </div>
     {% empty %}
-    <div class="col-12">
-        <div class="card border-0 py-5 text-center">
-            <i class="fas fa-folder-open fa-3x text-secondary opacity-25 mb-3"></i>
-            <p class="text-secondary mb-0">No projects found.</p>
-        </div>
+    <div class="col-span-full py-20 text-center bg-slate-800 rounded-2xl border border-dashed border-slate-700">
+        <i class="fas fa-folder-open text-4xl text-slate-600 mb-4"></i>
+        <p class="text-slate-500">No projects found.</p>
     </div>
     {% endfor %}
 </div>
+
+<!-- Pagination -->
+{% if is_paginated %}
+<div class="mt-8 flex justify-center">
+    <nav class="flex space-x-2">
+        {% if page_obj.has_previous %}
+        <a href="?page={{ page_obj.previous_page_number }}" class="px-4 py-2 bg-slate-800 border border-slate-700 rounded-lg hover:bg-slate-700 transition-colors">Previous</a>
+        {% endif %}
+        <span class="px-4 py-2 bg-blue-600 rounded-lg">{{ page_obj.number }}</span>
+        {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}" class="px-4 py-2 bg-slate-800 border border-slate-700 rounded-lg hover:bg-slate-700 transition-colors">Next</a>
+        {% endif %}
+    </nav>
+</div>
+{% endif %}
 {% endblock %}

@@ -3,105 +3,84 @@
 {% block title %}Summary Report{% endblock %}
 
 {% block content %}
-<div class="row mb-4">
-    <div class="col">
-        <h1 class="h2 fw-bold text-white">Summary Reports</h1>
-        <p class="text-secondary">Project-wise and employee-wise work distribution</p>
-    </div>
-    <div class="col-auto">
-        <a href="{% url 'export_csv' %}?start_date={{ start_date }}&end_date={{ end_date }}" class="btn btn-outline-success">
-            <i class="fas fa-file-csv me-2"></i> Export CSV
-        </a>
-    </div>
+<div class="flex justify-between items-center mb-8">
+    <h2 class="text-3xl font-bold">Summary Report</h2>
+    <a href="{% url 'export_csv' %}?start_date={{ start_date }}&end_date={{ end_date }}" class="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2 rounded-lg font-semibold transition-colors flex items-center">
+        <i class="fas fa-file-csv mr-2"></i> Export CSV
+    </a>
 </div>
 
-<!-- Filters -->
-<div class="card border-0 shadow-sm mb-4">
-    <div class="card-body p-4">
-        <form method="get" class="row g-3 align-items-end">
-            <div class="col-md-4">
-                <label class="form-label text-secondary small fw-bold">Start Date</label>
-                <input type="date" name="start_date" value="{{ start_date }}" class="form-control">
-            </div>
-            <div class="col-md-4">
-                <label class="form-label text-secondary small fw-bold">End Date</label>
-                <input type="date" name="end_date" value="{{ end_date }}" class="form-control">
-            </div>
-            <div class="col-md-4">
-                <button type="submit" class="btn btn-primary w-100 font-semibold">Apply Date Filter</button>
-            </div>
-        </form>
-    </div>
+<!-- Date Filter -->
+<div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 mb-8 shadow-xl">
+    <form method="get" class="flex flex-wrap items-end gap-4">
+        <div>
+            <label class="block text-sm font-medium text-slate-400 mb-1">Start Date</label>
+            <input type="date" name="start_date" value="{{ start_date }}" class="bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 outline-none">
+        </div>
+        <div>
+            <label class="block text-sm font-medium text-slate-400 mb-1">End Date</label>
+            <input type="date" name="end_date" value="{{ end_date }}" class="bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 outline-none">
+        </div>
+        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg transition-colors font-semibold">
+            Apply Filter
+        </button>
+    </form>
 </div>
 
-<div class="row g-4">
-    <div class="col-lg-7">
-        <div class="card h-100 border-0 shadow-sm overflow-hidden">
-            <div class="card-header bg-transparent border-0 pt-4 px-4">
-                <h5 class="fw-bold text-white mb-0">Project Breakdown</h5>
-            </div>
-            <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0">
-                        <thead>
-                            <tr>
-                                <th class="px-4">Project</th>
-                                <th class="text-end">Billable</th>
-                                <th class="text-end">Non-Billable</th>
-                                <th class="text-end px-4">Total Hours</th>
-                            </tr>
-                        </thead>
-                        <tbody class="border-top-0">
-                            {% for item in project_summary %}
-                            <tr>
-                                <td class="px-4">
-                                    <div class="fw-bold text-white">{{ item.project__name }}</div>
-                                    <small class="text-secondary">{{ item.project__project_code }}</small>
-                                </td>
-                                <td class="text-end text-success fw-bold">{{ item.billable_hours|default:0 }}</td>
-                                <td class="text-end text-secondary">{{ item.non_billable_hours|default:0 }}</td>
-                                <td class="text-end px-4 fw-bold text-primary">{{ item.total_hours }}</td>
-                            </tr>
-                            {% empty %}
-                            <tr><td colspan="4" class="text-center py-4 text-secondary">No data found.</td></tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+    <!-- Project Summary -->
+    <div class="bg-slate-800 rounded-2xl border border-slate-700 shadow-xl overflow-hidden">
+        <div class="p-6 border-b border-slate-700">
+            <h3 class="text-xl font-bold">Project Breakdown</h3>
         </div>
+        <table class="w-full text-left">
+            <thead class="bg-slate-700/50 text-slate-400 text-xs uppercase">
+                <tr>
+                    <th class="px-6 py-3">Project</th>
+                    <th class="px-6 py-3 text-right">Billable</th>
+                    <th class="px-6 py-3 text-right">Non-Billable</th>
+                    <th class="px-6 py-3 text-right">Total</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-700">
+                {% for item in project_summary %}
+                <tr class="hover:bg-slate-700/30">
+                    <td class="px-6 py-4">
+                        <span class="font-medium">{{ item.project__name }}</span>
+                        <p class="text-xs text-slate-400">{{ item.project__project_code }}</p>
+                    </td>
+                    <td class="px-6 py-4 text-right text-emerald-400">{{ item.billable_hours|default:0 }}</td>
+                    <td class="px-6 py-4 text-right text-slate-400">{{ item.non_billable_hours|default:0 }}</td>
+                    <td class="px-6 py-4 text-right font-bold">{{ item.total_hours }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
 
-    <div class="col-lg-5">
-        <div class="card h-100 border-0 shadow-sm overflow-hidden">
-            <div class="card-header bg-transparent border-0 pt-4 px-4">
-                <h5 class="fw-bold text-white mb-0">Employee Breakdown</h5>
-            </div>
-            <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0">
-                        <thead>
-                            <tr>
-                                <th class="px-4">Employee</th>
-                                <th class="text-end px-4">Total Hours</th>
-                            </tr>
-                        </thead>
-                        <tbody class="border-top-0">
-                            {% for item in employee_summary %}
-                            <tr>
-                                <td class="px-4">
-                                    <div class="fw-bold text-white">{{ item.employee__user__first_name }} {{ item.employee__user__last_name }}</div>
-                                </td>
-                                <td class="text-end px-4 fw-bold text-white">{{ item.total_hours }}</td>
-                            </tr>
-                            {% empty %}
-                            <tr><td colspan="2" class="text-center py-4 text-secondary">No data found.</td></tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+    <!-- Employee Summary -->
+    <div class="bg-slate-800 rounded-2xl border border-slate-700 shadow-xl overflow-hidden">
+        <div class="p-6 border-b border-slate-700">
+            <h3 class="text-xl font-bold">Employee Breakdown</h3>
         </div>
+        <table class="w-full text-left">
+            <thead class="bg-slate-700/50 text-slate-400 text-xs uppercase">
+                <tr>
+                    <th class="px-6 py-3">Employee</th>
+                    <th class="px-6 py-3 text-right">Total Hours</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-700">
+                {% for item in employee_summary %}
+                <tr class="hover:bg-slate-700/30">
+                    <td class="px-6 py-4 font-medium">
+                        {{ item.employee__user__first_name }} {{ item.employee__user__last_name }}
+                    </td>
+                    <td class="px-6 py-4 text-right font-bold">{{ item.total_hours }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
 </div>
 {% endblock %}
