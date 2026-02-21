@@ -1,4 +1,4 @@
-from django.db import models
+from django.db import models, transaction
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.utils import timezone
@@ -12,9 +12,37 @@ class Employee(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='employee')
     role = models.CharField(max_length=10, choices=ROLE_CHOICES, default='EMPLOYEE')
     employee_id = models.CharField(max_length=20, unique=True)
+    employee_code = models.CharField(max_length=20, unique=True, editable=False)
+
+    def save(self, *args, **kwargs):
+        if not self.employee_code:
+            with transaction.atomic():
+                year = timezone.now().year
+                prefix = f"EMP-{year}-"
+                # Use select_for_update to handle concurrency safely
+                last_employee = Employee.objects.filter(
+                    employee_code__startswith=prefix
+                ).select_for_update().order_by('-employee_code').first()
+
+                if last_employee:
+                    try:
+                        last_num = int(last_employee.employee_code.split('-')[-1])
+                        new_num = last_num + 1
+                    except (ValueError, IndexError):
+                        new_num = 1
+                else:
+                    new_num = 1
+
+                self.employee_code = f"{prefix}{new_num:04d}"
+
+                # Also auto-fill employee_id if it's empty to maintain compatibility
+                if not self.employee_id:
+                    self.employee_id = self.employee_code
+
+        super().save(*args, **kwargs)
 
     def __str__(self):
-        return f"{self.user.get_full_name()} ({self.role})"
+        return f"{self.user.get_full_name()} ({self.employee_code})"
 
 class Project(models.Model):
     STATUS_CHOICES = (
