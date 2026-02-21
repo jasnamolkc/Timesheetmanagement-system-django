@@ -3,7 +3,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('timesheet', '0003_populate_employee_codes'),
+        ('timesheet', '0002_populate_missing_employee_data'),
     ]
 
     operations = [
