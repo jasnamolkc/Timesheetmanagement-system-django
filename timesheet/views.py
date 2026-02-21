@@ -289,3 +289,6 @@ class ExportCSVView(ManagerRequiredMixin, View):
             writer.writerow(entry)
 
         return response
+
+def csrf_failure(request, reason=""):
+    return render(request, 'timesheet/csrf_failure.html', {'reason': reason}, status=403)

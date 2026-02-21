@@ -25,8 +25,12 @@ SECRET_KEY = "django-insecure-&qtu(h)2(axfstky60=kp&1+nboh^0)k0dx28dw!z(_et(p%pg
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
-
+ALLOWED_HOSTS = ['*']
+CSRF_TRUSTED_ORIGINS = [
+    'http://localhost:8000',
+    'http://127.0.0.1:8000',
+]
+CSRF_FAILURE_VIEW = 'timesheet.views.csrf_failure'
 
 # Application definition
 
