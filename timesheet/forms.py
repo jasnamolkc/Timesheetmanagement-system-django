@@ -1,4 +1,5 @@
 from django import forms
+from django.db import models
 from django.core.exceptions import ValidationError
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import UserCreationForm
@@ -41,6 +42,16 @@ class AllocationForm(forms.ModelForm):
             'end_date': forms.DateInput(attrs={'type': 'date'}),
         }
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Only allow allocating to non-archived projects
+        self.fields['project'].queryset = Project.objects.filter(is_archived=False)
+        if self.instance.pk and self.instance.project.is_archived:
+            # If editing an existing allocation for an archived project, include it in the queryset
+            self.fields['project'].queryset = Project.objects.filter(
+                models.Q(is_archived=False) | models.Q(pk=self.instance.project.pk)
+            )
+
     def clean(self):
         cleaned_data = super().clean()
         if not self.errors:
@@ -64,11 +75,11 @@ class TimesheetEntryForm(forms.ModelForm):
         self.employee = kwargs.pop('employee', None)
         super().__init__(*args, **kwargs)
         if self.employee:
-            # Filter projects to only those where the employee is allocated
+            # Filter projects to only those where the employee is allocated AND project is not archived
             allocated_projects = ProjectAllocation.objects.filter(
                 employee=self.employee
             ).values_list('project_id', flat=True)
-            self.fields['project'].queryset = Project.objects.filter(id__in=allocated_projects)
+            self.fields['project'].queryset = Project.objects.filter(id__in=allocated_projects, is_archived=False)
 
     def clean(self):
         cleaned_data = super().clean()

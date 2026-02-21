@@ -71,6 +71,24 @@ class ProjectListView(LoginRequiredMixin, ListView):
     context_object_name = 'projects'
     paginate_by = 10
 
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        if self.request.GET.get('archived') == '1':
+            return queryset.filter(is_archived=True)
+        return queryset.filter(is_archived=False)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['show_archived'] = self.request.GET.get('archived') == '1'
+        return context
+
+class ProjectArchiveView(ManagerRequiredMixin, View):
+    def post(self, request, pk):
+        project = get_object_or_404(Project, pk=pk)
+        project.is_archived = not project.is_archived
+        project.save()
+        return redirect('project_list')
+
 class ProjectCreateView(ManagerRequiredMixin, AjaxTemplateMixin, CreateView):
     model = Project
     form_class = ProjectForm

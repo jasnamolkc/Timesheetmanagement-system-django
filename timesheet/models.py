@@ -58,6 +58,13 @@ class Project(models.Model):
     end_date = models.DateField(null=True, blank=True)
     is_archived = models.BooleanField(default=False)
 
+    class Meta:
+        ordering = ['-start_date', 'name']
+
+    def clean(self):
+        if self.start_date and self.end_date and self.end_date < self.start_date:
+            raise ValidationError("End date cannot be before start date.")
+
     def __str__(self):
         return f"{self.project_code} - {self.name}"
 
@@ -75,6 +82,7 @@ class ProjectAllocation(models.Model):
 
     class Meta:
         unique_together = ('employee', 'project', 'start_date')
+        ordering = ['-start_date']
 
     def clean(self):
         # Prevent allocation > 100%
