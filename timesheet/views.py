@@ -6,11 +6,11 @@ from django.urls import reverse_lazy
 from django.db.models import Sum, Count
 from django.utils import timezone
 from django.http import HttpResponse
-import pandas as pd
+import csv
 from datetime import datetime, timedelta
 
 from .models import Project, ProjectAllocation, TimesheetEntry, Employee
-from .forms import ProjectForm, AllocationForm, TimesheetEntryForm
+from .forms import ProjectForm, AllocationForm, TimesheetEntryForm, RegistrationForm
 
 # Permission Mixins
 class AdminRequiredMixin(UserPassesTestMixin):
@@ -20,6 +20,12 @@ class AdminRequiredMixin(UserPassesTestMixin):
 class ManagerRequiredMixin(UserPassesTestMixin):
     def test_func(self):
         return self.request.user.is_authenticated and hasattr(self.request.user, 'employee') and self.request.user.employee.role in ['ADMIN', 'MANAGER']
+
+# Auth Views
+class RegisterView(CreateView):
+    form_class = RegistrationForm
+    template_name = 'registration/register.html'
+    success_url = reverse_lazy('login')
 
 # Dashboard
 class DashboardView(LoginRequiredMixin, TemplateView):
@@ -105,15 +111,41 @@ class TimesheetListView(LoginRequiredMixin, ListView):
 
     def get_queryset(self):
         queryset = super().get_queryset()
-        if self.request.user.employee.role == 'EMPLOYEE':
-            queryset = queryset.filter(employee=self.request.user.employee)
+        user_employee = self.request.user.employee
+
+        if user_employee.role == 'EMPLOYEE':
+            queryset = queryset.filter(employee=user_employee)
 
         # Filtering
         project_id = self.request.GET.get('project')
         if project_id:
             queryset = queryset.filter(project_id=project_id)
 
-        return queryset.order_by('-date')
+        employee_id = self.request.GET.get('employee')
+        if employee_id and user_employee.role in ['ADMIN', 'MANAGER']:
+            queryset = queryset.filter(employee_id=employee_id)
+
+        start_date = self.request.GET.get('start_date')
+        if start_date:
+            queryset = queryset.filter(date__gte=start_date)
+
+        end_date = self.request.GET.get('end_date')
+        if end_date:
+            queryset = queryset.filter(date__lte=end_date)
+
+        return queryset.select_related('project', 'employee__user').order_by('-date')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        user_employee = self.request.user.employee
+
+        if user_employee.role in ['ADMIN', 'MANAGER']:
+            context['all_employees'] = Employee.objects.select_related('user').all()
+            context['all_projects'] = Project.objects.all()
+        else:
+            context['all_projects'] = Project.objects.filter(allocations__employee=user_employee).distinct()
+
+        return context
 
 class TimesheetCreateView(LoginRequiredMixin, CreateView):
     model = TimesheetEntry
@@ -130,21 +162,29 @@ class TimesheetCreateView(LoginRequiredMixin, CreateView):
         form.instance.employee = self.request.user.employee
         return super().form_valid(form)
 
-class TimesheetUpdateView(LoginRequiredMixin, UpdateView):
+class TimesheetUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     model = TimesheetEntry
     form_class = TimesheetEntryForm
     template_name = 'timesheet/modal_form.html'
     success_url = reverse_lazy('timesheet_list')
 
+    def test_func(self):
+        obj = self.get_object()
+        return obj.employee == self.request.user.employee or self.request.user.employee.role in ['ADMIN', 'MANAGER']
+
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
-        kwargs['employee'] = self.object.employee
+        kwargs['employee'] = self.request.user.employee
         return kwargs
 
-class TimesheetDeleteView(LoginRequiredMixin, DeleteView):
+class TimesheetDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
     model = TimesheetEntry
     template_name = 'timesheet/entry_confirm_delete.html'
     success_url = reverse_lazy('timesheet_list')
+
+    def test_func(self):
+        obj = self.get_object()
+        return obj.employee == self.request.user.employee or self.request.user.employee.role in ['ADMIN', 'MANAGER']
 
 # Summary Report
 class SummaryReportView(ManagerRequiredMixin, TemplateView):
@@ -182,13 +222,21 @@ class ExportCSVView(ManagerRequiredMixin, View):
         start_date = request.GET.get('start_date')
         end_date = request.GET.get('end_date')
 
-        entries = TimesheetEntry.objects.filter(date__range=[start_date, end_date]).values(
+        if not start_date or not end_date:
+            return HttpResponse("Please provide both start_date and end_date.", status=400)
+
+        entries = TimesheetEntry.objects.filter(date__range=[start_date, end_date]).select_related(
+            'employee__user', 'project'
+        ).values_list(
             'date', 'employee__user__username', 'project__project_code', 'hours', 'description', 'billable'
         )
 
-        df = pd.DataFrame(list(entries))
         response = HttpResponse(content_type='text/csv')
         response['Content-Disposition'] = f'attachment; filename="timesheet_report_{start_date}_{end_date}.csv"'
 
-        df.to_csv(path_or_buf=response, index=False)
+        writer = csv.writer(response)
+        writer.writerow(['Date', 'Employee', 'Project', 'Hours', 'Description', 'Billable'])
+        for entry in entries:
+            writer.writerow(entry)
+
         return response
