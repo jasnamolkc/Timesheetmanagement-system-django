@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block title %}My Dashboard{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h1 class="h2 fw-bold text-white">Welcome, {{ request.user.first_name }}</h1>
+        <p class="text-secondary">Here's your work summary for this month</p>
+    </div>
+    <div class="col-auto">
+        <a href="{% url 'timesheet_create' %}" onclick="openModal(this.href); return false;" class="btn btn-primary">
+            <i class="fas fa-clock me-2"></i> Log Hours
+        </a>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-md-6">
+        <div class="card h-100 border-0 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="bg-success bg-opacity-10 p-3 rounded-3 text-success me-3">
+                        <i class="fas fa-check-circle fa-lg"></i>
+                    </div>
+                    <div>
+                        <h6 class="card-subtitle text-secondary mb-1">Hours Logged</h6>
+                        <h3 class="card-title fw-bold mb-0 text-white">{{ my_hours_month }}</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card h-100 border-0 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="bg-info bg-opacity-10 p-3 rounded-3 text-info me-3">
+                        <i class="fas fa-project-diagram fa-lg"></i>
+                    </div>
+                    <div>
+                        <h6 class="card-subtitle text-secondary mb-1">Assigned Projects</h6>
+                        <h3 class="card-title fw-bold mb-0 text-white">{{ my_projects }}</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

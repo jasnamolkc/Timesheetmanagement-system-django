@@ -3,9 +3,9 @@ from .models import Employee, Project, ProjectAllocation, TimesheetEntry
 
 @admin.register(Employee)
 class EmployeeAdmin(admin.ModelAdmin):
-    list_display = ('user', 'role', 'employee_code', 'employee_id')
-    list_filter = ('role',)
-    search_fields = ('user__username', 'user__first_name', 'user__last_name', 'employee_code', 'employee_id')
+    list_display = ('user', 'role', 'employee_code', 'department', 'is_active')
+    list_filter = ('role', 'department', 'is_active')
+    search_fields = ('user__username', 'user__first_name', 'user__last_name', 'employee_code')
     raw_id_fields = ('user',)
     readonly_fields = ('employee_code',)
 

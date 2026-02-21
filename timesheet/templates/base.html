@@ -1,107 +1,185 @@
 <!DOCTYPE html>
-<html lang="en" class="h-full" style="background-color: #0f172a;">
+<html lang="en" class="h-100">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Timesheet Pro - {% block title %}{% endblock %}</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-        body { font-family: 'Inter', sans-serif; background-color: #0f172a; }
-        .sidebar-active { background: linear-gradient(90deg, rgba(59, 130, 246, 0.2) 0%, rgba(59, 130, 246, 0) 100%); border-left: 4px solid #3b82f6; }
-        .bg-dark-navy { background-color: #0f172a; }
-        .bg-slate-800 { background-color: #1e293b; }
+        :root {
+            --bg-navy: #0f172a;
+            --card-bg: #1e293b;
+            --border-color: #334155;
+            --text-light: #e2e8f0;
+            --accent-blue: #3b82f6;
+        }
+        body {
+            background-color: var(--bg-navy);
+            color: var(--text-light);
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        }
+        .sidebar {
+            width: 280px;
+            background-color: var(--card-bg);
+            border-right: 1px solid var(--border-color);
+            min-height: 100vh;
+        }
+        .nav-link {
+            color: #94a3b8;
+            padding: 0.75rem 1.25rem;
+            border-radius: 0.5rem;
+            margin: 0.25rem 1rem;
+            transition: all 0.2s;
+        }
+        .nav-link:hover, .nav-link.active {
+            background-color: rgba(59, 130, 246, 0.1);
+            color: var(--accent-blue);
+        }
+        .card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 1rem;
+            color: var(--text-light);
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            border: none;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+            transform: translateY(-1px);
+        }
+        .table {
+            color: var(--text-light);
+            border-color: var(--border-color);
+        }
+        .table thead th {
+            background-color: rgba(51, 65, 85, 0.5);
+            color: #94a3b8;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+        }
+        .modal-content {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 1.25rem;
+        }
+        .form-control, .form-select {
+            background-color: var(--bg-navy);
+            border: 1px solid var(--border-color);
+            color: var(--text-light);
+        }
+        .form-control:focus, .form-select:focus {
+            background-color: var(--bg-navy);
+            border-color: var(--accent-blue);
+            color: var(--text-light);
+            box-shadow: 0 0 0 0.25rem rgba(59, 130, 246, 0.25);
+        }
     </style>
 </head>
-<body class="h-full text-slate-200 bg-dark-navy">
-    <div class="flex h-full">
-        <!-- Sidebar -->
-        <aside class="w-64 bg-slate-800 border-r border-slate-700 flex-shrink-0 shadow-2xl">
-            <div class="p-6">
-                <h1 class="text-2xl font-bold bg-gradient-to-r from-blue-400 to-indigo-500 bg-clip-text text-transparent">
-                    Timesheet Pro
-                </h1>
-            </div>
-            <nav class="mt-6 px-4 space-y-2">
-                <a href="{% url 'dashboard' %}" class="flex items-center px-4 py-3 text-sm font-medium rounded-lg hover:bg-slate-700 transition-colors {% if request.resolver_match.url_name == 'dashboard' %}sidebar-active text-blue-400{% endif %}">
-                    <i class="fas fa-chart-line mr-3 w-5"></i> Dashboard
+<body class="d-flex flex-nowrap">
+    <!-- Sidebar -->
+    <div class="sidebar d-flex flex-column flex-shrink-0 p-3">
+        <a href="{% url 'dashboard' %}" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-decoration-none p-3">
+            <span class="fs-4 fw-bold text-primary">Timesheet Pro</span>
+        </a>
+        <hr class="mx-3" style="border-color: var(--border-color)">
+        <ul class="nav nav-pills flex-column mb-auto">
+            <li class="nav-item">
+                <a href="{% url 'dashboard' %}" class="nav-link {% if 'dashboard' in request.path %}active{% endif %}">
+                    <i class="fas fa-chart-line me-2"></i> Dashboard
                 </a>
-                <a href="{% url 'project_list' %}" class="flex items-center px-4 py-3 text-sm font-medium rounded-lg hover:bg-slate-700 transition-colors {% if 'project' in request.path %}sidebar-active text-blue-400{% endif %}">
-                    <i class="fas fa-project-diagram mr-3 w-5"></i> Projects
+            </li>
+            {% if request.user.employee.role == 'admin' %}
+            <li>
+                <a href="{% url 'user_list' %}" class="nav-link {% if 'user' in request.path %}active{% endif %}">
+                    <i class="fas fa-users me-2"></i> Users
                 </a>
-                {% if request.user.employee.role != 'EMPLOYEE' %}
-                <a href="{% url 'allocation_list' %}" class="flex items-center px-4 py-3 text-sm font-medium rounded-lg hover:bg-slate-700 transition-colors {% if 'allocation' in request.path %}sidebar-active text-blue-400{% endif %}">
-                    <i class="fas fa-user-tag mr-3 w-5"></i> Allocations
+            </li>
+            {% endif %}
+            <li>
+                <a href="{% url 'project_list' %}" class="nav-link {% if 'project' in request.path %}active{% endif %}">
+                    <i class="fas fa-project-diagram me-2"></i> Projects
                 </a>
-                {% endif %}
-                <a href="{% url 'timesheet_list' %}" class="flex items-center px-4 py-3 text-sm font-medium rounded-lg hover:bg-slate-700 transition-colors {% if 'timesheet' in request.path %}sidebar-active text-blue-400{% endif %}">
-                    <i class="fas fa-clock mr-3 w-5"></i> Timesheets
+            </li>
+            {% if request.user.employee.role != 'employee' %}
+            <li>
+                <a href="{% url 'allocation_list' %}" class="nav-link {% if 'allocation' in request.path %}active{% endif %}">
+                    <i class="fas fa-user-tag me-2"></i> Allocations
                 </a>
-                {% if request.user.employee.role != 'EMPLOYEE' %}
-                <a href="{% url 'summary_report' %}" class="flex items-center px-4 py-3 text-sm font-medium rounded-lg hover:bg-slate-700 transition-colors {% if 'report' in request.path %}sidebar-active text-blue-400{% endif %}">
-                    <i class="fas fa-file-alt mr-3 w-5"></i> Reports
+            </li>
+            {% endif %}
+            <li>
+                <a href="{% url 'timesheet_list' %}" class="nav-link {% if 'timesheet' in request.path %}active{% endif %}">
+                    <i class="fas fa-clock me-2"></i> Timesheets
                 </a>
-                {% endif %}
-            </nav>
-            <div class="absolute bottom-0 w-64 p-4 border-t border-slate-700">
-                <div class="flex items-center mb-4 px-2">
-                    <div class="w-8 h-8 rounded-full bg-indigo-500 flex items-center justify-center text-xs font-bold mr-3">
-                        {{ request.user.username|slice:":2"|upper }}
-                    </div>
-                    <div>
-                        <p class="text-sm font-medium truncate">{{ request.user.get_full_name|default:request.user.username }}</p>
-                        <p class="text-xs text-slate-400">{{ request.user.employee.role|default:"User" }}</p>
-                    </div>
+            </li>
+            {% if request.user.employee.role != 'employee' %}
+            <li>
+                <a href="{% url 'summary_report' %}" class="nav-link {% if 'report' in request.path %}active{% endif %}">
+                    <i class="fas fa-file-alt me-2"></i> Reports
+                </a>
+            </li>
+            {% endif %}
+        </ul>
+        <hr class="mx-3" style="border-color: var(--border-color)">
+        <div class="dropdown px-3">
+            <a href="#" class="d-flex align-items-center text-decoration-none dropdown-toggle text-light" data-bs-toggle="dropdown" aria-expanded="false">
+                <div class="rounded-circle bg-primary d-flex align-items-center justify-center me-2" style="width: 32px; height: 32px; font-size: 0.8rem; font-weight: bold;">
+                    {{ request.user.username|slice:":2"|upper }}
                 </div>
-                <form action="{% url 'logout' %}" method="post">
-                    {% csrf_token %}
-                    <button type="submit" class="flex items-center w-full px-4 py-2 text-sm text-red-400 hover:bg-red-400/10 rounded-lg transition-colors">
-                        <i class="fas fa-sign-out-alt mr-3"></i> Logout
-                    </button>
-                </form>
-            </div>
-        </aside>
-
-        <!-- Main Content -->
-        <main class="flex-1 overflow-y-auto p-8">
-            <div class="max-w-7xl mx-auto">
-                {% block content %}{% endblock %}
-            </div>
-        </main>
+                <strong>{{ request.user.username }}</strong>
+            </a>
+            <ul class="dropdown-menu dropdown-menu-dark text-small shadow">
+                <li><a class="dropdown-item" href="#">Profile</a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li>
+                    <form action="{% url 'logout' %}" method="post">
+                        {% csrf_token %}
+                        <button type="submit" class="dropdown-item">Sign out</button>
+                    </form>
+                </li>
+            </ul>
+        </div>
     </div>
 
+    <!-- Main Content -->
+    <main class="flex-grow-1 overflow-auto p-4 p-md-5">
+        <div class="container-fluid">
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+
     <!-- Modal Container -->
-    <div id="modal-container" class="hidden fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-        <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-            <div class="fixed inset-0 bg-slate-950/75 transition-opacity" aria-hidden="true" onclick="closeModal()"></div>
-            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-            <div class="inline-block align-bottom bg-slate-800 rounded-xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full border border-slate-700">
-                <div id="modal-content" class="p-6">
-                    <!-- Loaded via AJAX or direct include -->
-                </div>
+    <div class="modal fade" id="universalModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content" id="modal-content-container">
+                <!-- Content loaded via AJAX -->
             </div>
         </div>
     </div>
 
+    <!-- Bootstrap 5 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+        const modalElement = document.getElementById('universalModal');
+        const modal = new bootstrap.Modal(modalElement);
+        const modalContent = document.getElementById('modal-content-container');
+
         function openModal(url) {
-            const modalUrl = url.includes('?') ? `${url}&modal=1` : `${url}?modal=1`;
-            fetch(modalUrl, {
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
+            fetch(url + (url.includes('?') ? '&' : '?') + 'modal=1', {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
             })
-                .then(response => response.text())
-                .then(html => {
-                    document.getElementById('modal-content').innerHTML = html;
-                    document.getElementById('modal-container').classList.remove('hidden');
-                    document.body.classList.add('overflow-hidden');
-                });
-        }
-        function closeModal() {
-            document.getElementById('modal-container').classList.add('hidden');
-            document.body.classList.remove('overflow-hidden');
+            .then(r => r.text())
+            .then(html => {
+                modalContent.innerHTML = html;
+                modal.show();
+            });
         }
     </script>
 </body>

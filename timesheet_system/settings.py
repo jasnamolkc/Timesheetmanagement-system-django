@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
+import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -20,12 +21,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-&qtu(h)2(axfstky60=kp&1+nboh^0)k0dx28dw!z(_et(p%pg"
+SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "django-insecure-&qtu(h)2(axfstky60=kp&1+nboh^0)k0dx28dw!z(_et(p%pg")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get("DJANGO_DEBUG", "True") == "True"
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
 
 
 # Application definition
@@ -40,7 +41,7 @@ INSTALLED_APPS = [
 
     # Third-party apps
     'crispy_forms',
-    'crispy_tailwind',
+    'crispy_bootstrap5',
     'django_filters',
     'django_bootstrap5',
 
@@ -48,8 +49,8 @@ INSTALLED_APPS = [
     'timesheet.apps.TimesheetConfig',
 ]
 
-CRISPY_ALLOWED_TEMPLATE_PACKS = "tailwind"
-CRISPY_TEMPLATE_PACK = "tailwind"
+CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
+CRISPY_TEMPLATE_PACK = "bootstrap5"
 
 LOGIN_REDIRECT_URL = 'dashboard'
 LOGOUT_REDIRECT_URL = 'login'
@@ -87,12 +88,33 @@ WSGI_APPLICATION = "timesheet_system.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+if os.environ.get("DATABASE_URL"):
+    # In production, we'd use dj-database-url
+    import dj_database_url
+    DATABASES = {
+        'default': dj_database_url.config(conn_max_age=600)
     }
-}
+else:
+    # Default to PostgreSQL if specified in requirement, but fallback to SQLite for local dev
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": "timesheet_db",
+            "USER": "timesheet_user",
+            "PASSWORD": "password",
+            "HOST": "localhost",
+            "PORT": "5432",
+        }
+    }
+
+# Fallback for local development environment where Postgres might not be set up
+if os.environ.get("USE_SQLITE", "True") == "True":
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": BASE_DIR / "db.sqlite3",
+        }
+    }
 
 
 # Password validation

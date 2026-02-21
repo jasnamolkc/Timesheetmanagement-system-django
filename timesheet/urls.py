@@ -6,7 +6,15 @@ urlpatterns = [
     path('', views.DashboardView.as_view(), name='dashboard'),
     path('login/', auth_views.LoginView.as_view(template_name='registration/login.html'), name='login'),
     path('logout/', auth_views.LogoutView.as_view(), name='logout'),
-    path('register/', views.RegisterView.as_view(), name='register'),
+
+    # Role-based Dashboards
+    path('dashboard/admin/', views.AdminDashboardView.as_view(), name='admin_dashboard'),
+    path('dashboard/manager/', views.ManagerDashboardView.as_view(), name='manager_dashboard'),
+    path('dashboard/employee/', views.EmployeeDashboardView.as_view(), name='employee_dashboard'),
+
+    # User Management (Admin Only)
+    path('users/', views.UserListView.as_view(), name='user_list'),
+    path('users/create/', views.UserCreateView.as_view(), name='user_create'),
 
     # Projects
     path('projects/', views.ProjectListView.as_view(), name='project_list'),
