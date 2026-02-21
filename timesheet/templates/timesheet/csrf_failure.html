@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block title %}CSRF Verification Failed{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto bg-slate-800 rounded-3xl border border-slate-700 p-10 shadow-2xl text-center">
+    <div class="w-20 h-20 bg-amber-500/10 text-amber-500 rounded-full flex items-center justify-center mx-auto mb-6 text-3xl">
+        <i class="fas fa-shield-alt"></i>
+    </div>
+
+    <h1 class="text-3xl font-bold mb-4">CSRF Verification Failed</h1>
+    <p class="text-slate-400 mb-8 leading-relaxed">
+        For security reasons, your request could not be processed. This often happens if you've left a page open for a long time or logged in/out in another tab.
+    </p>
+
+    {% if reason %}
+    <div class="bg-slate-900/50 rounded-xl p-4 mb-8 text-sm text-slate-500 font-mono">
+        Reason: {{ reason }}
+    </div>
+    {% endif %}
+
+    <div class="flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-4">
+        <button onclick="window.location.reload()" class="px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold shadow-lg transition-all">
+            Refresh Page
+        </button>
+        <a href="{% url 'dashboard' %}" class="px-8 py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-xl font-bold transition-all">
+            Back to Dashboard
+        </a>
+    </div>
+</div>
+{% endblock %}
