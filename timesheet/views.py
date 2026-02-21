@@ -1,4 +1,5 @@
 from django.db import models
+from django.contrib.auth.models import User
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView, TemplateView, View
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
@@ -22,11 +23,19 @@ class AjaxTemplateMixin:
 # Permission Mixins
 class AdminRequiredMixin(UserPassesTestMixin):
     def test_func(self):
-        return self.request.user.is_authenticated and hasattr(self.request.user, 'employee') and self.request.user.employee.role == 'ADMIN'
+        if not self.request.user.is_authenticated:
+            return False
+        if self.request.user.is_superuser:
+            return True
+        return hasattr(self.request.user, 'employee') and self.request.user.employee.role == 'ADMIN'
 
 class ManagerRequiredMixin(UserPassesTestMixin):
     def test_func(self):
-        return self.request.user.is_authenticated and hasattr(self.request.user, 'employee') and self.request.user.employee.role in ['ADMIN', 'MANAGER']
+        if not self.request.user.is_authenticated:
+            return False
+        if self.request.user.is_superuser:
+            return True
+        return hasattr(self.request.user, 'employee') and self.request.user.employee.role in ['ADMIN', 'MANAGER']
 
 # Auth Views
 class RegisterView(CreateView):
@@ -56,7 +65,7 @@ class DashboardView(LoginRequiredMixin, TemplateView):
                 end_date__gte=today
             ).count()
 
-        if self.request.user.employee.role in ['ADMIN', 'MANAGER']:
+        if (employee and employee.role in ['ADMIN', 'MANAGER']) or self.request.user.is_superuser:
             context['total_employees_allocated'] = Employee.objects.filter(
                 allocations__end_date__gte=today
             ).distinct().count()
@@ -136,7 +145,10 @@ class TimesheetListView(LoginRequiredMixin, ListView):
 
     def get_queryset(self):
         queryset = super().get_queryset()
-        user_employee = self.request.user.employee
+        user_employee = getattr(self.request.user, 'employee', None)
+
+        if not user_employee:
+            return queryset.none() if not self.request.user.is_superuser else queryset
 
         if user_employee.role == 'EMPLOYEE':
             queryset = queryset.filter(employee=user_employee)
@@ -162,13 +174,15 @@ class TimesheetListView(LoginRequiredMixin, ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        user_employee = self.request.user.employee
+        user_employee = getattr(self.request.user, 'employee', None)
 
-        if user_employee.role in ['ADMIN', 'MANAGER']:
+        if user_employee and user_employee.role in ['ADMIN', 'MANAGER']:
             context['all_employees'] = Employee.objects.select_related('user').all()
             context['all_projects'] = Project.objects.all()
-        else:
+        elif user_employee:
             context['all_projects'] = Project.objects.filter(allocations__employee=user_employee).distinct()
+        else:
+            context['all_projects'] = Project.objects.none()
 
         return context
 
@@ -180,11 +194,11 @@ class TimesheetCreateView(LoginRequiredMixin, AjaxTemplateMixin, CreateView):
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
-        kwargs['employee'] = self.request.user.employee
+        kwargs['employee'] = getattr(self.request.user, 'employee', None)
         return kwargs
 
     def form_valid(self, form):
-        form.instance.employee = self.request.user.employee
+        form.instance.employee = getattr(self.request.user, 'employee', None)
         return super().form_valid(form)
 
 class TimesheetUpdateView(LoginRequiredMixin, UserPassesTestMixin, AjaxTemplateMixin, UpdateView):
@@ -195,11 +209,16 @@ class TimesheetUpdateView(LoginRequiredMixin, UserPassesTestMixin, AjaxTemplateM
 
     def test_func(self):
         obj = self.get_object()
-        return obj.employee == self.request.user.employee or self.request.user.employee.role in ['ADMIN', 'MANAGER']
+        user_employee = getattr(self.request.user, 'employee', None)
+        if self.request.user.is_superuser:
+            return True
+        if not user_employee:
+            return False
+        return obj.employee == user_employee or user_employee.role in ['ADMIN', 'MANAGER']
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
-        kwargs['employee'] = self.request.user.employee
+        kwargs['employee'] = getattr(self.request.user, 'employee', None)
         return kwargs
 
 class TimesheetDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
@@ -209,7 +228,12 @@ class TimesheetDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
 
     def test_func(self):
         obj = self.get_object()
-        return obj.employee == self.request.user.employee or self.request.user.employee.role in ['ADMIN', 'MANAGER']
+        user_employee = getattr(self.request.user, 'employee', None)
+        if self.request.user.is_superuser:
+            return True
+        if not user_employee:
+            return False
+        return obj.employee == user_employee or user_employee.role in ['ADMIN', 'MANAGER']
 
 # Summary Report
 class SummaryReportView(ManagerRequiredMixin, TemplateView):
