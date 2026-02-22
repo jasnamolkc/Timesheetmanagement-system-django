@@ -6,7 +6,7 @@
 {% block content %}
 <div class="flex justify-between items-center mb-8">
     <h2 class="text-3xl font-bold">
-        {% if request.user.is_superuser or request.user.employee.role == 'ADMIN' or request.user.employee.role == 'MANAGER' %}
+        {% if request.user.is_superuser or request.user.employee and request.user.employee.role == 'ADMIN' or request.user.employee and request.user.employee.role == 'MANAGER' %}
             Timesheet Overview
         {% else %}
             My Timesheets
@@ -31,7 +31,7 @@
                 {% endfor %}
             </select>
         </div>
-        {% if request.user.is_superuser or request.user.employee.role == 'ADMIN' or request.user.employee.role == 'MANAGER' %}
+        {% if request.user.is_superuser or request.user.employee and request.user.employee.role == 'ADMIN' or request.user.employee and request.user.employee.role == 'MANAGER' %}
         <div>
             <label class="block text-sm font-medium text-slate-400 mb-1">Employee</label>
             <select name="employee" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 outline-none text-sm">
@@ -69,7 +69,7 @@
         <thead class="bg-slate-700/50 text-slate-400 text-xs uppercase tracking-wider">
             <tr>
                 <th class="px-6 py-4 font-semibold">Date</th>
-                {% if request.user.is_superuser or request.user.employee.role == 'ADMIN' or request.user.employee.role == 'MANAGER' %}
+                {% if request.user.is_superuser or request.user.employee and request.user.employee.role == 'ADMIN' or request.user.employee and request.user.employee.role == 'MANAGER' %}
                 <th class="px-6 py-4 font-semibold">Employee</th>
                 {% endif %}
                 <th class="px-6 py-4 font-semibold">Project</th>
@@ -83,7 +83,7 @@
             {% for entry in entries %}
             <tr class="hover:bg-slate-700/30 transition-colors">
                 <td class="px-6 py-4 whitespace-nowrap text-sm">{{ entry.date }}</td>
-                {% if request.user.is_superuser or request.user.employee.role == 'ADMIN' or request.user.employee.role == 'MANAGER' %}
+                {% if request.user.is_superuser or request.user.employee and request.user.employee.role == 'ADMIN' or request.user.employee and request.user.employee.role == 'MANAGER' %}
                 <td class="px-6 py-4 whitespace-nowrap">
                     <span class="text-sm font-medium">{{ entry.employee.user.get_full_name|default:entry.employee.user.username }}</span>
                 </td>
