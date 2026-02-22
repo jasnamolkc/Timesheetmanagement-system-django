@@ -29,8 +29,19 @@ ALLOWED_HOSTS = ['*']
 CSRF_TRUSTED_ORIGINS = [
     'http://localhost:8000',
     'http://127.0.0.1:8000',
+    'http://0.0.0.0:8000',
+    'http://[::1]:8000',
+    'https://localhost:8000',
+    'https://127.0.0.1:8000',
 ]
 CSRF_FAILURE_VIEW = 'timesheet.views.csrf_failure'
+
+# Unique cookie names to avoid conflicts with other local Django projects
+CSRF_COOKIE_NAME = 'timesheet_csrftoken'
+SESSION_COOKIE_NAME = 'timesheet_sessionid'
+
+# Use session-based CSRF tokens for better reliability
+CSRF_USE_SESSIONS = True
 
 # Application definition
 

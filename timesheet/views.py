@@ -81,7 +81,16 @@ class ProjectListView(LoginRequiredMixin, ListView):
     paginate_by = 10
 
     def get_queryset(self):
-        queryset = super().get_queryset()
+        # Annotate with assigned employee count for efficiency
+        queryset = Project.objects.annotate(
+            assigned_count=Count('allocations', distinct=True)
+        ).order_by('-start_date', 'name')
+
+        user_employee = getattr(self.request.user, 'employee', None)
+        # Employees should only see projects they are allocated to
+        if user_employee and user_employee.role == 'EMPLOYEE' and not self.request.user.is_superuser:
+            queryset = queryset.filter(allocations__employee=user_employee).distinct()
+
         if self.request.GET.get('archived') == '1':
             return queryset.filter(is_archived=True)
         return queryset.filter(is_archived=False)
