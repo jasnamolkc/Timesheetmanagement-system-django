@@ -11,7 +11,7 @@
             <a href="{% url 'project_list' %}?archived=1" class="text-sm {% if show_archived %}text-blue-400 font-bold{% else %}text-slate-400 hover:text-slate-300{% endif %}">Archived</a>
         </div>
     </div>
-    {% if request.user.is_superuser or request.user.employee.role == 'ADMIN' or request.user.employee.role == 'MANAGER' %}
+    {% if request.user.is_superuser or request.user.employee and request.user.employee.role == 'ADMIN' or request.user.employee and request.user.employee.role == 'MANAGER' %}
     <a href="{% url 'project_create' %}" onclick="openModal(this.href); return false;" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-semibold transition-colors flex items-center">
         <i class="fas fa-plus mr-2"></i> New Project
     </a>
@@ -38,7 +38,7 @@
             <div class="flex items-center text-slate-400 text-xs">
                 <i class="fas fa-users mr-2"></i> {{ project.allocated_employees_count }} Assigned
             </div>
-            {% if request.user.is_superuser or request.user.employee.role == 'ADMIN' or request.user.employee.role == 'MANAGER' %}
+            {% if request.user.is_superuser or request.user.employee and request.user.employee.role == 'ADMIN' or request.user.employee and request.user.employee.role == 'MANAGER' %}
             <div class="flex space-x-2">
                 <a href="{% url 'project_edit' project.pk %}" onclick="openModal(this.href); return false;" title="Edit Project" class="p-2 text-slate-400 hover:text-blue-400 transition-colors">
                     <i class="fas fa-edit"></i>
