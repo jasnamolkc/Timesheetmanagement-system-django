@@ -132,6 +132,9 @@ class TimesheetEntry(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def clean(self):
+        if self.project and self.project.is_archived:
+            raise ValidationError(f"Cannot log hours for archived project {self.project.project_code}.")
+
         # Prevent logging hours if employee not allocated
         is_allocated = ProjectAllocation.objects.filter(
             employee=self.employee,
