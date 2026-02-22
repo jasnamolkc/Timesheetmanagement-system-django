@@ -26,11 +26,13 @@ class ProjectForm(forms.ModelForm):
 
     def clean(self):
         cleaned_data = super().clean()
-        instance = Project(**cleaned_data)
-        try:
-            instance.clean()
-        except ValidationError as e:
-            raise forms.ValidationError(e.messages)
+        if not self.errors:
+            for field, value in cleaned_data.items():
+                setattr(self.instance, field, value)
+            try:
+                self.instance.clean()
+            except ValidationError as e:
+                raise forms.ValidationError(e.messages)
         return cleaned_data
 
 class AllocationForm(forms.ModelForm):
@@ -55,10 +57,13 @@ class AllocationForm(forms.ModelForm):
     def clean(self):
         cleaned_data = super().clean()
         if not self.errors:
-            instance = ProjectAllocation(**cleaned_data)
+            # Update the current instance with cleaned_data to ensure clean() works correctly
+            for field, value in cleaned_data.items():
+                setattr(self.instance, field, value)
             try:
-                instance.clean()
+                self.instance.clean()
             except ValidationError as e:
+                # Add the error to the non-field errors
                 raise forms.ValidationError(e.messages)
         return cleaned_data
 
@@ -86,8 +91,8 @@ class TimesheetEntryForm(forms.ModelForm):
         if self.employee and not self.errors:
             # We need to set the employee on the instance before calling clean
             self.instance.employee = self.employee
-            self.instance.project = cleaned_data.get('project')
-            self.instance.date = cleaned_data.get('date')
+            for field, value in cleaned_data.items():
+                setattr(self.instance, field, value)
             try:
                 self.instance.clean()
             except ValidationError as e:
