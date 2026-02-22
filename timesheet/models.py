@@ -85,24 +85,37 @@ class ProjectAllocation(models.Model):
         ordering = ['-start_date']
 
     def clean(self):
-        # Prevent allocation > 100%
-        # This is a simplified check for overlapping periods
-        # In a real system, we'd need more complex logic for any date in the range
+        if self.start_date and self.end_date and self.end_date < self.start_date:
+            raise ValidationError("End date cannot be before start date.")
+
+        if not hasattr(self, 'employee') or self.employee is None:
+            return
+
+        # Improved check for allocation > 100% at any point in time
         existing_allocations = ProjectAllocation.objects.filter(
             employee=self.employee
         ).exclude(pk=self.pk)
 
-        # Check if total allocation for the period exceeds 100%
-        # For simplicity, we check if there's any overlap and sum it up
-        # This is basic and could be improved
-        total_allocation = self.allocation_percentage
-        for alloc in existing_allocations:
-            # If date ranges overlap
-            if not (self.end_date < alloc.start_date or self.start_date > alloc.end_date):
-                total_allocation += alloc.allocation_percentage
+        # Find all allocations that overlap with our range
+        overlapping = existing_allocations.filter(
+            start_date__lte=self.end_date,
+            end_date__gte=self.start_date
+        )
 
-        if total_allocation > 100:
-            raise ValidationError(f"Total allocation for this employee would exceed 100% (currently {total_allocation}%).")
+        # Check total allocation at each "event" date (start of any overlapping allocation)
+        check_dates = {self.start_date}
+        for alloc in overlapping:
+            if self.start_date <= alloc.start_date <= self.end_date:
+                check_dates.add(alloc.start_date)
+
+        for d in check_dates:
+            total = self.allocation_percentage
+            for alloc in overlapping:
+                if alloc.start_date <= d <= alloc.end_date:
+                    total += alloc.allocation_percentage
+
+            if total > 100:
+                raise ValidationError(f"Total allocation on {d} would be {total}%, which exceeds 100%.")
 
     def __str__(self):
         return f"{self.employee.user.username} -> {self.project.project_code}"
