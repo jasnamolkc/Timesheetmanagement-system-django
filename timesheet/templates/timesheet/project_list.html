@@ -36,7 +36,7 @@
 
         <div class="flex items-center justify-between pt-4 border-t border-slate-700/50">
             <div class="flex items-center text-slate-400 text-xs">
-                <i class="fas fa-users mr-2"></i> {{ project.allocated_employees_count }} Assigned
+                <i class="fas fa-users mr-2"></i> {{ project.assigned_count }} Assigned
             </div>
             {% if request.user.is_superuser or request.user.employee and request.user.employee.role == 'ADMIN' or request.user.employee and request.user.employee.role == 'MANAGER' %}
             <div class="flex space-x-2">
