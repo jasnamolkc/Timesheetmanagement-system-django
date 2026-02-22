@@ -159,7 +159,7 @@ class TimesheetListView(LoginRequiredMixin, ListView):
             queryset = queryset.filter(project_id=project_id)
 
         employee_id = self.request.GET.get('employee')
-        if employee_id and user_employee.role in ['ADMIN', 'MANAGER']:
+        if employee_id and (self.request.user.is_superuser or (user_employee and user_employee.role in ['ADMIN', 'MANAGER'])):
             queryset = queryset.filter(employee_id=employee_id)
 
         start_date = self.request.GET.get('start_date')
@@ -176,7 +176,7 @@ class TimesheetListView(LoginRequiredMixin, ListView):
         context = super().get_context_data(**kwargs)
         user_employee = getattr(self.request.user, 'employee', None)
 
-        if user_employee and user_employee.role in ['ADMIN', 'MANAGER']:
+        if self.request.user.is_superuser or (user_employee and user_employee.role in ['ADMIN', 'MANAGER']):
             context['all_employees'] = Employee.objects.select_related('user').all()
             context['all_projects'] = Project.objects.all()
         elif user_employee:
