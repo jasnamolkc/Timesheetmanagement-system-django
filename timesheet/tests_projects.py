@@ -104,3 +104,28 @@ class ProjectModuleTests(TestCase):
         form = TimesheetEntryForm(employee=self.employee)
         self.assertIn(active_project, form.fields['project'].queryset)
         self.assertNotIn(archived_project, form.fields['project'].queryset)
+
+    def test_employee_project_visibility(self):
+        # Create two projects
+        p1 = Project.objects.create(name='Project 1', project_code='P1', start_date=timezone.now().date())
+        p2 = Project.objects.create(name='Project 2', project_code='P2', start_date=timezone.now().date())
+
+        # Allocate employee only to Project 1
+        ProjectAllocation.objects.create(
+            employee=self.employee, project=p1, allocation_percentage=50,
+            role_in_project='Dev', start_date=timezone.now().date(), end_date=timezone.now().date() + timedelta(days=10)
+        )
+
+        # Login as employee
+        self.client.login(username='employee', password='password')
+
+        # Employee should only see Project 1
+        response = self.client.get(reverse('project_list'))
+        self.assertEqual(len(response.context['projects']), 1)
+        self.assertEqual(response.context['projects'][0].name, 'Project 1')
+
+        # Admin should see both
+        self.client.login(username='admin', password='password')
+        response = self.client.get(reverse('project_list'))
+        # Both projects are active, so admin sees both
+        self.assertEqual(len(response.context['projects']), 2)
