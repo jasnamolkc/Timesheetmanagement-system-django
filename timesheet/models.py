@@ -105,7 +105,7 @@ class Project(models.Model):
 class ProjectAllocation(models.Model):
     employee = models.ForeignKey(Employee, on_delete=models.CASCADE, related_name='allocations')
     project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='allocations')
-    allocation_percentage = models.DecimalField(max_digits=5, decimal_places=2)
+    allocation_percentage = models.DecimalField(max_digits=5, decimal_places=2,null=True, blank=True)
     role_in_project = models.CharField(max_length=100)
     start_date = models.DateField()
     end_date = models.DateField()

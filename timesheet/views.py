@@ -117,6 +117,7 @@ class ProjectListView(LoginRequiredMixin, ListView):
                 queryset = queryset.filter(is_archived=True)
             else:
                 queryset = queryset.filter(is_archived=False)
+       
 
         return queryset
         
@@ -140,7 +141,30 @@ class ProjectUpdateView(ManagerRequiredMixin, AjaxTemplateMixin, UpdateView):
     form_class = ProjectForm
     template_name = 'timesheet/form_page.html'
     success_url = reverse_lazy('project_list')
+def allocate_employee(request, project_id):
+    project = get_object_or_404(Project, pk=project_id)
 
+    if request.method == "POST":
+        employee_id = request.POST.get("employee")
+        employee = Employee.objects.get(id=employee_id)
+        start_date = request.POST.get("start_date")
+        end_date = request.POST.get("end_date")
+
+        ProjectAllocation.objects.get_or_create(
+            project=project,
+            employee=employee,defaults={"allocation_percentage": 100},
+            start_date=start_date,
+            end_date=end_date
+        )
+
+        return redirect("project_list")
+
+    employees = Employee.objects.all()
+
+    return render(request, "projects/allocate_employee.html", {
+        "project": project,
+        "employees": employees
+    })
 # Allocation Views
 class AllocationListView(ManagerRequiredMixin, ListView):
     model = ProjectAllocation

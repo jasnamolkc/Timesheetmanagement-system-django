@@ -36,7 +36,7 @@ class ProjectForm(forms.ModelForm):
 class AllocationForm(forms.ModelForm):
     class Meta:
         model = ProjectAllocation
-        fields = ['employee', 'project', 'allocation_percentage', 'role_in_project', 'start_date', 'end_date']
+        fields = ['employee', 'project',  'role_in_project', 'start_date', 'end_date']
         widgets = {
             'start_date': forms.DateInput(attrs={'type': 'date'}),
             'end_date': forms.DateInput(attrs={'type': 'date'}),

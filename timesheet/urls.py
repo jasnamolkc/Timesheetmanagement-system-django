@@ -13,6 +13,7 @@ urlpatterns = [
     path('projects/create/', views.ProjectCreateView.as_view(), name='project_create'),
     path('projects/<int:pk>/edit/', views.ProjectUpdateView.as_view(), name='project_edit'),
     path('projects/<int:pk>/archive/', views.ProjectArchiveView.as_view(), name='project_archive'),
+    path('projects/<int:project_id>/allocate/',views.allocate_employee,name='allocate_employee'),
 
     # Allocations
     path('allocations/', views.AllocationListView.as_view(), name='allocation_list'),

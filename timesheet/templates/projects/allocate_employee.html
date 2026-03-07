@@ -1,0 +1,61 @@
+<div class="p-6">
+    <h2 class="text-xl font-bold mb-4 text-white">
+        Allocate Employee
+    </h2>
+
+```
+<p class="text-sm text-slate-400 mb-4">
+    Project: <strong>{{ project.name }}</strong>
+</p>
+
+<form method="POST" action="{% url 'allocate_employee' project.id %}">
+    {% csrf_token %}
+
+    <!-- Employee -->
+    <label class="block mb-1 text-sm text-slate-300">Employee</label>
+    <select name="employee"
+        class="w-full bg-slate-800 border border-slate-700 text-white p-2 rounded mb-4 focus:ring-2 focus:ring-blue-500">
+        {% for employee in employees %}
+            <option value="{{ employee.id }}">
+                {{ employee.user.get_full_name }}
+            </option>
+        {% endfor %}
+    </select>
+
+    <!-- Allocation Percentage -->
+    <!-- <label class="block mb-1 text-sm text-slate-300">Allocation %</label>
+    <input
+        type="number"
+        name="allocation_percentage"
+        min="1"
+        max="100"
+        required
+        class="w-full bg-slate-800 border border-slate-700 text-white p-2 rounded mb-4 focus:ring-2 focus:ring-blue-500"
+    > -->
+
+    <!-- Start Date -->
+    <label class="block mb-1 text-sm text-slate-300">Start Date</label>
+    <input
+        type="date"
+        name="start_date"
+        required
+        class="w-full bg-slate-800 border border-slate-700 text-white p-2 rounded mb-4 focus:ring-2 focus:ring-blue-500"
+    >
+
+    <!-- End Date -->
+    <label class="block mb-1 text-sm text-slate-300">End Date</label>
+    <input
+        type="date"
+        name="end_date"
+        required
+        class="w-full bg-slate-800 border border-slate-700 text-white p-2 rounded mb-4 focus:ring-2 focus:ring-blue-500"
+    >
+
+    <button type="submit"
+        class="mt-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
+        Assign
+    </button>
+</form>
+
+
+</div>

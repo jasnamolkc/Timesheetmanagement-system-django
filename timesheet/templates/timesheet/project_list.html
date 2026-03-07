@@ -35,11 +35,29 @@
         <p class="text-slate-400 text-sm mb-6 line-clamp-2">{{ project.description }}</p>
 
         <div class="flex items-center justify-between pt-4 border-t border-slate-700/50">
-            <div class="flex items-center text-slate-400 text-xs">
+            <!-- <div class="flex items-center text-slate-400 text-xs">
                 <i class="fas fa-users mr-2"></i> {{ project.allocated_employees_count }} Assigned
-            </div>
+            </div> -->
+           <div class="relative group flex items-center text-slate-400 text-xs">
+    <i class="fas fa-users mr-2"></i>
+    {{ project.allocated_employees_count }} Assigned
+
+    <div class="absolute bottom-full left-0 mb-2 hidden group-hover:block
+        bg-slate-900 text-white text-xs px-3 py-2 rounded shadow-lg whitespace-pre-line z-10">
+        {% for alloc in project.allocations.all %}
+            {{ alloc.employee.user.get_full_name }}
+        {% empty %}
+            No employees assigned
+        {% endfor %}
+    </div>
+</div>
             {% if request.user.is_superuser or request.user.employee.role == 'ADMIN' or request.user.employee.role == 'MANAGER' %}
             <div class="flex space-x-2">
+                <a href="{% url 'allocate_employee' project.pk %}" 
+                    onclick="openModal(this.href); return false;"
+                    class="p-2 text-slate-400 hover:text-green-400">
+                        <i class="fas fa-user-plus"></i>
+                    </a>
                 <a href="{% url 'project_edit' project.pk %}" onclick="openModal(this.href); return false;" title="Edit Project" class="p-2 text-slate-400 hover:text-blue-400 transition-colors">
                     <i class="fas fa-edit"></i>
                 </a>
