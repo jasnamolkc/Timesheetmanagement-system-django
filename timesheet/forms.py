@@ -17,7 +17,7 @@ class RegistrationForm(UserCreationForm):
 class ProjectForm(forms.ModelForm):
     class Meta:
         model = Project
-        fields = ['name', 'project_code', 'status', 'description', 'start_date', 'end_date', 'is_archived']
+        fields = ['name', 'project_code', 'status', 'description', 'start_date', 'end_date']
         widgets = {
             'start_date': forms.DateInput(attrs={'type': 'date'}),
             'end_date': forms.DateInput(attrs={'type': 'date'}),
