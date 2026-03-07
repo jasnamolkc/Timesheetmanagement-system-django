@@ -30,4 +30,8 @@ urlpatterns = [
     # Reports
     path('reports/', views.SummaryReportView.as_view(), name='summary_report'),
     path('reports/export/', views.ExportCSVView.as_view(), name='export_csv'),
+
+    #Employee
+    path("employees/", views.EmployeeListView.as_view(), name="employee_list"),
+    path("employees/<int:pk>/approve/", views.approve_employee, name="approve_employee"),   
 ]

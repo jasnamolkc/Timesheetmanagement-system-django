@@ -522,3 +522,36 @@ class ExportCSVView(ManagerRequiredMixin, View):
             writer.writerow(entry)
 
         return response
+from django.db.models import Q
+
+class EmployeeListView(ListView):
+    model = Employee
+    template_name = "employees/employee_list.html"
+    context_object_name = "employees"
+    paginate_by = 10
+
+    def get_queryset(self):
+        queryset = Employee.objects.select_related("user")
+
+        search = self.request.GET.get("search")
+        role = self.request.GET.get("role")
+
+        if search:
+            queryset = queryset.filter(
+                Q(user__first_name__icontains=search) |
+                Q(user__last_name__icontains=search) |
+                Q(employee_code__icontains=search)
+            )
+
+        if role:
+            queryset = queryset.filter(role=role)
+
+        return queryset.order_by("-id")
+from django.shortcuts import redirect, get_object_or_404
+
+
+def approve_employee(request, pk):
+    emp = get_object_or_404(Employee, pk=pk)
+    emp.status = "APPROVED"
+    emp.save()
+    return redirect("employee_list")

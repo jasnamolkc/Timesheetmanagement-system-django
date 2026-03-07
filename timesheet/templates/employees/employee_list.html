@@ -1,0 +1,174 @@
+{% extends "base.html" %}
+{% block title %}Employees{% endblock %}
+
+{% block content %}
+
+<div class="flex items-center justify-between mb-6">
+    <h2 class="text-3xl font-bold">Employees</h2>
+</div>
+
+<!-- Search + Filter -->
+<div class="flex gap-3 mb-6">
+
+<input
+    type="text"
+    id="searchInput"
+    placeholder="Search employee..."
+    class="bg-slate-800 border border-slate-700 px-4 py-2 rounded-lg text-sm w-64"
+/>
+
+<select
+    id="roleFilter"
+    class="bg-slate-800 border border-slate-700 px-4 py-2 rounded-lg text-sm"
+>
+<option value="">All Roles</option>
+<option value="ADMIN">Admin</option>
+<option value="MANAGER">Manager</option>
+<option value="EMPLOYEE">Employee</option>
+</select>
+
+</div>
+
+<!-- Employees Table -->
+<div class="bg-slate-800 rounded-xl border border-slate-700 overflow-hidden">
+
+<table class="w-full text-sm">
+
+<thead class="bg-slate-700 text-slate-300">
+<tr>
+<th class="p-3 text-left">Name</th>
+<th class="p-3 text-left">Employee Code</th>
+<th class="p-3 text-left">Role</th>
+<th class="p-3 text-left">Status</th>
+<th class="p-3 text-left">Action</th>
+</tr>
+</thead>
+
+<tbody id="employeeTable">
+
+{% for emp in employees %}
+
+<tr
+class="border-t border-slate-700"
+data-name="{{ emp.user.get_full_name|default:emp.user.username|lower }}"
+data-code="{{ emp.employee_code|lower }}"
+data-role="{{ emp.role }}"
+>
+
+<td class="p-3">
+{{ emp.user.get_full_name|default:emp.user.username }}
+</td>
+
+<td class="p-3">
+{{ emp.employee_code }}
+</td>
+
+<td class="p-3">
+{{ emp.role }}
+</td>
+
+<td class="p-3">
+
+{% if emp.status == "APPROVED" %}
+
+<span class="text-green-400 bg-green-400/10 px-2 py-1 rounded text-xs">
+Approved
+</span>
+
+{% else %}
+
+<span class="text-yellow-400 bg-yellow-400/10 px-2 py-1 rounded text-xs">
+Pending
+</span>
+
+{% endif %}
+
+</td>
+
+<td class="p-3">
+
+{% if emp.status == "PENDING" %}
+
+<a href="{% url 'approve_employee' emp.id %}"
+class="text-green-400 hover:text-green-300 text-sm">
+Approve
+</a>
+
+{% else %}
+
+<span class="text-slate-500 text-sm">—</span>
+
+{% endif %}
+
+</td>
+
+</tr>
+{% empty %}
+
+<tr id="noDataRow">
+<td colspan="5" class="text-center text-slate-400 py-6">
+No data existing
+</td>
+</tr>
+
+{% endfor %}
+<tr id="noDataRow" style="display:none;">
+<td colspan="5" class="text-center text-slate-400 py-6">
+No data existing
+</td>
+</tr>
+
+</tbody>
+
+</table>
+
+</div>
+
+<!-- JavaScript Filter -->
+
+<script>
+
+const searchInput = document.getElementById("searchInput");
+const roleFilter = document.getElementById("roleFilter");
+const rows = document.querySelectorAll("#employeeTable tr[data-name]");
+const noDataRow = document.getElementById("noDataRow");
+
+function filterEmployees() {
+
+    const searchValue = searchInput.value.toLowerCase();
+    const roleValue = roleFilter.value;
+
+    let visibleCount = 0;
+
+    rows.forEach(row => {
+
+        const name = row.dataset.name || "";
+        const code = row.dataset.code || "";
+        const role = row.dataset.role || "";
+
+        const matchSearch = name.includes(searchValue) || code.includes(searchValue);
+        const matchRole = roleValue === "" || role === roleValue;
+
+        if (matchSearch && matchRole) {
+            row.style.display = "";
+            visibleCount++;
+        } else {
+            row.style.display = "none";
+        }
+
+    });
+
+    if (visibleCount === 0) {
+        noDataRow.style.display = "";
+    } else {
+        noDataRow.style.display = "none";
+    }
+
+}
+
+searchInput.addEventListener("keyup", filterEmployees);
+roleFilter.addEventListener("change", filterEmployees);
+
+</script>
+
+{% endblock %}
