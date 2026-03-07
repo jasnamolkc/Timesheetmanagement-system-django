@@ -48,6 +48,8 @@ class Employee(models.Model):
         if not self.employee_id:
             self.employee_id = self.employee_code
         super().save(*args, **kwargs)
+    def __str__(self):
+        return f"{self.user.get_full_name()} ({self.employee_code})"
     # def save(self, *args, **kwargs):
     #     if not self.employee_code:
     #         with transaction.atomic():
@@ -78,42 +80,97 @@ class Employee(models.Model):
     # def __str__(self):
     #     return f"{self.user.get_full_name()} ({self.employee_code})"
 
+
+from django.db.models import Q, Sum
+
+
 class Project(models.Model):
+
     STATUS_CHOICES = (
-    ('REQUIREMENT_ANALYSIS', 'Requirement Analysis'),
-    ('DEVELOPMENT', 'Development'),
-    ('TESTING', 'Testing'),
-    ('DEPLOYMENT', 'Deployment'),
-    ('COMPLETED', 'Completed'),
+        ('REQUIREMENT_ANALYSIS', 'Requirement Analysis'),
+        ('DEVELOPMENT', 'Development'),
+        ('TESTING', 'Testing'),
+        ('DEPLOYMENT', 'Deployment'),
+        ('COMPLETED', 'Completed'),
     )
+
     name = models.CharField(max_length=200)
-    project_code = models.CharField(max_length=50, unique=True)
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='PLANNING')
+
+    project_code = models.CharField(
+        max_length=50,
+        unique=True
+    )
+
+    status = models.CharField(
+        max_length=25,
+        choices=STATUS_CHOICES,
+        default='REQUIREMENT_ANALYSIS'
+    )
+
     description = models.TextField(blank=True)
+
     start_date = models.DateField()
-    end_date = models.DateField(null=True, blank=True)
+
+    end_date = models.DateField(
+        null=True,
+        blank=True
+    )
+
     is_archived = models.BooleanField(default=False)
 
     class Meta:
         ordering = ['-start_date', 'name']
 
     def clean(self):
-        if self.start_date and self.end_date and self.end_date < self.start_date:
-            raise ValidationError("End date cannot be before start date.")
+        if self.start_date and self.end_date:
+            if self.end_date < self.start_date:
+                raise ValidationError(
+                    "End date cannot be before start date."
+                )
 
     def __str__(self):
         return f"{self.project_code} - {self.name}"
 
     @property
     def allocated_employees_count(self):
-        return self.allocations.filter(end_date__gte=timezone.now().date()).count()
+        today = timezone.now().date()
+
+        return self.allocations.filter(
+            Q(end_date__gte=today) | Q(end_date__isnull=True)
+        ).count()
+    @property
+    def progress(self):
+        total = self.tasks.count()
+        if total == 0:
+            return 0
+        completed = self.tasks.filter(status="COMPLETED").count()
+        return int((completed / total) * 100)
 
 class ProjectAllocation(models.Model):
-    employee = models.ForeignKey(Employee, on_delete=models.CASCADE, related_name='allocations')
-    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='allocations')
-    allocation_percentage = models.DecimalField(max_digits=5, decimal_places=2,null=True, blank=True)
+
+    employee = models.ForeignKey(
+        'Employee',
+        on_delete=models.CASCADE,
+        related_name='allocations'
+    )
+
+    project = models.ForeignKey(
+        Project,
+        on_delete=models.CASCADE,
+        related_name='allocations'
+    )
+
+    allocation_percentage = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        null=True,
+        blank=True
+    )
+
     role_in_project = models.CharField(max_length=100)
+
     start_date = models.DateField()
+
     end_date = models.DateField()
 
     class Meta:
@@ -121,50 +178,174 @@ class ProjectAllocation(models.Model):
         ordering = ['-start_date']
 
     def clean(self):
-        # Prevent allocation > 100%
-        # This is a simplified check for overlapping periods
-        # In a real system, we'd need more complex logic for any date in the range
+
         existing_allocations = ProjectAllocation.objects.filter(
             employee=self.employee
         ).exclude(pk=self.pk)
 
-        # Check if total allocation for the period exceeds 100%
-        # For simplicity, we check if there's any overlap and sum it up
-        # This is basic and could be improved
-        total_allocation = self.allocation_percentage
+        total_allocation = self.allocation_percentage or 0
+
         for alloc in existing_allocations:
-            # If date ranges overlap
+
             if not (self.end_date < alloc.start_date or self.start_date > alloc.end_date):
-                total_allocation += alloc.allocation_percentage
+
+                total_allocation += alloc.allocation_percentage or 0
 
         if total_allocation > 100:
-            raise ValidationError(f"Total allocation for this employee would exceed 100% (currently {total_allocation}%).")
-
+            raise ValidationError(
+                f"Total allocation exceeds 100% (currently {total_allocation}%)."
+            )
+        if self.end_date < self.start_date:
+            raise ValidationError("End date cannot be before start date.")
     def __str__(self):
         return f"{self.employee.user.username} -> {self.project.project_code}"
 
-class TimesheetEntry(models.Model):
-    employee = models.ForeignKey(Employee, on_delete=models.CASCADE, related_name='timesheets')
-    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='timesheets')
-    date = models.DateField(default=timezone.now)
-    hours = models.DecimalField(max_digits=4, decimal_places=2)
-    description = models.TextField()
-    task_reference = models.CharField(max_length=100, blank=True)
-    billable = models.BooleanField(default=True)
+
+class Task(models.Model):
+
+    STATUS_CHOICES = (
+        ("PENDING", "Pending"),
+        ("IN_PROGRESS", "In Progress"),
+        ("COMPLETED", "Completed"),
+    )
+
+    project = models.ForeignKey(
+        Project,
+        on_delete=models.CASCADE,
+        related_name="tasks"
+    )
+
+    title = models.CharField(max_length=200)
+
+    description = models.TextField(blank=True)
+
+    assigned_to = models.ForeignKey(
+        'Employee',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="tasks"
+    )
+
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default="PENDING"
+    )
+
+    estimated_hours = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        default=0
+    )
+
     created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.project.project_code} - {self.title}"
+
+
+class TimesheetEntry(models.Model):
+
+    employee = models.ForeignKey(
+        'Employee',
+        on_delete=models.CASCADE,
+        related_name='timesheets'
+    )
+
+    project = models.ForeignKey(
+        Project,
+        on_delete=models.CASCADE,
+        related_name='timesheets'
+    )
+
+    task = models.ForeignKey(
+        Task,
+        on_delete=models.CASCADE,
+        related_name='timesheets',
+        null=True,
+        blank=True
+    )
+
+    date = models.DateField(default=timezone.now)
+
+    hours = models.DecimalField(
+        max_digits=4,
+        decimal_places=2
+    )
+
+    description = models.TextField()
+
+    billable = models.BooleanField(default=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
     updated_at = models.DateTimeField(auto_now=True)
 
     def clean(self):
-        # Prevent logging hours if employee not allocated
+
+        # Check allocation
         is_allocated = ProjectAllocation.objects.filter(
             employee=self.employee,
             project=self.project,
-            start_date__lte=self.date,
-            end_date__gte=self.date
+            start_date__lte=self.date
+        ).filter(
+            Q(end_date__gte=self.date) | Q(end_date__isnull=True)
         ).exists()
 
         if not is_allocated:
-            raise ValidationError(f"Employee is not allocated to project {self.project.project_code} on {self.date}.")
+            raise ValidationError(
+                f"Employee not allocated to project {self.project.project_code}"
+            )
+
+        # Prevent logging for completed project
+        if self.project.status == "COMPLETED":
+            raise ValidationError(
+                "Cannot log time for completed project."
+            )
+
+        # Prevent logging for archived project
+        if self.project.is_archived:
+            raise ValidationError(
+                "Cannot log time for archived project."
+            )
+
+        # Check task belongs to project
+        if self.task and self.task.project != self.project:
+            raise ValidationError(
+                "Selected task does not belong to this project."
+            )
+
+        # Check daily hours limit
+        existing_hours = TimesheetEntry.objects.filter(
+            employee=self.employee,
+            date=self.date
+        ).exclude(pk=self.pk).aggregate(
+            Sum('hours')
+        )['hours__sum'] or 0
+
+        if existing_hours + self.hours > 12:
+            raise ValidationError(
+                "Total hours for this day cannot exceed 12."
+            )
+        if self.date > timezone.now().date():
+            raise ValidationError("Cannot log timesheet for future date.")
+        if self.task and self.task.status == "COMPLETED":
+            raise ValidationError("Cannot log hours for completed task.")
+
+    def save(self, *args, **kwargs):
+
+        self.full_clean()
+
+        super().save(*args, **kwargs)
+
+        # Auto complete project if all tasks finished
+        project = self.project
+        tasks = project.tasks.all()
+
+        if tasks.exists() and not tasks.exclude(status="COMPLETED").exists():
+            project.status = "COMPLETED"
+            project.save()
 
     def __str__(self):
         return f"{self.employee.user.username} - {self.project.project_code} - {self.date}"

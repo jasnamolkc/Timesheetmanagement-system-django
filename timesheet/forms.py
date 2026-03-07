@@ -36,7 +36,7 @@ class ProjectForm(forms.ModelForm):
 class AllocationForm(forms.ModelForm):
     class Meta:
         model = ProjectAllocation
-        fields = ['employee', 'project',  'role_in_project', 'start_date', 'end_date']
+        fields = ['employee', 'project', 'role_in_project', 'start_date', 'end_date']
         widgets = {
             'start_date': forms.DateInput(attrs={'type': 'date'}),
             'end_date': forms.DateInput(attrs={'type': 'date'}),
@@ -65,7 +65,7 @@ class AllocationForm(forms.ModelForm):
 class TimesheetEntryForm(forms.ModelForm):
     class Meta:
         model = TimesheetEntry
-        fields = ['project', 'date', 'hours', 'description', 'task_reference', 'billable']
+        fields = ['project', 'date', 'hours', 'description', 'task', 'billable']
         widgets = {
             'date': forms.DateInput(attrs={'type': 'date'}),
             'description': forms.Textarea(attrs={'rows': 3}),

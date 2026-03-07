@@ -7,11 +7,12 @@
 
 <div class="flex justify-between items-center mb-6">
     <h2 class="text-3xl font-bold">Timesheets</h2>
+    
     <a href="{% url 'timesheet_create' %}" 
-       onclick="openModal(this.href); return false;"
-       class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-semibold">
-        <i class="fas fa-plus mr-2"></i> Log Entry
-    </a>
+   onclick="openModal(this.href); return false;"
+   class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-semibold">
+    <i class="fas fa-plus mr-2"></i> Create Timesheet
+</a>
 </div>
 
 <div id="modalOverlay"
