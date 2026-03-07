@@ -10,7 +10,7 @@ import csv
 from datetime import datetime, timedelta
 
 from .models import Project, ProjectAllocation, TimesheetEntry, Employee
-from .forms import ProjectForm, AllocationForm, TimesheetEntryForm, RegistrationForm
+from .forms import *
 
 # Template Mixins
 class AjaxTemplateMixin:
@@ -555,3 +555,150 @@ def approve_employee(request, pk):
     emp.status = "APPROVED"
     emp.save()
     return redirect("employee_list")
+from django.shortcuts import render, get_object_or_404
+from django.http import JsonResponse
+from .models import Task, Project, Employee
+from django.db.models import Q
+
+
+def task_page(request):
+    tasks = Task.objects.select_related("project","assigned_to")
+    projects = Project.objects.all()
+
+    return render(request,"tasks/task_list.html",{
+        "tasks":tasks,
+        "projects":projects
+    })
+
+
+def task_list(request):
+
+    search = request.GET.get("search")
+    project = request.GET.get("project")
+
+    tasks = Task.objects.select_related("project", "assigned_to")
+
+    if search:
+        tasks = tasks.filter(
+            Q(title__icontains=search) |
+            Q(description__icontains=search)
+        )
+
+    if project:
+        tasks = tasks.filter(project_id=project)
+
+    data = []
+
+    for t in tasks:
+        data.append({
+            "id": t.id,
+            "title": t.title,
+            "project": t.project.name,
+            "employee": t.assigned_to.user.username if t.assigned_to else "",
+            "status": t.status,
+        })
+
+    return JsonResponse(data, safe=False)
+
+
+# def task_create(request):
+#     if request.method == "POST":
+
+#         task = Task(
+#             title=request.POST.get("title"),
+#             project_id=request.POST.get("project"),
+#             assigned_to_id=request.POST.get("assigned_to") or None,
+#             status=request.POST.get("status"),
+#             estimated_hours=request.POST.get("estimated_hours") or 0,
+#             description=request.POST.get("description") or ""
+#         )
+
+#         task.full_clean()
+#         task.save()
+
+#         return JsonResponse({
+#             "success": True,
+#             "redirect": "/tasks/"   # Task list page URL
+#         })
+
+#     projects = Project.objects.all()
+
+#     # Only employees
+#     employees = Employee.objects.filter(role="EMPLOYEE", is_active=True)
+
+#     return render(request, "tasks/task_form.html", {
+#         "projects": projects,
+#         "employees": employees
+#     })
+class TaskCreateView(LoginRequiredMixin, CreateView):
+    model = Task
+    form_class = TaskForm
+    template_name = "tasks/modal_form.html"
+    success_url = reverse_lazy("task_page")
+
+    def form_valid(self, form):
+        self.object = form.save()
+
+        if self.request.headers.get("X-Requested-With") == "XMLHttpRequest":
+            return JsonResponse({
+                "success": True,
+                "redirect": reverse("task_page")
+            })
+
+        return redirect(self.success_url)
+
+    def form_invalid(self, form):
+        if self.request.headers.get("X-Requested-With") == "XMLHttpRequest":
+            html = render_to_string(
+                "tasks/modal_form.html",
+                {"form": form},
+                request=self.request
+            )
+            return JsonResponse({"html": html}, status=400)
+
+        return super().form_invalid(form)
+
+    def get_template_names(self):
+        if self.request.headers.get("X-Requested-With") == "XMLHttpRequest":
+            return ["tasks/modal_form.html"]
+        return [self.template_name]
+
+class TaskUpdateView(LoginRequiredMixin, UpdateView):
+    model = Task
+    form_class = TaskForm
+    template_name = "tasks/modal_form.html"
+    success_url = reverse_lazy("task_page")
+
+    def form_valid(self, form):
+        self.object = form.save()
+
+        if self.request.headers.get("X-Requested-With") == "XMLHttpRequest":
+            return JsonResponse({
+                "success": True,
+                "redirect": reverse("task_page")
+            })
+
+        return redirect(self.success_url)
+
+    def form_invalid(self, form):
+        if self.request.headers.get("X-Requested-With") == "XMLHttpRequest":
+            html = render_to_string(
+                "tasks/modal_form.html",
+                {"form": form},
+                request=self.request
+            )
+            return JsonResponse({"html": html}, status=400)
+
+        return super().form_invalid(form)
+
+    def get_template_names(self):
+        if self.request.headers.get("X-Requested-With") == "XMLHttpRequest":
+            return ["tasks/modal_form.html"]
+        return [self.template_name]
+
+def task_delete(request, id):
+
+    task = get_object_or_404(Task, id=id)
+    task.delete()
+
+    return JsonResponse({"status": "deleted"})

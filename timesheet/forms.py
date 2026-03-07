@@ -93,3 +93,33 @@ class TimesheetEntryForm(forms.ModelForm):
             except ValidationError as e:
                 raise forms.ValidationError(e.messages)
         return cleaned_data
+from django import forms
+from .models import Task, Employee
+
+
+class TaskForm(forms.ModelForm):
+
+    class Meta:
+        model = Task
+        fields = [
+            "project",
+            "title",
+            "description",
+            "assigned_to",
+            "status",
+            "estimated_hours",
+        ]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # Only employees in dropdown (no users)
+        self.fields["assigned_to"].queryset = Employee.objects.filter(
+            is_active=True
+        )
+
+        # Optional fields styling (if using crispy not required)
+        for field in self.fields.values():
+            field.widget.attrs.update({
+                "class": "w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200"
+            })

@@ -30,6 +30,10 @@
                 <a href="{% url 'project_list' %}" class="flex items-center px-4 py-3 text-sm font-medium rounded-lg hover:bg-slate-700 transition-colors {% if 'project' in request.path %}sidebar-active text-blue-400{% endif %}">
                     <i class="fas fa-project-diagram mr-3 w-5"></i> Projects
                 </a>
+                <a href="{% url 'task_page' %}" 
+                class="flex items-center px-4 py-3 text-sm font-medium rounded-lg hover:bg-slate-700 transition-colors {% if 'task' in request.path %}sidebar-active text-blue-400{% endif %}">
+                <i class="fas fa-tasks mr-3 w-5"></i> Tasks
+                </a>
                 {% if request.user.is_superuser or request.user.employee.role == 'ADMIN' or request.user.employee.role == 'MANAGER' %}
                 <a href="{% url 'allocation_list' %}" class="flex items-center px-4 py-3 text-sm font-medium rounded-lg hover:bg-slate-700 transition-colors {% if 'allocation' in request.path %}sidebar-active text-blue-400{% endif %}">
                     <i class="fas fa-user-tag mr-3 w-5"></i> Allocations

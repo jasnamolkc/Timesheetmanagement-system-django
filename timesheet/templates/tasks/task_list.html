@@ -1,0 +1,207 @@
+{% extends "base.html" %}
+{% block title %}Tasks{% endblock %}
+
+{% block content %}
+
+<div class="flex items-center justify-between mb-6">
+    <h2 class="text-3xl font-bold">Tasks</h2>
+
+    <button onclick="openModal('{% url 'task_create' %}')"
+        class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg text-sm font-medium">
+        + Create Task
+    </button>
+</div>
+
+<!-- Search + Filter -->
+<div class="flex gap-3 mb-6">
+
+<input
+    type="text"
+    id="searchInput"
+    placeholder="Search task..."
+    class="bg-slate-800 border border-slate-700 px-4 py-2 rounded-lg text-sm w-64"
+/>
+
+<select
+    id="statusFilter"
+    class="bg-slate-800 border border-slate-700 px-4 py-2 rounded-lg text-sm"
+>
+<option value="">All Status</option>
+<option value="PENDING">Pending</option>
+<option value="IN_PROGRESS">In Progress</option>
+<option value="COMPLETED">Completed</option>
+</select>
+
+<select
+    id="projectFilter"
+    class="bg-slate-800 border border-slate-700 px-4 py-2 rounded-lg text-sm"
+>
+<option value="">All Projects</option>
+
+{% for project in projects %}
+<option value="{{ project.id }}">{{ project.name }}</option>
+{% endfor %}
+
+</select>
+
+</div>
+
+<!-- Tasks Table -->
+<div class="bg-slate-800 rounded-xl border border-slate-700 overflow-hidden">
+
+<table class="w-full text-sm">
+
+<thead class="bg-slate-700 text-slate-300">
+<tr>
+<th class="p-3 text-left">Title</th>
+<th class="p-3 text-left">Project</th>
+<th class="p-3 text-left">Assigned To</th>
+<th class="p-3 text-left">Status</th>
+<th class="p-3 text-left">Action</th>
+</tr>
+</thead>
+
+<tbody id="taskTable">
+
+{% for task in tasks %}
+
+<tr
+class="border-t border-slate-700"
+data-title="{{ task.title|lower }}"
+data-project="{{ task.project.id }}"
+data-status="{{ task.status }}"
+>
+
+<td class="p-3">
+{{ task.title }}
+</td>
+
+<td class="p-3">
+{{ task.project.name }}
+</td>
+
+<td class="p-3">
+{% if task.assigned_to %}
+{{ task.assigned_to.user.get_full_name|default:task.assigned_to.user.username }}
+{% else %}
+<span class="text-slate-400">Unassigned</span>
+{% endif %}
+</td>
+
+<td class="p-3">
+
+{% if task.status == "COMPLETED" %}
+
+<span class="text-green-400 bg-green-400/10 px-2 py-1 rounded text-xs">
+Completed
+</span>
+
+{% elif task.status == "IN_PROGRESS" %}
+
+<span class="text-blue-400 bg-blue-400/10 px-2 py-1 rounded text-xs">
+In Progress
+</span>
+
+{% else %}
+
+<span class="text-yellow-400 bg-yellow-400/10 px-2 py-1 rounded text-xs">
+Pending
+</span>
+
+{% endif %}
+
+</td>
+
+<td class="p-3 flex gap-3">
+
+<a
+onclick="openModal('{% url 'task_update' task.id %}')"
+class="text-blue-400 hover:text-blue-300 text-sm cursor-pointer">
+Edit
+</a>
+
+<a
+onclick="openModal('{% url 'task_delete' task.id %}')"
+class="text-red-400 hover:text-red-300 text-sm cursor-pointer">
+Delete
+</a>
+
+</td>
+
+</tr>
+
+{% empty %}
+
+<tr id="noDataRow">
+<td colspan="5" class="text-center text-slate-400 py-6">
+No data existing
+</td>
+</tr>
+
+{% endfor %}
+
+<tr id="noDataRow" style="display:none;">
+<td colspan="5" class="text-center text-slate-400 py-6">
+No data existing
+</td>
+</tr>
+
+</tbody>
+
+</table>
+
+</div>
+
+<!-- JavaScript Filter -->
+
+<script>
+
+const searchInput = document.getElementById("searchInput");
+const statusFilter = document.getElementById("statusFilter");
+const projectFilter = document.getElementById("projectFilter");
+
+const rows = document.querySelectorAll("#taskTable tr[data-title]");
+const noDataRow = document.getElementById("noDataRow");
+
+function filterTasks() {
+
+    const searchValue = searchInput.value.toLowerCase();
+    const statusValue = statusFilter.value;
+    const projectValue = projectFilter.value;
+
+    let visibleCount = 0;
+
+    rows.forEach(row => {
+
+        const title = row.dataset.title || "";
+        const status = row.dataset.status || "";
+        const project = row.dataset.project || "";
+
+        const matchSearch = title.includes(searchValue);
+        const matchStatus = statusValue === "" || status === statusValue;
+        const matchProject = projectValue === "" || project === projectValue;
+
+        if (matchSearch && matchStatus && matchProject) {
+            row.style.display = "";
+            visibleCount++;
+        } else {
+            row.style.display = "none";
+        }
+
+    });
+
+    if (visibleCount === 0) {
+        noDataRow.style.display = "";
+    } else {
+        noDataRow.style.display = "none";
+    }
+
+}
+
+searchInput.addEventListener("keyup", filterTasks);
+statusFilter.addEventListener("change", filterTasks);
+projectFilter.addEventListener("change", filterTasks);
+
+</script>
+
+{% endblock %}
