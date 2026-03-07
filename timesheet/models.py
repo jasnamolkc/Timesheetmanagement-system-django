@@ -13,6 +13,12 @@ class Employee(models.Model):
     role = models.CharField(max_length=10, choices=ROLE_CHOICES, default='EMPLOYEE')
     employee_id = models.CharField(max_length=20, unique=True)
     employee_code = models.CharField(max_length=20, unique=True, editable=False)
+    STATUS_CHOICES = (
+        ('PENDING', 'Pending'),
+        ('APPROVED', 'Approved'),
+    )
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='PENDING')
+    is_active = models.BooleanField(default=True)
     def generate_employee_code(self):
         year = timezone.now().year
 
