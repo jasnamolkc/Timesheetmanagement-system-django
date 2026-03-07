@@ -13,42 +13,72 @@ class Employee(models.Model):
     role = models.CharField(max_length=10, choices=ROLE_CHOICES, default='EMPLOYEE')
     employee_id = models.CharField(max_length=20, unique=True)
     employee_code = models.CharField(max_length=20, unique=True, editable=False)
+    def generate_employee_code(self):
+        year = timezone.now().year
+
+        if self.role == 'ADMIN':
+            prefix = 'ADM'
+        elif self.role == 'MANAGER':
+            prefix = 'MGR'
+        else:
+            prefix = 'EMP'
+
+        last_employee = Employee.objects.filter(
+            employee_code__startswith=f"{prefix}-{year}"
+        ).order_by('-employee_code').first()
+
+        if last_employee:
+            last_number = int(last_employee.employee_code.split('-')[-1])
+            new_number = last_number + 1
+        else:
+            new_number = 1
+
+        return f"{prefix}-{year}-{str(new_number).zfill(3)}"
 
     def save(self, *args, **kwargs):
         if not self.employee_code:
-            with transaction.atomic():
-                year = timezone.now().year
-                prefix = f"EMP-{year}-"
-                # Use select_for_update to handle concurrency safely
-                last_employee = Employee.objects.filter(
-                    employee_code__startswith=prefix
-                ).select_for_update().order_by('-employee_code').first()
-
-                if last_employee:
-                    try:
-                        last_num = int(last_employee.employee_code.split('-')[-1])
-                        new_num = last_num + 1
-                    except (ValueError, IndexError):
-                        new_num = 1
-                else:
-                    new_num = 1
-
-                self.employee_code = f"{prefix}{new_num:04d}"
-
-                # Also auto-fill employee_id if it's empty to maintain compatibility
-                if not self.employee_id:
-                    self.employee_id = self.employee_code
-
+            self.employee_code = self.generate_employee_code()
+        # 🔥 Auto-fill employee_id if empty (compatibility support)
+        if not self.employee_id:
+            self.employee_id = self.employee_code
         super().save(*args, **kwargs)
+    # def save(self, *args, **kwargs):
+    #     if not self.employee_code:
+    #         with transaction.atomic():
+    #             year = timezone.now().year
+    #             prefix = f"EMP-{year}-"
+    #             # Use select_for_update to handle concurrency safely
+    #             last_employee = Employee.objects.filter(
+    #                 employee_code__startswith=prefix
+    #             ).select_for_update().order_by('-employee_code').first()
 
-    def __str__(self):
-        return f"{self.user.get_full_name()} ({self.employee_code})"
+    #             if last_employee:
+    #                 try:
+    #                     last_num = int(last_employee.employee_code.split('-')[-1])
+    #                     new_num = last_num + 1
+    #                 except (ValueError, IndexError):
+    #                     new_num = 1
+    #             else:
+    #                 new_num = 1
+
+    #             self.employee_code = f"{prefix}{new_num:04d}"
+
+    #             # Also auto-fill employee_id if it's empty to maintain compatibility
+    #             if not self.employee_id:
+    #                 self.employee_id = self.employee_code
+
+    #     super().save(*args, **kwargs)
+
+    # def __str__(self):
+    #     return f"{self.user.get_full_name()} ({self.employee_code})"
 
 class Project(models.Model):
     STATUS_CHOICES = (
-        ('PLANNING', 'Planning'),
-        ('ACTIVE', 'Active'),
-        ('COMPLETED', 'Completed'),
+    ('REQUIREMENT_ANALYSIS', 'Requirement Analysis'),
+    ('DEVELOPMENT', 'Development'),
+    ('TESTING', 'Testing'),
+    ('DEPLOYMENT', 'Deployment'),
+    ('COMPLETED', 'Completed'),
     )
     name = models.CharField(max_length=200)
     project_code = models.CharField(max_length=50, unique=True)

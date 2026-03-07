@@ -4,19 +4,37 @@
 {% block title %}Timesheets{% endblock %}
 
 {% block content %}
-<div class="flex justify-between items-center mb-8">
-    <h2 class="text-3xl font-bold">My Timesheets</h2>
-    <a href="{% url 'timesheet_create' %}" onclick="openModal(this.href); return false;" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-semibold transition-colors flex items-center">
+
+<div class="flex justify-between items-center mb-6">
+    <h2 class="text-3xl font-bold">Timesheets</h2>
+    <a href="{% url 'timesheet_create' %}" 
+       onclick="openModal(this.href); return false;"
+       class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-semibold">
         <i class="fas fa-plus mr-2"></i> Log Entry
     </a>
 </div>
 
+<div id="modalOverlay"
+     class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+
+    <div id="modalContent"
+         class="bg-slate-800 w-full max-w-2xl p-8 rounded-2xl border border-slate-700 shadow-2xl">
+    </div>
+
+</div>
+<!-- Total Hours -->
+<div class="mb-4 text-right text-slate-300 font-semibold">
+    Total Hours: {{ total_hours }}
+</div>
+
+
 <!-- Filters -->
-<div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 mb-8 shadow-xl">
+<div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 mb-8">
     <form method="get" class="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
+
         <div>
-            <label class="block text-sm font-medium text-slate-400 mb-1">Project</label>
-            <select name="project" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 outline-none text-sm">
+            <label class="text-sm text-slate-400">Project</label>
+            <select name="project" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm">
                 <option value="">All Projects</option>
                 {% for project in all_projects %}
                 <option value="{{ project.id }}" {% if request.GET.project == project.id|stringformat:"i" %}selected{% endif %}>
@@ -25,10 +43,11 @@
                 {% endfor %}
             </select>
         </div>
-        {% if request.user.is_superuser or request.user.employee.role == 'ADMIN' or request.user.employee.role == 'MANAGER' %}
+
+        {% if can_manage %}
         <div>
-            <label class="block text-sm font-medium text-slate-400 mb-1">Employee</label>
-            <select name="employee" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 outline-none text-sm">
+            <label class="text-sm text-slate-400">Employee</label>
+            <select name="employee" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm">
                 <option value="">All Employees</option>
                 {% for emp in all_employees %}
                 <option value="{{ emp.id }}" {% if request.GET.employee == emp.id|stringformat:"i" %}selected{% endif %}>
@@ -38,76 +57,101 @@
             </select>
         </div>
         {% endif %}
+
         <div>
-            <label class="block text-sm font-medium text-slate-400 mb-1">From</label>
-            <input type="date" name="start_date" value="{{ request.GET.start_date }}" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 outline-none text-sm">
+            <label class="text-sm text-slate-400">From</label>
+            <input type="date" name="start_date" value="{{ request.GET.start_date }}"
+                   class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm">
         </div>
+
         <div>
-            <label class="block text-sm font-medium text-slate-400 mb-1">To</label>
-            <input type="date" name="end_date" value="{{ request.GET.end_date }}" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 outline-none text-sm">
+            <label class="text-sm text-slate-400">To</label>
+            <input type="date" name="end_date" value="{{ request.GET.end_date }}"
+                   class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm">
         </div>
+
         <div class="flex space-x-2">
-            <button type="submit" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors font-semibold">
+            <button type="submit" class="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg">
                 Apply
             </button>
-            <a href="{% url 'timesheet_list' %}" class="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-lg transition-colors">
-                <i class="fas fa-undo"></i>
+            <a href="{% url 'timesheet_list' %}" 
+               class="bg-slate-700 text-white px-4 py-2 rounded-lg">
+                Reset
             </a>
         </div>
     </form>
 </div>
 
-<!-- Timesheet Table -->
-<div class="bg-slate-800 rounded-2xl border border-slate-700 overflow-hidden shadow-xl">
+
+<!-- Table -->
+<div class="bg-slate-800 rounded-2xl border border-slate-700 overflow-hidden">
     <table class="w-full text-left">
-        <thead class="bg-slate-700/50 text-slate-400 text-xs uppercase tracking-wider">
+        <thead class="bg-slate-700/50 text-slate-400 text-xs uppercase">
             <tr>
-                <th class="px-6 py-4 font-semibold">Date</th>
-                {% if request.user.is_superuser or request.user.employee.role == 'ADMIN' or request.user.employee.role == 'MANAGER' %}
-                <th class="px-6 py-4 font-semibold">Employee</th>
+                <th class="px-6 py-4">Date</th>
+                {% if can_manage %}
+                <th class="px-6 py-4">Employee</th>
                 {% endif %}
-                <th class="px-6 py-4 font-semibold">Project</th>
-                <th class="px-6 py-4 font-semibold text-center">Hours</th>
-                <th class="px-6 py-4 font-semibold">Description</th>
-                <th class="px-6 py-4 font-semibold">Status</th>
-                <th class="px-6 py-4 font-semibold text-right">Actions</th>
+                <th class="px-6 py-4">Project</th>
+                <th class="px-6 py-4 text-center">Hours</th>
+                <th class="px-6 py-4">Description</th>
+                <th class="px-6 py-4">Billable</th>
+                <th class="px-6 py-4 text-right">Actions</th>
             </tr>
         </thead>
+
         <tbody class="divide-y divide-slate-700">
             {% for entry in entries %}
-            <tr class="hover:bg-slate-700/30 transition-colors">
-                <td class="px-6 py-4 whitespace-nowrap text-sm">{{ entry.date }}</td>
-                {% if request.user.is_superuser or request.user.employee.role == 'ADMIN' or request.user.employee.role == 'MANAGER' %}
-                <td class="px-6 py-4 whitespace-nowrap">
-                    <span class="text-sm font-medium">{{ entry.employee.user.get_full_name|default:entry.employee.user.username }}</span>
+            <tr class="hover:bg-slate-700/30">
+                <td class="px-6 py-4 text-sm">{{ entry.date }}</td>
+
+                {% if can_manage %}
+                <td class="px-6 py-4 text-sm">
+                    {{ entry.employee.user.get_full_name|default:entry.employee.user.username }}
                 </td>
                 {% endif %}
-                <td class="px-6 py-4 whitespace-nowrap">
-                    <span class="font-medium text-blue-400">{{ entry.project.project_code }}</span>
-                    <p class="text-xs text-slate-400">{{ entry.project.name }}</p>
+
+                <td class="px-6 py-4 text-sm">
+                    <span class="text-blue-400 font-semibold">
+                        {{ entry.project.project_code }}
+                    </span>
                 </td>
-                <td class="px-6 py-4 whitespace-nowrap text-center font-bold">{{ entry.hours }}</td>
+
+                <td class="px-6 py-4 text-center font-bold">
+                    {{ entry.hours }}
+                </td>
+
+                <td class="px-6 py-4 text-sm text-slate-300 line-clamp-1">
+                    {{ entry.description }}
+                </td>
+
                 <td class="px-6 py-4">
-                    <p class="text-sm line-clamp-1 text-slate-300">{{ entry.description }}</p>
-                    {% if entry.task_reference %}
-                    <span class="text-[10px] bg-slate-900 text-slate-400 px-1.5 py-0.5 rounded uppercase">{{ entry.task_reference }}</span>
-                    {% endif %}
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap">
                     {% if entry.billable %}
-                    <span class="px-2 py-1 text-[10px] font-bold bg-emerald-500/10 text-emerald-500 rounded-full">BILLABLE</span>
+                    <span class="px-2 py-1 text-xs bg-emerald-500/10 text-emerald-400 rounded-full">
+                        Billable
+                    </span>
                     {% else %}
-                    <span class="px-2 py-1 text-[10px] font-bold bg-slate-500/10 text-slate-500 rounded-full">NON-BILLABLE</span>
+                    <span class="px-2 py-1 text-xs bg-slate-500/10 text-slate-400 rounded-full">
+                        Non-Billable
+                    </span>
                     {% endif %}
                 </td>
-                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <a href="{% url 'timesheet_edit' entry.pk %}" onclick="openModal(this.href); return false;" class="text-blue-400 hover:text-blue-300 mr-3"><i class="fas fa-edit"></i></a>
-                    <a href="{% url 'timesheet_delete' entry.pk %}" class="text-red-400 hover:text-red-300"><i class="fas fa-trash"></i></a>
+
+                <td class="px-6 py-4 text-right">
+                    <a href="{% url 'timesheet_edit' entry.pk %}" 
+                       onclick="openModal(this.href); return false;"
+                       class="text-blue-400 mr-3">
+                        <i class="fas fa-edit"></i>
+                    </a>
+                    <a href="{% url 'timesheet_delete' entry.pk %}" 
+                       class="text-red-400">
+                        <i class="fas fa-trash"></i>
+                    </a>
                 </td>
             </tr>
             {% empty %}
             <tr>
-                <td colspan="6" class="px-6 py-12 text-center text-slate-500 italic">
+                <td colspan="7" class="px-6 py-12 text-center text-slate-500">
                     No timesheet entries found.
                 </td>
             </tr>
@@ -115,19 +159,50 @@
         </tbody>
     </table>
 </div>
-
-<!-- Pagination -->
-{% if is_paginated %}
-<div class="mt-8 flex justify-center">
-    <nav class="flex space-x-2">
-        {% if page_obj.has_previous %}
-        <a href="?page={{ page_obj.previous_page_number }}" class="px-4 py-2 bg-slate-800 border border-slate-700 rounded-lg hover:bg-slate-700 transition-colors">Previous</a>
-        {% endif %}
-        <span class="px-4 py-2 bg-blue-600 rounded-lg">{{ page_obj.number }}</span>
-        {% if page_obj.has_next %}
-        <a href="?page={{ page_obj.next_page_number }}" class="px-4 py-2 bg-slate-800 border border-slate-700 rounded-lg hover:bg-slate-700 transition-colors">Next</a>
-        {% endif %}
-    </nav>
-</div>
-{% endif %}
 {% endblock %}
+
+<script>
+function openModal(url) {
+    fetch(url, {
+        headers: {
+            "X-Requested-With": "XMLHttpRequest"
+        }
+    })
+    .then(response => response.text())
+    .then(html => {
+        document.getElementById("modalContent").innerHTML = html;
+
+        const modal = document.getElementById("modalOverlay");
+        modal.classList.remove("hidden");
+        modal.classList.add("flex");
+    });
+}
+</script>
+<script>
+document.addEventListener("submit", function(e) {
+    if (e.target.closest("#modalContent")) {
+        e.preventDefault();
+
+        const form = e.target;
+        const url = form.action;
+        const formData = new FormData(form);
+
+        fetch(url, {
+            method: "POST",
+            headers: {
+                "X-Requested-With": "XMLHttpRequest"
+            },
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                closeModal();
+                location.reload(); // or refresh table only
+            } else if (data.html) {
+                document.getElementById("modalContent").innerHTML = data.html;
+            }
+        });
+    }
+});
+</script>
