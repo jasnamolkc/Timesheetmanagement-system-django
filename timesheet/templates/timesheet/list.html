@@ -1,0 +1,154 @@
+{% extends "base.html" %}
+{% block title %}Timesheets{% endblock %}
+
+{% block content %}
+
+<div class="flex justify-between mb-6">
+    <h2 class="text-2xl font-bold">Timesheets</h2>
+
+    <button onclick="openModal('{% url 'timesheet_create' %}')"
+            class="bg-blue-600 text-white px-4 py-2 rounded">
+        + Create
+    </button>
+</div>
+
+<!-- Search & Filter -->
+<div class="flex gap-3 mb-4">
+    <input id="search"
+           placeholder="Search..."
+           class="bg-slate-800 border px-3 py-2 rounded text-sm">
+
+    <select id="filter"
+            class="bg-slate-800 border px-3 py-2 rounded text-sm">
+        <option value="">All</option>
+        <option value="Billable">Billable</option>
+        <option value="Non-Billable">Non-Billable</option>
+    </select>
+</div>
+
+<!-- List -->
+<!-- <div id="timesheetContainer" class="grid grid-cols-1 gap-3">
+
+    {% for entry in entries %}
+    <div class="bg-slate-800 p-4 rounded border"
+         data-text="{{ entry.description|lower }}"
+         data-billable="{{ entry.billable|yesno:'Billable,Non-Billable' }}">
+
+        <div class="flex justify-between">
+            <span>{{ entry.project.project_code }}</span>
+            <span>{{ entry.hours }} hrs</span>
+        </div>
+
+        <p class="text-sm text-slate-400">{{ entry.description }}</p>
+    </div>
+    {% empty %}
+    <p class="text-slate-400">No timesheets</p>
+    {% endfor %}
+
+</div> -->
+<div id="timesheetContainer" class="grid grid-cols-1 gap-3">
+
+    {% for entry in entries %}
+    <div class="bg-slate-800 p-4 rounded border"
+         data-text="{{ entry.description|lower }} {{ entry.task.name|lower }}"
+         data-billable="{{ entry.billable|yesno:'Billable,Non-Billable' }}">
+
+        <!-- Project & Task -->
+        <div class="flex justify-between mb-2">
+            <div class="font-semibold text-blue-400">{{ entry.project.project_code }}</div>
+            <div class="font-medium">{{ entry.task.name }}</div>
+        </div>
+
+        <!-- Times -->
+        <div class="grid grid-cols-4 gap-2 text-sm text-slate-300 mb-2">
+            <div>Allocated: {{ entry.task.estimated_hours }} hrs</div>
+            <div>Used: {{ entry.hours }} hrs</div>
+            <div>Pending: {{ entry.pending_hours }} hrs</div>
+            <div>Billable: {{ entry.billable|yesno:"Yes,No" }}</div>
+        </div>
+
+        <!-- Dates -->
+        <div class="text-sm text-slate-400 mb-2">
+            Start: {{ entry.start_date|date:"d M Y" }} | End: {{ entry.end_date|date:"d M Y" }}
+        </div>
+
+        <!-- Description -->
+        <p class="text-sm text-slate-400">{{ entry.description }}</p>
+    </div>
+
+    {% empty %}
+    <p class="text-slate-400">No timesheets</p>
+    {% endfor %}
+
+</div>
+
+<!-- Modal -->
+<div id="modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+    <div id="modalContent" class="bg-slate-800 p-6 rounded w-full max-w-lg"></div>
+</div>
+
+<script>
+const search = document.getElementById("search");
+const filter = document.getElementById("filter");
+const container = document.getElementById("timesheetContainer");
+
+function filterTimesheets() {
+    const s = search.value.toLowerCase();
+    const f = filter.value;
+
+    let visible = 0;
+
+    container.querySelectorAll("[data-text]").forEach(row => {
+        const matchSearch = row.dataset.text.includes(s);
+        const matchFilter = f === "" || row.dataset.billable === f;
+
+        if (matchSearch && matchFilter) {
+            row.style.display = "";
+            visible++;
+        } else {
+            row.style.display = "none";
+        }
+    });
+
+    if (visible === 0) {
+        container.innerHTML = `<p class='text-slate-400'>No data found</p>`;
+    }
+}
+
+search.addEventListener("keyup", filterTimesheets);
+filter.addEventListener("change", filterTimesheets);
+
+// Modal project → task dynamic load
+// document.addEventListener("change", function(e) {
+//     const modalForm = document.getElementById("modalContent").querySelector("form");
+//     if (!modalForm) return;
+
+//     if (e.target.id === "id_project") {
+//         const projectId = e.target.value;
+//         const taskSelect = modalForm.querySelector("#id_task");
+
+//         if (!taskSelect) return;
+
+//         if (!projectId) {
+//             taskSelect.innerHTML = '<option value="">Select task</option>';
+//             return;
+//         }
+
+//         fetch(`/tasks/by-project/${projectId}/`, {
+//             headers: { "X-Requested-With": "XMLHttpRequest" }
+//         })
+//         .then(res => res.json())
+//         .then(data => {
+//             taskSelect.innerHTML = '<option value="">Select task</option>';
+//             data.tasks.forEach(task => {
+//                 const option = new Option(task.name || task.title, task.id);
+//                 taskSelect.add(option);
+//             });
+//         })
+//         .catch(err => {
+//             console.error("Error fetching tasks:", err);
+//         });
+//     }
+// });
+</script>
+{% endblock %}

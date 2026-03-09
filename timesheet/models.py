@@ -321,13 +321,16 @@ class TimesheetEntry(models.Model):
             employee=self.employee,
             date=self.date
         ).exclude(pk=self.pk).aggregate(
-            Sum('hours')
-        )['hours__sum'] or 0
+            total_hours=Sum('hours')
+        )['total_hours'] or 0
 
-        if existing_hours + self.hours > 12:
+        # Ensure self.hours is not None
+        hours_to_add = self.hours or 0
+
+        if existing_hours + hours_to_add > 12:
             raise ValidationError(
                 "Total hours for this day cannot exceed 12."
-            )
+        )
         if self.date > timezone.now().date():
             raise ValidationError("Cannot log timesheet for future date.")
         if self.task and self.task.status == "COMPLETED":
@@ -349,3 +352,11 @@ class TimesheetEntry(models.Model):
 
     def __str__(self):
         return f"{self.employee.user.username} - {self.project.project_code} - {self.date}"
+    @property
+    def pending_hours(self):
+        estimated = self.task.estimated_hours if self.task else 0
+        qs = TimesheetEntry.objects.filter(project=self.project, task=self.task)
+        # if self.pk:
+        #     qs = qs.exclude(pk=self.pk)  # exclude self if already saved
+        total_logged = qs.aggregate(total=Sum('hours'))['total'] or 0
+        return max(estimated - total_logged, 0)

@@ -288,76 +288,100 @@ from .forms import TimesheetEntryForm
 # =========================
 # TIMESHEET LIST
 # =========================
-class TimesheetListView(LoginRequiredMixin, ListView):
-    model = TimesheetEntry
-    template_name = 'timesheet/timesheet_list.html'
-    context_object_name = 'entries'
-    paginate_by = 15
+# class TimesheetListView(LoginRequiredMixin, ListView):
+#     model = TimesheetEntry
+#     template_name = 'timesheet/timesheet_list.html'
+#     context_object_name = 'entries'
+#     paginate_by = 15
 
-    def get_queryset(self):
-        user = self.request.user
-        user_employee = getattr(user, "employee", None)
+#     def get_queryset(self):
+#         user = self.request.user
+#         user_employee = getattr(user, "employee", None)
 
-        queryset = TimesheetEntry.objects.select_related(
-            'project',
-            'employee__user'
-        )
+#         queryset = TimesheetEntry.objects.select_related(
+#             'project',
+#             'employee__user'
+#         )
 
-        # Employee restriction
-        if user_employee and user_employee.role == 'EMPLOYEE':
-            queryset = queryset.filter(employee=user_employee)
+#         # Employee restriction
+#         if user_employee and user_employee.role == 'EMPLOYEE':
+#             queryset = queryset.filter(employee=user_employee)
 
-        # Filters
-        project_id = self.request.GET.get('project')
-        if project_id:
-            queryset = queryset.filter(project_id=project_id)
+#         # Filters
+#         project_id = self.request.GET.get('project')
+#         if project_id:
+#             queryset = queryset.filter(project_id=project_id)
 
-        employee_id = self.request.GET.get('employee')
-        if employee_id and user_employee and user_employee.role in ['ADMIN', 'MANAGER']:
-            queryset = queryset.filter(employee_id=employee_id)
+#         employee_id = self.request.GET.get('employee')
+#         if employee_id and user_employee and user_employee.role in ['ADMIN', 'MANAGER']:
+#             queryset = queryset.filter(employee_id=employee_id)
 
-        start_date = self.request.GET.get('start_date')
-        if start_date:
-            queryset = queryset.filter(date__gte=start_date)
+#         start_date = self.request.GET.get('start_date')
+#         if start_date:
+#             queryset = queryset.filter(date__gte=start_date)
 
-        end_date = self.request.GET.get('end_date')
-        if end_date:
-            queryset = queryset.filter(date__lte=end_date)
+#         end_date = self.request.GET.get('end_date')
+#         if end_date:
+#             queryset = queryset.filter(date__lte=end_date)
 
-        return queryset.order_by('-date')
+#         return queryset.order_by('-date')
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        user = self.request.user
-        user_employee = getattr(user, "employee", None)
+#     def get_context_data(self, **kwargs):
+#         context = super().get_context_data(**kwargs)
+#         user = self.request.user
+#         user_employee = getattr(user, "employee", None)
 
-        # Permission flag (clean template usage)
-        context["can_manage"] = (
-            user.is_superuser or
-            (user_employee and user_employee.role in ['ADMIN', 'MANAGER'])
-        )
+#         # Permission flag (clean template usage)
+#         context["can_manage"] = (
+#             user.is_superuser or
+#             (user_employee and user_employee.role in ['ADMIN', 'MANAGER'])
+#         )
 
-        # Employee & Project filter lists
-        if context["can_manage"]:
-            context['all_employees'] = Employee.objects.select_related('user').all()
-            context['all_projects'] = Project.objects.filter(is_archived=False)
-        else:
-            context['all_projects'] = Project.objects.filter(
-                allocations__employee=user_employee,
-                is_archived=False
-            ).distinct()
+#         # Employee & Project filter lists
+#         if context["can_manage"]:
+#             context['all_employees'] = Employee.objects.select_related('user').all()
+#             context['all_projects'] = Project.objects.filter(is_archived=False)
+#         else:
+#             context['all_projects'] = Project.objects.filter(
+#                 allocations__employee=user_employee,
+#                 is_archived=False
+#             ).distinct()
 
-        # Total Hours
-        context['total_hours'] = self.get_queryset().aggregate(
-            total=Sum('hours')
-        )['total'] or 0
+#         # Total Hours
+#         context['total_hours'] = self.get_queryset().aggregate(
+#             total=Sum('hours')
+#         )['total'] or 0
 
-        return context
+#         return context
 
 
-# =========================
-# CREATE
-# =========================
+# # =========================
+# # CREATE
+# # =========================
+# # class TimesheetCreateView(LoginRequiredMixin, CreateView):
+# #     model = TimesheetEntry
+# #     form_class = TimesheetEntryForm
+# #     template_name = 'timesheet/form_page.html'
+# #     success_url = reverse_lazy('timesheet_list')
+
+# #     def get_form_kwargs(self):
+# #         kwargs = super().get_form_kwargs()
+# #         user_employee = getattr(self.request.user, "employee", None)
+# #         if user_employee:
+# #             kwargs['employee'] = user_employee
+# #         return kwargs
+
+# #     def form_valid(self, form):
+# #         user_employee = getattr(self.request.user, "employee", None)
+# #         if user_employee:
+# #             form.instance.employee = user_employee
+# #         return super().form_valid(form)
+
+# from django.urls import reverse_lazy
+# from django.template.loader import render_to_string
+# from django.http import JsonResponse
+# from django.shortcuts import redirect
+
 # class TimesheetCreateView(LoginRequiredMixin, CreateView):
 #     model = TimesheetEntry
 #     form_class = TimesheetEntryForm
@@ -375,57 +399,33 @@ class TimesheetListView(LoginRequiredMixin, ListView):
 #         user_employee = getattr(self.request.user, "employee", None)
 #         if user_employee:
 #             form.instance.employee = user_employee
-#         return super().form_valid(form)
 
-from django.urls import reverse_lazy
-from django.template.loader import render_to_string
-from django.http import JsonResponse
-from django.shortcuts import redirect
+#         self.object = form.save()
 
-class TimesheetCreateView(LoginRequiredMixin, CreateView):
-    model = TimesheetEntry
-    form_class = TimesheetEntryForm
-    template_name = 'timesheet/form_page.html'
-    success_url = reverse_lazy('timesheet_list')
+#         # ✅ If AJAX → return JSON success
+#         if self.request.headers.get('x-requested-with') == 'XMLHttpRequest':
+#             return JsonResponse({"success": True})
 
-    def get_form_kwargs(self):
-        kwargs = super().get_form_kwargs()
-        user_employee = getattr(self.request.user, "employee", None)
-        if user_employee:
-            kwargs['employee'] = user_employee
-        return kwargs
+#         return redirect(self.success_url)
 
-    def form_valid(self, form):
-        user_employee = getattr(self.request.user, "employee", None)
-        if user_employee:
-            form.instance.employee = user_employee
+#     def form_invalid(self, form):
+#         # ✅ If AJAX → return form HTML again
+#         if self.request.headers.get('x-requested-with') == 'XMLHttpRequest':
+#             html = render_to_string(
+#                 "timesheet/modal_form.html",
+#                 {"form": form},
+#                 request=self.request
+#             )
+#             return JsonResponse({"html": html}, status=400)
 
-        self.object = form.save()
+#         return super().form_invalid(form)
 
-        # ✅ If AJAX → return JSON success
-        if self.request.headers.get('x-requested-with') == 'XMLHttpRequest':
-            return JsonResponse({"success": True})
+#     def get_template_names(self):
+#         # ✅ If AJAX → return only modal form
+#         if self.request.headers.get('x-requested-with') == 'XMLHttpRequest':
+#             return ["timesheet/modal_form.html"]
 
-        return redirect(self.success_url)
-
-    def form_invalid(self, form):
-        # ✅ If AJAX → return form HTML again
-        if self.request.headers.get('x-requested-with') == 'XMLHttpRequest':
-            html = render_to_string(
-                "timesheet/modal_form.html",
-                {"form": form},
-                request=self.request
-            )
-            return JsonResponse({"html": html}, status=400)
-
-        return super().form_invalid(form)
-
-    def get_template_names(self):
-        # ✅ If AJAX → return only modal form
-        if self.request.headers.get('x-requested-with') == 'XMLHttpRequest':
-            return ["timesheet/modal_form.html"]
-
-        return [self.template_name]
+#         return [self.template_name]
 # =========================
 # UPDATE
 # =========================
@@ -630,6 +630,46 @@ def task_list(request):
 #         "projects": projects,
 #         "employees": employees
 #     })
+# class TaskCreateView(LoginRequiredMixin, CreateView):
+#     model = Task
+#     form_class = TaskForm
+#     template_name = "tasks/modal_form.html"
+#     success_url = reverse_lazy("task_page")
+
+#     def form_valid(self, form):
+#         self.object = form.save()
+
+#         if self.request.headers.get("X-Requested-With") == "XMLHttpRequest":
+#             return JsonResponse({
+#                 "success": True,
+#                 "redirect": reverse("task_page")
+#             })
+
+#         return redirect(self.success_url)
+
+#     def form_invalid(self, form):
+#         if self.request.headers.get("X-Requested-With") == "XMLHttpRequest":
+#             html = render_to_string(
+#                 "tasks/modal_form.html",
+#                 {"form": form},
+#                 request=self.request
+#             )
+#             return JsonResponse({"html": html}, status=400)
+
+#         return super().form_invalid(form)
+
+#     def get_template_names(self):
+#         if self.request.headers.get("X-Requested-With") == "XMLHttpRequest":
+#             return ["tasks/modal_form.html"]
+#         return [self.template_name]
+from django.http import JsonResponse
+from django.shortcuts import redirect
+from django.urls import reverse, reverse_lazy
+from django.template.loader import render_to_string
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.views.generic import CreateView
+
+
 class TaskCreateView(LoginRequiredMixin, CreateView):
     model = Task
     form_class = TaskForm
@@ -642,7 +682,8 @@ class TaskCreateView(LoginRequiredMixin, CreateView):
         if self.request.headers.get("X-Requested-With") == "XMLHttpRequest":
             return JsonResponse({
                 "success": True,
-                "redirect": reverse("task_page")
+                "task_id": self.object.id,
+                "task_name": str(self.object)
             })
 
         return redirect(self.success_url)
@@ -662,7 +703,6 @@ class TaskCreateView(LoginRequiredMixin, CreateView):
         if self.request.headers.get("X-Requested-With") == "XMLHttpRequest":
             return ["tasks/modal_form.html"]
         return [self.template_name]
-
 class TaskUpdateView(LoginRequiredMixin, UpdateView):
     model = Task
     form_class = TaskForm
@@ -702,3 +742,79 @@ def task_delete(request, id):
     task.delete()
 
     return JsonResponse({"status": "deleted"})
+
+from django.views.generic import ListView, CreateView
+from django.http import JsonResponse
+from django.template.loader import render_to_string
+from .models import TimesheetEntry
+from .forms import TimesheetEntryForm
+
+
+class TimesheetListView(ListView):
+    model = TimesheetEntry
+    template_name = "timesheet/list.html"
+    context_object_name = "entries"
+
+    def get_queryset(self):
+        qs = TimesheetEntry.objects.select_related("employee", "project", "task")
+
+        # optional filters (server side not required for JS search)
+        project = self.request.GET.get("project")
+        if project:
+            qs = qs.filter(project_id=project)
+
+        return qs
+
+
+class TimesheetCreateView(LoginRequiredMixin, CreateView):
+    model = TimesheetEntry
+    form_class = TimesheetEntryForm
+    template_name = "timesheet/modal_form.html"
+    success_url = reverse_lazy('timesheet_list')  # redirect after non-AJAX submit
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        user_employee = getattr(self.request.user, "employee", None)
+        kwargs['employee'] = user_employee
+        return kwargs
+
+    def form_valid(self, form):
+        user_employee = getattr(self.request.user, "employee", None)
+
+        if not user_employee:
+            return JsonResponse({"error": "Employee profile not found"}, status=400)
+
+        obj = form.save(commit=False)
+        obj.employee = user_employee
+        obj.save()
+
+        # Return JSON for AJAX
+        if self.request.headers.get("x-requested-with") == "XMLHttpRequest":
+            return JsonResponse({"success": True})
+        # Normal POST fallback
+        return super().form_valid(form)
+
+    def form_invalid(self, form):
+        if self.request.headers.get("x-requested-with") == "XMLHttpRequest":
+            html = render_to_string("timesheet/modal_form.html", {"form": form}, request=self.request)
+            return JsonResponse({"success": False, "html": html}, status=400)
+        return super().form_invalid(form)
+
+    def get_template_names(self):
+        if self.request.headers.get("X-Requested-With") == "XMLHttpRequest":
+            return ["timesheet/modal_form.html"]
+        return [self.template_name]
+# def tasks_by_project(request, project_id):
+#     tasks = Task.objects.filter(project_id=project_id)
+#     data = {
+#         "tasks": [{"id": t.id, "name": t.name} for t in tasks]
+#     }
+#     return JsonResponse(data)
+def tasks_by_project(request, project_id):
+    try:
+        tasks = Task.objects.filter(project_id=project_id).values('id', 'title')
+        return JsonResponse({'tasks': list(tasks)})
+    except Task.DoesNotExist:
+        return JsonResponse({'tasks': []})
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)

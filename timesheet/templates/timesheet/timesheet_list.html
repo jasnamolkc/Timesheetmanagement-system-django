@@ -114,7 +114,7 @@
 
                 <td class="px-6 py-4 text-sm">
                     <span class="text-blue-400 font-semibold">
-                        {{ entry.project.project_code }}
+                        {{ entry.project.project_code }} 
                     </span>
                 </td>
 
@@ -160,9 +160,49 @@
         </tbody>
     </table>
 </div>
-{% endblock %}
+<!-- <script>
+document.addEventListener("change", function(e){
 
-<script>
+    if(e.target.id === "id_project"){
+
+        const projectId = e.target.value;
+
+        const form = e.target.closest("form");
+        const formData = new FormData(form);
+
+        const params = new URLSearchParams(formData);
+
+        fetch(form.action + "?" + params.toString(), {
+            headers: {
+                "X-Requested-With": "XMLHttpRequest"
+            }
+        })
+        .then(response => response.text())
+        .then(html => {
+            document.getElementById("modalContent").innerHTML = html;
+        });
+
+    }
+
+});
+</script> -->
+<!-- <script>
+console.log("Script loaded");
+
+document.addEventListener("change", function(e) {
+
+    console.log("Change detected:", e.target);
+
+    if (e.target.id === "id_project") {
+        const projectId = e.target.value;
+
+        console.log("Selected Project:", projectId);
+        alert("Project selected: " + projectId);
+    }
+
+});
+</script> -->
+<!-- <script>
 function openModal(url) {
     fetch(url, {
         headers: {
@@ -178,7 +218,7 @@ function openModal(url) {
         modal.classList.add("flex");
     });
 }
-</script>
+</script> -->
 <script>
 document.addEventListener("submit", function(e) {
     if (e.target.closest("#modalContent")) {
@@ -207,3 +247,5 @@ document.addEventListener("submit", function(e) {
     }
 });
 </script>
+{% endblock %}
+
