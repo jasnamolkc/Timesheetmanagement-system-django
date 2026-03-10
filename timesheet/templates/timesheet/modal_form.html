@@ -9,10 +9,41 @@
 
 <form method="post" action="{{ request.path }}">
     {% csrf_token %}
-    <div class="space-y-4">
+    <!-- <div class="space-y-4">
         {{ form|crispy }}
+    </div> -->
+<div class="space-y-4">
+
+{% if 'timesheet' in request.path %}
+
+    <!-- Project -->
+    {{ form.project|as_crispy_field }}
+
+    <!-- Task + Plus button -->
+    <div class="flex items-end gap-2">
+        <div class="flex-1">
+            {{ form.task|as_crispy_field }}
+        </div>
+
+       <!-- <button type="button"
+    onclick="openTaskModal('{% url 'task_create' %}?modal=1')"
+    class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg cursor-pointer">
+    +
+</button> -->
     </div>
 
+    {{ form.date|as_crispy_field }}
+    {{ form.hours|as_crispy_field }}
+    {{ form.description|as_crispy_field }}
+    {{ form.billable|as_crispy_field }}
+
+{% else %}
+
+    {{ form|crispy }}
+
+{% endif %}
+
+</div>
     <div class="mt-8 flex justify-end space-x-3">
         <button type="button" onclick="closeModal()" class="px-6 py-2 bg-slate-700 text-white rounded-lg hover:bg-slate-600 transition-colors">
             Cancel
@@ -34,3 +65,8 @@
     label { color: #94a3b8 !important; font-size: 0.875rem !important; margin-bottom: 0.25rem !important; }
     .text-danger { color: #f87171 !important; font-size: 0.75rem !important; margin-top: 0.25rem !important; }
 </style>
+<!-- <script>
+    document.getElementById("id_project").addEventListener("change", function(){
+    document.getElementById("addTaskBtn").disabled = !this.value;
+});
+</script> -->

@@ -97,6 +97,9 @@
         </div>
     </div>
 
+
+   
+
     <script>
         function openModal(url) {
             const modalUrl = url.includes('?') ? `${url}&modal=1` : `${url}?modal=1`;
@@ -107,9 +110,47 @@
             })
                 .then(response => response.text())
                 .then(html => {
-                    document.getElementById('modal-content').innerHTML = html;
-                    document.getElementById('modal-container').classList.remove('hidden');
-                    document.body.classList.add('overflow-hidden');
+                    // document.getElementById('modal-content').innerHTML = html;
+                    // document.getElementById('modal-container').classList.remove('hidden');
+                    // document.body.classList.add('overflow-hidden');
+                    const modalContent = document.getElementById('modal-content'); // define modalContent
+    modalContent.innerHTML = html;
+    document.getElementById('modal-container').classList.remove('hidden');
+    document.body.classList.add('overflow-hidden');
+
+                   /////////////
+
+// --- Attach Timesheet-specific behavior ---
+        const modalForm = modalContent.querySelector("form");
+
+        if (modalForm && modalForm.action.includes("timesheet")) {
+            const projectSelect = modalForm.querySelector("#id_project");
+            const taskSelect = modalForm.querySelector("#id_task");
+
+    if (projectSelect && taskSelect) {
+        projectSelect.addEventListener("change", function() {
+            const projectId = this.value;
+
+            if (!projectId) {
+                taskSelect.innerHTML = '<option value="">Select task</option>';
+                return;
+            }
+
+            fetch(`/tasks/by-project/${projectId}/`, {
+                headers: { "X-Requested-With": "XMLHttpRequest" }
+            })
+            .then(res => res.json())
+            .then(data => {
+                taskSelect.innerHTML = '<option value="">Select task</option>';
+                data.tasks.forEach(task => {
+                    const option = new Option(task.title, task.id);
+                    taskSelect.add(option);
+                });
+            });
+        });
+    }
+}
+                   /////////////
                 });
         }
         function closeModal() {
@@ -117,5 +158,8 @@
             document.body.classList.remove('overflow-hidden');
         }
     </script>
+   
+
+
 </body>
 </html>

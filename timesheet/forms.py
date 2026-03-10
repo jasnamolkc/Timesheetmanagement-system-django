@@ -39,8 +39,7 @@ class AllocationForm(forms.ModelForm):
         fields = ['employee', 'project', 'role_in_project', 'start_date', 'end_date']
         widgets = {
             'start_date': forms.DateInput(attrs={'type': 'date'}),
-            'end_date': forms.DateInput(attrs={'type': 'date'}),
-        }
+            'end_date': forms.DateInput(attrs={'type': 'date'}),}
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -49,8 +48,7 @@ class AllocationForm(forms.ModelForm):
         if self.instance.pk and self.instance.project.is_archived:
             # If editing an existing allocation for an archived project, include it in the queryset
             self.fields['project'].queryset = Project.objects.filter(
-                models.Q(is_archived=False) | models.Q(pk=self.instance.project.pk)
-            )
+                models.Q(is_archived=False) | models.Q(pk=self.instance.project.pk))
 
     def clean(self):
         cleaned_data = super().clean()
@@ -62,36 +60,86 @@ class AllocationForm(forms.ModelForm):
                 raise forms.ValidationError(e.messages)
         return cleaned_data
 
+# class TimesheetEntryForm(forms.ModelForm):
+#     class Meta:
+#         model = TimesheetEntry
+#         fields = ['project', 'task', 'date', 'hours', 'description', 'billable']
+#         widgets = {
+#             'date': forms.DateInput(attrs={'type': 'date'}),
+#             'description': forms.Textarea(attrs={'rows': 3}),
+#         }
+
+#     def __init__(self, *args, **kwargs):
+#         self.employee = kwargs.pop('employee', None)
+#         super().__init__(*args, **kwargs)
+#         if self.employee:
+#             # Filter projects to only those where the employee is allocated AND project is not archived
+#             allocated_projects = ProjectAllocation.objects.filter(
+#                 employee=self.employee
+#             ).values_list('project_id', flat=True)
+#             self.fields['project'].queryset = Project.objects.filter(id__in=allocated_projects, is_archived=False)
+
+#     def clean(self):
+#         cleaned_data = super().clean()
+#         if self.employee and not self.errors:
+#             # We need to set the employee on the instance before calling clean
+#             self.instance.employee = self.employee
+#             self.instance.project = cleaned_data.get('project')
+#             self.instance.date = cleaned_data.get('date')
+#             try:
+#                 self.instance.clean()
+#             except ValidationError as e:
+#                 raise forms.ValidationError(e.messages)
+#         return cleaned_data
 class TimesheetEntryForm(forms.ModelForm):
     class Meta:
         model = TimesheetEntry
-        fields = ['project', 'date', 'hours', 'description', 'task', 'billable']
+        fields = ['project', 'task', 'date', 'hours', 'description', 'billable']
         widgets = {
             'date': forms.DateInput(attrs={'type': 'date'}),
-            'description': forms.Textarea(attrs={'rows': 3}),
-        }
+            'description': forms.Textarea(attrs={'rows': 3}), }
 
     def __init__(self, *args, **kwargs):
         self.employee = kwargs.pop('employee', None)
         super().__init__(*args, **kwargs)
+
+        # Filter projects based on allocation
         if self.employee:
-            # Filter projects to only those where the employee is allocated AND project is not archived
             allocated_projects = ProjectAllocation.objects.filter(
                 employee=self.employee
             ).values_list('project_id', flat=True)
-            self.fields['project'].queryset = Project.objects.filter(id__in=allocated_projects, is_archived=False)
+
+            self.fields['project'].queryset = Project.objects.filter(id__in=allocated_projects,is_archived=False)
+
+        # Default: no tasks until project selected
+        self.fields['task'].queryset = Task.objects.none()
+
+        # When project selected (POST or GET)
+        if 'project' in self.data:
+            try:
+                project_id = int(self.data.get('project'))
+                self.fields['task'].queryset = Task.objects.filter(project_id=project_id)
+            except (ValueError, TypeError):
+                pass
+
+        # When editing existing entry
+        elif self.instance.pk and self.instance.project:
+            self.fields['task'].queryset = Task.objects.filter(
+                project=self.instance.project)
 
     def clean(self):
         cleaned_data = super().clean()
+
         if self.employee and not self.errors:
-            # We need to set the employee on the instance before calling clean
             self.instance.employee = self.employee
             self.instance.project = cleaned_data.get('project')
             self.instance.date = cleaned_data.get('date')
+
             try:
                 self.instance.clean()
             except ValidationError as e:
                 raise forms.ValidationError(e.messages)
+
         return cleaned_data
 from django import forms
 from .models import Task, Employee
@@ -101,14 +149,7 @@ class TaskForm(forms.ModelForm):
 
     class Meta:
         model = Task
-        fields = [
-            "project",
-            "title",
-            "description",
-            "assigned_to",
-            "status",
-            "estimated_hours",
-        ]
+        fields = ["project","title","description","assigned_to","status","estimated_hours",]
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
