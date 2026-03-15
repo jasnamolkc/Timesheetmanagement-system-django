@@ -46,7 +46,25 @@
 
             </select>
         </div>
+        <!-- ---------------------------  -->
+         <div>
+            <label class="text-sm text-slate-400">Milestone</label>
 
+            <select
+            name="milestone"
+            class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200">
+
+            <option value="">No Milestone</option>
+
+            {% for milestone in milestones %}
+            <option value="{{ milestone.id }}">
+            {{ milestone.name }} ({{ milestone.project.name }})
+            </option>
+            {% endfor %}
+
+            </select>
+            </div>
+        <!-- ---------------------------  -->
             <div>
                 <label class="text-sm text-slate-400">Status</label>
                 <select

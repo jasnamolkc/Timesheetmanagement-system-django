@@ -56,6 +56,7 @@
 <th class="p-3 text-left">Title</th>
 <th class="p-3 text-left">Project</th>
 <th class="p-3 text-left">Assigned To</th>
+<th class="p-3 text-left">Milestone</th>
 <th class="p-3 text-left">Status</th>
 <th class="p-3 text-left">Action</th>
 </tr>
@@ -87,7 +88,13 @@ data-status="{{ task.status }}"
 <span class="text-slate-400">Unassigned</span>
 {% endif %}
 </td>
-
+<td class="p-3">
+{% if task.milestone %}
+{{ task.milestone.name }}
+{% else %}
+<span class="text-slate-400">No milestone</span>
+{% endif %}
+</td>
 <td class="p-3">
 
 {% if task.status == "COMPLETED" %}

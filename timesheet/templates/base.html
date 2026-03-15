@@ -30,6 +30,10 @@
                 <a href="{% url 'project_list' %}" class="flex items-center px-4 py-3 text-sm font-medium rounded-lg hover:bg-slate-700 transition-colors {% if 'project' in request.path %}sidebar-active text-blue-400{% endif %}">
                     <i class="fas fa-project-diagram mr-3 w-5"></i> Projects
                 </a>
+                <a href="{% url 'milestone_list' %}"
+                class="flex items-center px-4 py-3 text-sm font-medium rounded-lg hover:bg-slate-700 transition-colors {% if 'milestone' in request.path %}sidebar-active text-blue-400{% endif %}">
+                <i class="fas fa-flag-checkered mr-3 w-5"></i> Milestones
+                </a>
                 <a href="{% url 'task_page' %}" 
                 class="flex items-center px-4 py-3 text-sm font-medium rounded-lg hover:bg-slate-700 transition-colors {% if 'task' in request.path %}sidebar-active text-blue-400{% endif %}">
                 <i class="fas fa-tasks mr-3 w-5"></i> Tasks
@@ -151,6 +155,118 @@
     }
 }
                    /////////////
+                   // --- Attach Task milestone filtering ---
+if (modalForm && modalForm.action.includes("task")) {
+
+    const projectSelect = modalForm.querySelector("#id_project");
+    const milestoneSelect = modalForm.querySelector("#id_milestone");
+
+    if (projectSelect && milestoneSelect) {
+
+        projectSelect.addEventListener("change", function() {
+
+            const projectId = this.value;
+
+            if (!projectId) {
+                milestoneSelect.innerHTML = '<option value="">No Milestone</option>';
+                return;
+            }
+
+            fetch(`/milestones-by-project/${projectId}/`, {
+                headers: { "X-Requested-With": "XMLHttpRequest" }
+            })
+            .then(res => res.json())
+            .then(data => {
+
+                milestoneSelect.innerHTML = '<option value="">No Milestone</option>';
+
+                data.milestones.forEach(m => {
+                    const option = new Option(m.name, m.id);
+                    milestoneSelect.add(option);
+                });
+
+            });
+
+        });
+        // ⭐ AUTO LOAD milestones when modal opens
+        if (projectSelect.value) {
+            projectSelect.dispatchEvent(new Event("change"));
+        }
+
+    }
+
+}
+                   ////////////
+                   // --- Filter Assigned Users by Project ---
+// --- Attach Task milestone + employee filtering ---
+if (modalForm && modalForm.action.includes("task")) {
+
+    const projectSelect = modalForm.querySelector("#id_project");
+    const milestoneSelect = modalForm.querySelector("#id_milestone");
+    const employeeSelect = modalForm.querySelector("#id_assigned_to");
+
+    if (projectSelect) {
+
+        projectSelect.addEventListener("change", function () {
+
+            const projectId = this.value;
+
+            // -------- Milestone Filter --------
+            if (milestoneSelect) {
+
+                if (!projectId) {
+                    milestoneSelect.innerHTML = '<option value="">No Milestone</option>';
+                } else {
+                    fetch(`/milestones-by-project/${projectId}/`)
+                    .then(res => res.json())
+                    .then(data => {
+
+                        milestoneSelect.innerHTML = '<option value="">No Milestone</option>';
+
+                        data.milestones.forEach(m => {
+                            const option = new Option(m.name, m.id);
+                            milestoneSelect.add(option);
+                        });
+
+                    });
+                }
+
+            }
+
+            // -------- Employee Filter --------
+            if (employeeSelect) {
+
+                if (!projectId) {
+                    employeeSelect.innerHTML = '<option value="">Unassigned</option>';
+                } else {
+
+                    fetch(`/employees-by-project/${projectId}/`)
+                    .then(res => res.json())
+                    .then(data => {
+
+                        employeeSelect.innerHTML = '<option value="">Unassigned</option>';
+
+                        data.employees.forEach(emp => {
+                            const option = new Option(emp.name, emp.id);
+                            employeeSelect.add(option);
+                        });
+
+                    });
+
+                }
+
+            }
+
+        });
+
+        // Auto load when modal opens
+        if (projectSelect.value) {
+            projectSelect.dispatchEvent(new Event("change"));
+        }
+
+    }
+
+}                   ////////////
                 });
         }
         function closeModal() {

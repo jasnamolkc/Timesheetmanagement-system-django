@@ -3,7 +3,7 @@ from django.db import models
 from django.core.exceptions import ValidationError
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import UserCreationForm
-from .models import Project, ProjectAllocation, TimesheetEntry, Employee
+from .models import *
 
 class RegistrationForm(UserCreationForm):
     first_name = forms.CharField(max_length=30, required=True)
@@ -149,18 +149,69 @@ class TaskForm(forms.ModelForm):
 
     class Meta:
         model = Task
-        fields = ["project","title","description","assigned_to","status","estimated_hours",]
+        fields = [
+            "project",
+            "title",
+            "description",
+            "milestone",
+            "assigned_to",
+            "status",
+            "estimated_hours",
+        ]
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        # Only employees in dropdown (no users)
-        self.fields["assigned_to"].queryset = Employee.objects.filter(
-            is_active=True
-        )
+        # No milestone initially
+        self.fields['milestone'].queryset = Milestone.objects.none()
 
-        # Optional fields styling (if using crispy not required)
+        # No employee initially
+        self.fields['assigned_to'].queryset = Employee.objects.none()
+
+        if 'project' in self.data:
+            try:
+                project_id = int(self.data.get('project'))
+
+                allocated_employees = ProjectAllocation.objects.filter(
+                    project_id=project_id
+                ).values_list('employee_id', flat=True)
+
+                self.fields['assigned_to'].queryset = Employee.objects.filter(
+                    id__in=allocated_employees,
+                    is_active=True
+                )
+
+            except (ValueError, TypeError):
+                pass
+
+        elif self.instance.pk and self.instance.project:
+
+            allocated_employees = ProjectAllocation.objects.filter(
+                project=self.instance.project
+            ).values_list('employee_id', flat=True)
+
+            self.fields['assigned_to'].queryset = Employee.objects.filter(
+                id__in=allocated_employees,
+                is_active=True
+            )
+
+        # Styling
         for field in self.fields.values():
             field.widget.attrs.update({
                 "class": "w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200"
             })
+class MilestoneForm(forms.ModelForm):
+    class Meta:
+        model = Milestone
+        fields = [
+            "project",
+            "name",
+            "description",
+            "start_date",
+            "due_date",
+        ]
+
+        widgets = {
+            "start_date": forms.DateInput(attrs={"type": "date"}),
+            "due_date": forms.DateInput(attrs={"type": "date"}),
+        }

@@ -9,7 +9,7 @@ from django.http import HttpResponse
 import csv
 from datetime import datetime, timedelta
 
-from .models import Project, ProjectAllocation, TimesheetEntry, Employee
+from .models import *
 from .forms import *
 
 # Template Mixins
@@ -576,7 +576,7 @@ def task_list(request):
     search = request.GET.get("search")
     project = request.GET.get("project")
 
-    tasks = Task.objects.select_related("project", "assigned_to")
+    tasks = Task.objects.select_related("project","milestone", "assigned_to")
 
     if search:
         tasks = tasks.filter(
@@ -594,6 +594,7 @@ def task_list(request):
             "id": t.id,
             "title": t.title,
             "project": t.project.name,
+            "milestone": t.milestone.name if t.milestone else "",
             "employee": t.assigned_to.user.username if t.assigned_to else "",
             "status": t.status,
         })
@@ -675,7 +676,10 @@ class TaskCreateView(LoginRequiredMixin, CreateView):
     form_class = TaskForm
     template_name = "tasks/modal_form.html"
     success_url = reverse_lazy("task_page")
-
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["milestones"] = Milestone.objects.select_related("project")
+        return context
     def form_valid(self, form):
         self.object = form.save()
 
@@ -708,7 +712,10 @@ class TaskUpdateView(LoginRequiredMixin, UpdateView):
     form_class = TaskForm
     template_name = "tasks/modal_form.html"
     success_url = reverse_lazy("task_page")
-
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["milestones"] = Milestone.objects.select_related("project")
+        return context
     def form_valid(self, form):
         self.object = form.save()
 
@@ -818,3 +825,75 @@ def tasks_by_project(request, project_id):
         return JsonResponse({'tasks': []})
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
+
+
+def milestone_list(request):
+    milestones = Milestone.objects.select_related("project")
+    return render(request, "milestones/milestone_list.html", {"milestones": milestones})
+
+
+def milestone_create(request):
+
+    form = MilestoneForm(request.POST or None)
+
+    if form.is_valid():
+        form.save()
+        return redirect("milestone_list")
+
+    return render(request, "milestones/milestone_form.html", {"form": form})
+
+
+def milestone_update(request, pk):
+
+    milestone = get_object_or_404(Milestone, pk=pk)
+
+    form = MilestoneForm(request.POST or None, instance=milestone)
+
+    if form.is_valid():
+        form.save()
+        return redirect("milestone_list")
+
+    return render(request, "milestones/milestone_form.html", {"form": form})
+
+
+def milestone_delete(request, pk):
+
+    milestone = get_object_or_404(Milestone, pk=pk)
+
+    if request.method == "POST":
+        milestone.delete()
+        return redirect("milestone_list")
+
+    return render(request, "confirm_delete.html", {"object": milestone})
+def milestones_by_project(request, project_id):
+
+    milestones = Milestone.objects.filter(project_id=project_id)
+
+    data = {
+        "milestones": [
+            {
+                "id": m.id,
+                "name": m.name
+            }
+            for m in milestones
+        ]
+    }
+
+    return JsonResponse(data)
+def employees_by_project(request, project_id):
+
+    allocations = ProjectAllocation.objects.select_related(
+        "employee__user"
+    ).filter(project_id=project_id)
+
+    data = {
+        "employees": [
+            {
+                "id": a.employee.id,
+                "name": a.employee.user.get_full_name() or a.employee.user.username
+            }
+            for a in allocations
+        ]
+    }
+
+    return JsonResponse(data)

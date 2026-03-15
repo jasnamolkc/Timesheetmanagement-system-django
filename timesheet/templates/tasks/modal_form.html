@@ -26,7 +26,40 @@
         </button>
     </div>
 </form>
+<script>
 
+const projectField = document.getElementById("id_project");
+const milestoneField = document.getElementById("id_milestone");
+
+if (projectField && milestoneField) {
+
+    projectField.addEventListener("change", function(){
+
+        let projectId = this.value;
+
+        if(!projectId){
+            milestoneField.innerHTML = '<option value="">No Milestone</option>';
+            return;
+        }
+
+        fetch("/milestones-by-project/" + projectId + "/")
+        .then(res => res.json())
+        .then(data => {
+
+            milestoneField.innerHTML = '<option value="">No Milestone</option>';
+
+            data.milestones.forEach(m => {
+                milestoneField.innerHTML +=
+                    `<option value="${m.id}">${m.name}</option>`;
+            });
+
+        });
+
+    });
+
+}
+
+</script>
 <style>
 input, select, textarea {
     background-color: #0f172a !important;
