@@ -48,6 +48,7 @@ class Employee(models.Model):
         if not self.employee_id:
             self.employee_id = self.employee_code
         super().save(*args, **kwargs)
+    
     def __str__(self):
         return f"{self.user.get_full_name()} ({self.employee_code})"
     # def save(self, *args, **kwargs):
@@ -100,6 +101,11 @@ class Project(models.Model):
         max_length=50,
         unique=True
     )
+    logo = models.ImageField(
+        upload_to='project_logos/',
+        null=True,
+        blank=True
+    )
 
     status = models.CharField(
         max_length=25,
@@ -144,6 +150,13 @@ class Project(models.Model):
         if total == 0:
             return 0
         completed = self.tasks.filter(status="COMPLETED").count()
+        return int((completed / total) * 100)
+    @property
+    def milestone_progress(self):
+        total = self.milestones.count()
+        if total == 0:
+            return 0
+        completed = self.milestones.filter(status="COMPLETED").count()
         return int((completed / total) * 100)
 
 class ProjectAllocation(models.Model):
@@ -197,9 +210,57 @@ class ProjectAllocation(models.Model):
             )
         if self.end_date < self.start_date:
             raise ValidationError("End date cannot be before start date.")
+    
     def __str__(self):
         return f"{self.employee.user.username} -> {self.project.project_code}"
 
+class Milestone(models.Model):
+
+    STATUS_CHOICES = (
+        ("PENDING", "Pending"),
+        ("IN_PROGRESS", "In Progress"),
+        ("COMPLETED", "Completed"),
+    )
+
+    project = models.ForeignKey(
+        Project,
+        on_delete=models.CASCADE,
+        related_name="milestones"
+    )
+
+    name = models.CharField(max_length=200)
+
+    description = models.TextField(blank=True)
+
+    start_date = models.DateField()
+
+    due_date = models.DateField()
+
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default="PENDING"
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["due_date"]
+
+    def clean(self):
+        if self.due_date < self.start_date:
+            raise ValidationError("Milestone due date cannot be before start date.")
+
+    def __str__(self):
+        return f"{self.project.project_code} - {self.name}"
+
+    @property
+    def progress(self):
+        total = self.tasks.count()
+        if total == 0:
+            return 0
+        completed = self.tasks.filter(status="COMPLETED").count()
+        return int((completed / total) * 100)
 
 class Task(models.Model):
 
@@ -207,6 +268,13 @@ class Task(models.Model):
         ("PENDING", "Pending"),
         ("IN_PROGRESS", "In Progress"),
         ("COMPLETED", "Completed"),
+    )
+    milestone = models.ForeignKey(
+        'Milestone',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="tasks"
     )
 
     project = models.ForeignKey(
@@ -240,11 +308,51 @@ class Task(models.Model):
     )
 
     created_at = models.DateTimeField(auto_now_add=True)
+    def clean(self):
+        if self.milestone and self.milestone.project != self.project:
+            raise ValidationError(
+                "Milestone must belong to the same project."
+            )
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        super().save(*args, **kwargs)
+
+        # 🔹 Update milestone status automatically
+        if self.milestone:
+            tasks = self.milestone.tasks.all()
+
+            if tasks.filter(status="IN_PROGRESS").exists():
+                self.milestone.status = "IN_PROGRESS"
+
+            elif tasks.filter(status="COMPLETED").count() == tasks.count():
+                self.milestone.status = "COMPLETED"
+
+            else:
+                self.milestone.status = "PENDING"
+
+            self.milestone.save()
 
     def __str__(self):
         return f"{self.project.project_code} - {self.title}"
 
+class TaskImage(models.Model):
 
+    task = models.ForeignKey(
+        Task,
+        on_delete=models.CASCADE,
+        related_name="images"
+    )
+
+    image = models.ImageField(
+        upload_to="task_images/"
+    )
+
+    uploaded_at = models.DateTimeField(
+        auto_now_add=True
+    )
+
+    def __str__(self):
+        return f"Image for {self.task.title}"
 class TimesheetEntry(models.Model):
 
     employee = models.ForeignKey(
@@ -352,11 +460,22 @@ class TimesheetEntry(models.Model):
 
     def __str__(self):
         return f"{self.employee.user.username} - {self.project.project_code} - {self.date}"
+   
     @property
     def pending_hours(self):
-        estimated = self.task.estimated_hours if self.task else 0
-        qs = TimesheetEntry.objects.filter(project=self.project, task=self.task)
-        # if self.pk:
-        #     qs = qs.exclude(pk=self.pk)  # exclude self if already saved
+        if not self.task:
+            return 0
+
+        estimated = self.task.estimated_hours or 0
+
+        qs = TimesheetEntry.objects.filter(
+            project=self.project,
+            task=self.task
+        )
+
+        if self.pk:
+            qs = qs.exclude(pk=self.pk)
+
         total_logged = qs.aggregate(total=Sum('hours'))['total'] or 0
+
         return max(estimated - total_logged, 0)
