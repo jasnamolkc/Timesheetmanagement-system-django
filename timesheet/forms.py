@@ -4,7 +4,21 @@ from django.core.exceptions import ValidationError
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import UserCreationForm
 from .models import *
+class MultipleFileInput(forms.ClearableFileInput):
+    allow_multiple_selected = True
+class MultipleFileField(forms.FileField):
 
+    def __init__(self, *args, **kwargs):
+        kwargs.setdefault("widget", MultipleFileInput())
+        super().__init__(*args, **kwargs)
+
+    def clean(self, data, initial=None):
+        if isinstance(data, (list, tuple)):
+            result = []
+            for d in data:
+                result.append(super().clean(d, initial))
+            return result
+        return super().clean(data, initial)
 class RegistrationForm(UserCreationForm):
     first_name = forms.CharField(max_length=30, required=True)
     last_name = forms.CharField(max_length=30, required=True)
@@ -146,6 +160,8 @@ from .models import Task, Employee
 
 
 class TaskForm(forms.ModelForm):
+    # images = MultipleFileField(required=False)
+
 
     class Meta:
         model = Task
@@ -162,38 +178,60 @@ class TaskForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        # No milestone initially
-        self.fields['milestone'].queryset = Milestone.objects.none()
+        # Default empty
+        self.fields["milestone"].queryset = Milestone.objects.none()
+        self.fields["assigned_to"].queryset = Employee.objects.none()
 
-        # No employee initially
-        self.fields['assigned_to'].queryset = Employee.objects.none()
-
-        if 'project' in self.data:
+        # When project selected in form (Create)
+        if "project" in self.data:
             try:
-                project_id = int(self.data.get('project'))
+                project_id = int(self.data.get("project"))
 
-                allocated_employees = ProjectAllocation.objects.filter(
+                # Milestones of selected project
+                self.fields["milestone"].queryset = Milestone.objects.filter(
                     project_id=project_id
-                ).values_list('employee_id', flat=True)
+                )
 
-                self.fields['assigned_to'].queryset = Employee.objects.filter(
-                    id__in=allocated_employees,
+                # Allocated employees
+                allocated = ProjectAllocation.objects.filter(
+                    project_id=project_id
+                ).values_list("employee_id", flat=True)
+
+                self.fields["assigned_to"].queryset = Employee.objects.filter(
+                    id__in=allocated,
                     is_active=True
                 )
 
             except (ValueError, TypeError):
                 pass
 
+        # When editing existing task
         elif self.instance.pk and self.instance.project:
 
-            allocated_employees = ProjectAllocation.objects.filter(
-                project=self.instance.project
-            ).values_list('employee_id', flat=True)
+            project = self.instance.project
 
-            self.fields['assigned_to'].queryset = Employee.objects.filter(
-                id__in=allocated_employees,
+            # Milestones
+            milestone_qs = Milestone.objects.filter(project=project)
+
+            if self.instance.milestone:
+                milestone_qs = milestone_qs | Milestone.objects.filter(id=self.instance.milestone.id)
+
+            self.fields["milestone"].queryset = milestone_qs.distinct()
+
+            # Allocated employees
+            allocated = ProjectAllocation.objects.filter(
+                project=project
+            ).values_list("employee_id", flat=True)
+
+            employee_qs = Employee.objects.filter(
+                id__in=allocated,
                 is_active=True
             )
+
+            if self.instance.assigned_to:
+                employee_qs = employee_qs | Employee.objects.filter(id=self.instance.assigned_to.id)
+
+            self.fields["assigned_to"].queryset = employee_qs.distinct()
 
         # Styling
         for field in self.fields.values():
@@ -215,3 +253,10 @@ class MilestoneForm(forms.ModelForm):
             "start_date": forms.DateInput(attrs={"type": "date"}),
             "due_date": forms.DateInput(attrs={"type": "date"}),
         }
+    def __init__(self,*args,**kwargs):
+        super().__init__(*args,**kwargs)
+
+        for field in self.fields.values():
+                field.widget.attrs.update({
+                    "class": "w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200"
+                })

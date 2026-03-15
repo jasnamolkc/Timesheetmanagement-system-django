@@ -682,6 +682,14 @@ class TaskCreateView(LoginRequiredMixin, CreateView):
         return context
     def form_valid(self, form):
         self.object = form.save()
+        # handle multiple images
+        images = self.request.FILES.getlist("images")
+
+        for img in images:
+            TaskImage.objects.create(
+                task=self.object,
+                image=img
+            )
 
         if self.request.headers.get("X-Requested-With") == "XMLHttpRequest":
             return JsonResponse({
@@ -718,6 +726,13 @@ class TaskUpdateView(LoginRequiredMixin, UpdateView):
         return context
     def form_valid(self, form):
         self.object = form.save()
+        images = self.request.FILES.getlist("images")
+
+        for img in images:
+            TaskImage.objects.create(
+                task=self.object,
+                image=img
+            )
 
         if self.request.headers.get("X-Requested-With") == "XMLHttpRequest":
             return JsonResponse({
@@ -728,6 +743,8 @@ class TaskUpdateView(LoginRequiredMixin, UpdateView):
         return redirect(self.success_url)
 
     def form_invalid(self, form):
+        # Print form errors in terminal
+        print("FORM ERRORS:", form.errors)
         if self.request.headers.get("X-Requested-With") == "XMLHttpRequest":
             html = render_to_string(
                 "tasks/modal_form.html",
@@ -897,3 +914,13 @@ def employees_by_project(request, project_id):
     }
 
     return JsonResponse(data)
+
+from django.views.decorators.http import require_POST
+
+@require_POST
+def delete_task_image(request, pk):
+
+    image = TaskImage.objects.get(pk=pk)
+    image.delete()
+
+    return JsonResponse({"success": True})

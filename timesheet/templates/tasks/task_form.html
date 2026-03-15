@@ -1,7 +1,7 @@
 <div class="p-6">
     <h2 class="text-xl font-bold mb-4">Create Task</h2>
 
-    <form method="POST" action="{% url 'task_create' %}">
+    <form method="POST" action="{% url 'task_create' %}" enctype="multipart/form-data">
         {% csrf_token %}
 
         <div class="space-y-4">
@@ -32,37 +32,37 @@
             <div>
             <label class="text-sm text-slate-400">Assigned To</label>
 
-            <select
-                name="assigned_to"
-                class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200"
-            >
+            <select name="assigned_to"
+                class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200">
+
                 <option value="">Unassigned</option>
 
                 {% for emp in employees %}
-                    <option value="{{ emp.id }}">
-                        {{ emp.user.get_full_name|default:emp.user.username }}
-                    </option>
+                <option value="{{ emp.id }}"
+                {% if task.assigned_to.id == emp.id %}selected{% endif %}>
+                {{ emp.user.get_full_name|default:emp.user.username }}
+                </option>
                 {% endfor %}
 
-            </select>
+                </select>
         </div>
         <!-- ---------------------------  -->
          <div>
             <label class="text-sm text-slate-400">Milestone</label>
 
-            <select
-            name="milestone"
-            class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200">
+            <select name="milestone"
+class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200">
 
-            <option value="">No Milestone</option>
+<option value="">No Milestone</option>
 
-            {% for milestone in milestones %}
-            <option value="{{ milestone.id }}">
-            {{ milestone.name }} ({{ milestone.project.name }})
-            </option>
-            {% endfor %}
+{% for milestone in milestones %}
+<option value="{{ milestone.id }}"
+{% if task.milestone.id == milestone.id %}selected{% endif %}>
+{{ milestone.name }} ({{ milestone.project.name }})
+</option>
+{% endfor %}
 
-            </select>
+</select>
             </div>
         <!-- ---------------------------  -->
             <div>
