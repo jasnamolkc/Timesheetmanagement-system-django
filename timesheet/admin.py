@@ -1,5 +1,6 @@
 from django.contrib import admin
-from .models import Employee, Project, ProjectAllocation, Task, TimesheetEntry
+from django.utils.html import format_html
+from .models import *
 
 
 @admin.register(Employee)
@@ -53,6 +54,18 @@ class ProjectAllocationAdmin(admin.ModelAdmin):
     autocomplete_fields = ('employee', 'project')
 
 
+# 🔹 Inline for multiple images
+class TaskImageInline(admin.TabularInline):
+    model = TaskImage
+    extra = 1
+    readonly_fields = ["preview"]
+
+    def preview(self, obj):
+        if obj.image:
+            return format_html('<img src="{}" width="100"/>', obj.image.url)
+        return "No Image"
+
+
 @admin.register(Task)
 class TaskAdmin(admin.ModelAdmin):
     list_display = (
@@ -66,6 +79,8 @@ class TaskAdmin(admin.ModelAdmin):
     list_filter = ('status', 'project')
     search_fields = ('title', 'description', 'project__project_code')
     autocomplete_fields = ('project', 'assigned_to')
+    
+    inlines = [TaskImageInline]   # ✅ THIS IS REQUIRED
 
 
 @admin.register(TimesheetEntry)
