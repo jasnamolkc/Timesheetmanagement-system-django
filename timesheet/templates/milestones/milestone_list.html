@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+{% block title %}Milestones{% endblock %}
+
+{% block content %}
+
+<div class="flex items-center justify-between mb-6">
+    <h2 class="text-3xl font-bold">Milestones</h2>
+
+    <button onclick="openModal('{% url 'milestone_create' %}')"
+        class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg text-sm font-medium">
+        + Create Milestone
+    </button>
+</div>
+
+<div class="bg-slate-800 rounded-xl border border-slate-700 overflow-hidden">
+
+<table class="w-full text-sm">
+
+<thead class="bg-slate-700 text-slate-300">
+<tr>
+<th class="p-3 text-left">Name</th>
+<th class="p-3 text-left">Project</th>
+<th class="p-3 text-left">Start</th>
+<th class="p-3 text-left">Due Date</th>
+<th class="p-3 text-left">Status</th>
+<th class="p-3 text-left">Action</th>
+</tr>
+</thead>
+
+<tbody>
+
+{% for milestone in milestones %}
+
+<tr class="border-t border-slate-700">
+
+<td class="p-3">
+{{ milestone.name }}
+</td>
+
+<td class="p-3">
+{{ milestone.project.name }}
+</td>
+
+<td class="p-3">
+{{ milestone.start_date }}
+</td>
+
+<td class="p-3">
+{{ milestone.due_date }}
+</td>
+
+<td class="p-3">
+
+{% if milestone.status == "COMPLETED" %}
+
+<span class="text-green-400 bg-green-400/10 px-2 py-1 rounded text-xs">
+Completed
+</span>
+
+{% elif milestone.status == "IN_PROGRESS" %}
+
+<span class="text-blue-400 bg-blue-400/10 px-2 py-1 rounded text-xs">
+In Progress
+</span>
+
+{% else %}
+
+<span class="text-yellow-400 bg-yellow-400/10 px-2 py-1 rounded text-xs">
+Pending
+</span>
+
+{% endif %}
+
+</td>
+
+<td class="p-3 flex gap-3">
+
+<a onclick="openModal('{% url 'milestone_update' milestone.id %}')"
+class="text-blue-400 hover:text-blue-300 cursor-pointer">
+Edit
+</a>
+
+<a onclick="openModal('{% url 'milestone_delete' milestone.id %}')"
+class="text-red-400 hover:text-red-300 cursor-pointer">
+Delete
+</a>
+
+</td>
+
+</tr>
+
+{% empty %}
+
+<tr>
+<td colspan="6" class="text-center text-slate-400 py-6">
+No milestones
+</td>
+</tr>
+
+{% endfor %}
+
+</tbody>
+
+</table>
+
+</div>
+
+{% endblock %}

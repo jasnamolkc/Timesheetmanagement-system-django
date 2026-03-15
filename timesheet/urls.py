@@ -34,12 +34,19 @@ urlpatterns = [
     #Employee
     path("employees/", views.EmployeeListView.as_view(), name="employee_list"),
     path("employees/<int:pk>/approve/", views.approve_employee, name="approve_employee"),   
+    path("employees-by-project/<int:project_id>/",views.employees_by_project,name="employees_by_project"),
 
     path("tasks/", views.task_page, name="task_page"),
     path("tasks/list/", views.task_list, name="task_list"),
     path("tasks/create/", views.TaskCreateView.as_view(), name="task_create"),
     path("tasks/<int:pk>/edit/", views.TaskUpdateView.as_view(), name="task_update"),
     path("tasks/<int:id>/delete/", views.task_delete, name="task_delete"),
-    path("tasks/by-project/<int:project_id>/", views.tasks_by_project, name="tasks_by_project")
+    path("tasks/by-project/<int:project_id>/", views.tasks_by_project, name="tasks_by_project"),
+
+    path("milestones/", views.milestone_list, name="milestone_list"),
+    path("milestone/create/", views.milestone_create, name="milestone_create"),
+    path("milestone/<int:pk>/edit/", views.milestone_update, name="milestone_update"),
+    path("milestone/<int:pk>/delete/", views.milestone_delete, name="milestone_delete"),
+    path("milestones-by-project/<int:project_id>/",views.milestones_by_project,name="milestones_by_project"),
     
 ]
