@@ -48,5 +48,7 @@ urlpatterns = [
     path("milestone/<int:pk>/edit/", views.milestone_update, name="milestone_update"),
     path("milestone/<int:pk>/delete/", views.milestone_delete, name="milestone_delete"),
     path("milestones-by-project/<int:project_id>/",views.milestones_by_project,name="milestones_by_project"),
+
+    path("delete-task-image/<int:pk>/", views.delete_task_image, name="delete_task_image"),
     
 ]

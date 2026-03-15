@@ -6,11 +6,58 @@
     </h3>
 </div>
 
-<form method="post" action="{{ request.path }}">
+<form method="post" action="{{ request.path }}" enctype="multipart/form-data" >
     {% csrf_token %}
 
     <div class="space-y-4">
         {{ form|crispy }}
+        <!-- Multiple Image Upload -->
+       {% if form.instance.pk and form.instance.images.all %}
+<div class="mt-4">
+    <label class="text-sm text-slate-400 mb-2 block">
+        Existing Images
+    </label>
+
+    <div class="grid grid-cols-3 gap-3">
+
+        {% for img in form.instance.images.all %}
+        <div id="task-image-{{ img.id }}" class="relative group">
+
+    <img src="{{ img.image.url }}"
+         class="w-full h-24 object-cover rounded-lg border border-slate-700">
+
+    <button
+        type="button"
+        onclick="deleteTaskImage({{ img.id }})"
+        class="absolute top-1 right-1 bg-red-600 text-white text-xs px-2 py-1 rounded">
+        ✕
+    </button>
+
+</div>
+        {% endfor %}
+
+    </div>
+</div>
+{% endif %}
+    <div class="mt-4">
+
+<label class="text-sm text-slate-400 mb-2 block">
+Upload Images
+</label>
+
+<input
+    type="file"
+    name="images"
+    id="task-images"
+    multiple
+    accept="image/*"
+    class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200"
+/>
+
+<!-- Preview container -->
+<div id="image-preview" class="grid grid-cols-3 gap-3 mt-3"></div>
+
+</div>
     </div>
 
     <div class="mt-6 flex justify-end space-x-3">
@@ -26,40 +73,7 @@
         </button>
     </div>
 </form>
-<script>
 
-const projectField = document.getElementById("id_project");
-const milestoneField = document.getElementById("id_milestone");
-
-if (projectField && milestoneField) {
-
-    projectField.addEventListener("change", function(){
-
-        let projectId = this.value;
-
-        if(!projectId){
-            milestoneField.innerHTML = '<option value="">No Milestone</option>';
-            return;
-        }
-
-        fetch("/milestones-by-project/" + projectId + "/")
-        .then(res => res.json())
-        .then(data => {
-
-            milestoneField.innerHTML = '<option value="">No Milestone</option>';
-
-            data.milestones.forEach(m => {
-                milestoneField.innerHTML +=
-                    `<option value="${m.id}">${m.name}</option>`;
-            });
-
-        });
-
-    });
-
-}
-
-</script>
 <style>
 input, select, textarea {
     background-color: #0f172a !important;

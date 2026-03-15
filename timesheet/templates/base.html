@@ -166,6 +166,8 @@ if (modalForm && modalForm.action.includes("task")) {
         projectSelect.addEventListener("change", function() {
 
             const projectId = this.value;
+            const selectedMilestone = milestoneSelect.value;
+
 
             if (!projectId) {
                 milestoneSelect.innerHTML = '<option value="">No Milestone</option>';
@@ -177,11 +179,15 @@ if (modalForm && modalForm.action.includes("task")) {
             })
             .then(res => res.json())
             .then(data => {
-
+            console.log(data);   // DEBUG
                 milestoneSelect.innerHTML = '<option value="">No Milestone</option>';
 
                 data.milestones.forEach(m => {
                     const option = new Option(m.name, m.id);
+                   // ⭐ keep selected milestone during edit
+                    if (String(m.id) === String(selectedMilestone)) {
+                        option.selected = true;
+                    }
                     milestoneSelect.add(option);
                 });
 
@@ -210,6 +216,8 @@ if (modalForm && modalForm.action.includes("task")) {
         projectSelect.addEventListener("change", function () {
 
             const projectId = this.value;
+                        const selectedMilestone = milestoneSelect.value;
+
 
             // -------- Milestone Filter --------
             if (milestoneSelect) {
@@ -225,6 +233,9 @@ if (modalForm && modalForm.action.includes("task")) {
 
                         data.milestones.forEach(m => {
                             const option = new Option(m.name, m.id);
+                            if (String(m.id) === String(selectedMilestone)) {
+                        option.selected = true;
+                    }
                             milestoneSelect.add(option);
                         });
 
@@ -234,6 +245,8 @@ if (modalForm && modalForm.action.includes("task")) {
             }
 
             // -------- Employee Filter --------
+            const selectedEmployee = employeeSelect.value;
+
             if (employeeSelect) {
 
                 if (!projectId) {
@@ -248,6 +261,10 @@ if (modalForm && modalForm.action.includes("task")) {
 
                         data.employees.forEach(emp => {
                             const option = new Option(emp.name, emp.id);
+                            if (String(emp.id) === String(selectedEmployee)) {
+            option.selected = true;
+        }
+
                             employeeSelect.add(option);
                         });
 
@@ -276,6 +293,82 @@ if (modalForm && modalForm.action.includes("task")) {
     </script>
    
 
+<script>
+    document.addEventListener("change", function(e){
 
+    if(e.target.id === "task-images"){
+
+        const preview = document.getElementById("image-preview");
+        preview.innerHTML = "";
+
+        const files = e.target.files;
+
+        for(let i=0;i<files.length;i++){
+
+            const reader = new FileReader();
+
+            reader.onload = function(event){
+
+                const img = document.createElement("img");
+                img.src = event.target.result;
+                img.className = "w-full h-24 object-cover rounded-lg border border-slate-700";
+
+                preview.appendChild(img);
+            };
+
+            reader.readAsDataURL(files[i]);
+        }
+
+    }
+
+});
+</script>
+<script>
+    function getCookie(name) {
+    let cookieValue = null;
+
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+
+    return cookieValue;
+}
+    function deleteTaskImage(id){
+alert("bvhgvhg");
+    fetch(`/delete-task-image/${id}/`, {
+        method: "POST",
+        headers: {
+            "X-CSRFToken": getCookie("csrftoken"),
+            "X-Requested-With": "XMLHttpRequest"
+        }
+    })
+    .then(res => res.json())
+    .then(data => {
+
+        if(data.success){
+
+            const imgDiv = document.getElementById("task-image-" + id);
+
+            if(imgDiv){
+                imgDiv.remove();   // remove image from modal
+            }
+
+        }
+
+    });
+
+}
+
+
+</script>
 </body>
 </html>
