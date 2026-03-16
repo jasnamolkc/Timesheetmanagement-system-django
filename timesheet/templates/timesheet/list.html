@@ -33,12 +33,12 @@
             <tr>
                 <th class="px-6 py-3">Date</th>
                 <th class="px-6 py-3">Project</th>
+                 <th class="px-6 py-3">Employee</th>
                 <th class="px-6 py-3">Task</th>
                 <th class="px-6 py-3 text-center">Allocated (hrs)</th>
                 <th class="px-6 py-3 text-center">Used (hrs)</th>
                 <th class="px-6 py-3 text-center">Pending (hrs)</th>
                 <th class="px-6 py-3 text-center">Billable</th>
-                <th class="px-6 py-3">Description</th>
                 <th class="px-6 py-3 text-right">Actions</th>
             </tr>
         </thead>
@@ -47,8 +47,9 @@
             {% for entry in entries %}
             <tr class="hover:bg-slate-700/40 transition-colors">
                 <td class="px-6 py-3">{{ entry.date|date:"d M Y" }}</td>
-                <td class="px-6 py-3 text-blue-400 font-semibold">{{ entry.project.project_code }}</td>
-                <td class="px-6 py-3 font-medium">{{ entry.task.name }}</td>
+                <td class="px-6 py-3 text-blue-400 font-semibold">{{ entry.project.name }}</td>
+                <td class="px-6 py-3 font-medium">{{ entry.employee.user.username}}</td>
+                <td class="px-6 py-3 font-medium">{{ entry.task.title}}</td>
                 <td class="px-6 py-3 text-center">{{ entry.task.estimated_hours }}</td>
                 <td class="px-6 py-3 text-center font-bold">{{ entry.hours }}</td>
                 <td class="px-6 py-3 text-center">{{ entry.pending_hours }}</td>
@@ -59,7 +60,6 @@
                         <span class="px-2 py-1 text-xs bg-slate-500/10 text-slate-400 rounded-full">No</span>
                     {% endif %}
                 </td>
-                <td class="px-6 py-3 line-clamp-2">{{ entry.description }}</td>
                 <td class="px-6 py-3 text-right flex justify-end gap-3">
                     <a href="{% url 'timesheet_edit' entry.pk %}" class="text-blue-400 hover:text-blue-300">
                         <i class="fas fa-edit"></i>
