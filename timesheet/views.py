@@ -592,13 +592,38 @@ from .models import Task, Project, Employee
 from django.db.models import Q
 
 
-def task_page(request):
-    tasks = Task.objects.select_related("project","assigned_to")
-    projects = Project.objects.all()
+from django.shortcuts import render
+from django.utils import timezone
+from django.db.models import Q
+from .models import Task, Project, ProjectAllocation
 
-    return render(request,"tasks/task_list.html",{
-        "tasks":tasks,
-        "projects":projects
+def task_page(request):
+    user = request.user
+    employee = getattr(user, "employee", None)
+    today = timezone.now().date()
+
+    # Base queryset
+    tasks = Task.objects.select_related("project", "assigned_to")
+
+    # Employee → filter tasks by allocated projects
+    if employee and employee.role == "EMPLOYEE":
+        allocated_projects = ProjectAllocation.objects.filter(
+            employee=employee
+        ).filter(
+            Q(end_date__gte=today) | Q(end_date__isnull=True)
+        ).values_list('project_id', flat=True)
+
+        tasks = tasks.filter(project_id__in=allocated_projects)
+
+        # Projects dropdown → only allocated projects
+        projects = Project.objects.filter(id__in=allocated_projects)
+    else:
+        # Admin / Manager → all tasks & projects
+        projects = Project.objects.all()
+
+    return render(request, "tasks/task_list.html", {
+        "tasks": tasks,
+        "projects": projects
     })
 
 
