@@ -473,8 +473,8 @@ class TimesheetEntry(models.Model):
             task=self.task
         )
 
-        if self.pk:
-            qs = qs.exclude(pk=self.pk)
+        # if self.pk:
+        #     qs = qs.exclude(pk=self.pk)
 
         total_logged = qs.aggregate(total=Sum('hours'))['total'] or 0
 
