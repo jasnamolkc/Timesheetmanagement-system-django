@@ -3,94 +3,106 @@
 
 {% block content %}
 
-<div class="flex justify-between mb-6">
-    <h2 class="text-2xl font-bold">Timesheets</h2>
+<div class="flex justify-between items-center mb-6">
+    <h2 class="text-2xl font-bold text-white">Timesheets</h2>
 
     <button onclick="openModal('{% url 'timesheet_create' %}')"
-            class="bg-blue-600 text-white px-4 py-2 rounded">
-        + Create
+            class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded flex items-center">
+        <i class="fas fa-plus mr-2"></i> Create
     </button>
 </div>
 
 <!-- Search & Filter -->
 <div class="flex gap-3 mb-4">
     <input id="search"
-           placeholder="Search..."
-           class="bg-slate-800 border px-3 py-2 rounded text-sm">
+           placeholder="Search description or task..."
+           class="bg-slate-800 border border-slate-700 text-white px-3 py-2 rounded w-full">
 
     <select id="filter"
-            class="bg-slate-800 border px-3 py-2 rounded text-sm">
+            class="bg-slate-800 border border-slate-700 text-white px-3 py-2 rounded">
         <option value="">All</option>
-        <option value="Billable">Billable</option>
-        <option value="Non-Billable">Non-Billable</option>
+        <option value="Yes">Billable</option>
+        <option value="No">Non-Billable</option>
     </select>
 </div>
 
-<!-- List -->
-<!-- <div id="timesheetContainer" class="grid grid-cols-1 gap-3">
+<!-- Timesheet Table -->
+<div class="bg-slate-800 rounded-2xl border border-slate-700 overflow-x-auto">
+    <table class="w-full text-left text-sm divide-y divide-slate-700">
+        <thead class="bg-slate-700 text-slate-400 uppercase text-xs">
+            <tr>
+                <th class="px-6 py-3">Date</th>
+                <th class="px-6 py-3">Project</th>
+                <th class="px-6 py-3">Task</th>
+                <th class="px-6 py-3 text-center">Allocated (hrs)</th>
+                <th class="px-6 py-3 text-center">Used (hrs)</th>
+                <th class="px-6 py-3 text-center">Pending (hrs)</th>
+                <th class="px-6 py-3 text-center">Billable</th>
+                <th class="px-6 py-3">Description</th>
+                <th class="px-6 py-3 text-right">Actions</th>
+            </tr>
+        </thead>
 
-    {% for entry in entries %}
-    <div class="bg-slate-800 p-4 rounded border"
-         data-text="{{ entry.description|lower }}"
-         data-billable="{{ entry.billable|yesno:'Billable,Non-Billable' }}">
-
-        <div class="flex justify-between">
-            <span>{{ entry.project.project_code }}</span>
-            <span>{{ entry.hours }} hrs</span>
-        </div>
-
-        <p class="text-sm text-slate-400">{{ entry.description }}</p>
-    </div>
-    {% empty %}
-    <p class="text-slate-400">No timesheets</p>
-    {% endfor %}
-
-</div> -->
-<div id="timesheetContainer" class="grid grid-cols-1 gap-3">
-
-    {% for entry in entries %}
-    <div class="bg-slate-800 p-4 rounded border"
-         data-text="{{ entry.description|lower }} {{ entry.task.name|lower }}"
-         data-billable="{{ entry.billable|yesno:'Billable,Non-Billable' }}">
-
-        <!-- Project & Task -->
-        <div class="flex justify-between mb-2">
-            <div class="font-semibold text-blue-400">{{ entry.project.project_code }}</div>
-            <div class="font-medium">{{ entry.task.name }}</div>
-        </div>
-
-        <!-- Times -->
-        <div class="grid grid-cols-4 gap-2 text-sm text-slate-300 mb-2">
-            <div>Allocated: {{ entry.task.estimated_hours }} hrs</div>
-            <div>Used: {{ entry.hours }} hrs</div>
-            <div>Pending: {{ entry.pending_hours }} hrs</div>
-            <div>Billable: {{ entry.billable|yesno:"Yes,No" }}</div>
-        </div>
-
-        <!-- Dates -->
-        <div class="text-sm text-slate-400 mb-2">
-            Start: {{ entry.start_date|date:"d M Y" }} | End: {{ entry.end_date|date:"d M Y" }}
-        </div>
-
-        <!-- Description -->
-        <p class="text-sm text-slate-400">{{ entry.description }}</p>
-    </div>
-
-    {% empty %}
-    <p class="text-slate-400">No timesheets</p>
-    {% endfor %}
-
+        <tbody class="text-slate-300">
+            {% for entry in entries %}
+            <tr class="hover:bg-slate-700/40 transition-colors">
+                <td class="px-6 py-3">{{ entry.date|date:"d M Y" }}</td>
+                <td class="px-6 py-3 text-blue-400 font-semibold">{{ entry.project.project_code }}</td>
+                <td class="px-6 py-3 font-medium">{{ entry.task.name }}</td>
+                <td class="px-6 py-3 text-center">{{ entry.task.estimated_hours }}</td>
+                <td class="px-6 py-3 text-center font-bold">{{ entry.hours }}</td>
+                <td class="px-6 py-3 text-center">{{ entry.pending_hours }}</td>
+                <td class="px-6 py-3 text-center">
+                    {% if entry.billable %}
+                        <span class="px-2 py-1 text-xs bg-emerald-500/10 text-emerald-400 rounded-full">Yes</span>
+                    {% else %}
+                        <span class="px-2 py-1 text-xs bg-slate-500/10 text-slate-400 rounded-full">No</span>
+                    {% endif %}
+                </td>
+                <td class="px-6 py-3 line-clamp-2">{{ entry.description }}</td>
+                <td class="px-6 py-3 text-right flex justify-end gap-3">
+                    <a href="{% url 'timesheet_edit' entry.pk %}" class="text-blue-400 hover:text-blue-300">
+                        <i class="fas fa-edit"></i>
+                    </a>
+                    <a href="{% url 'timesheet_delete' entry.pk %}" class="text-red-400 hover:text-red-300">
+                        <i class="fas fa-trash"></i>
+                    </a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="9" class="px-6 py-12 text-center text-slate-500">
+                    No timesheet entries found.
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 </div>
 
-<!-- Modal -->
-<div id="modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-    <div id="modalContent" class="bg-slate-800 p-6 rounded w-full max-w-lg"></div>
+<!-- Pagination -->
+{% if is_paginated %}
+<div class="mt-6 flex justify-center">
+    <nav class="flex space-x-2">
+        {% if page_obj.has_previous %}
+        <a href="?page={{ page_obj.previous_page_number }}" class="px-4 py-2 bg-slate-800 border border-slate-700 rounded-lg hover:bg-slate-700">
+            Previous
+        </a>
+        {% endif %}
+        <span class="px-4 py-2 bg-blue-600 rounded-lg text-white">{{ page_obj.number }}</span>
+        {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}" class="px-4 py-2 bg-slate-800 border border-slate-700 rounded-lg hover:bg-slate-700">
+            Next
+        </a>
+        {% endif %}
+    </nav>
 </div>
+{% endif %}
 
 <script>
 const search = document.getElementById("search");
 const filter = document.getElementById("filter");
-const container = document.getElementById("timesheetContainer");
+const container = document.querySelector("tbody");
 
 function filterTimesheets() {
     const s = search.value.toLowerCase();
@@ -98,9 +110,14 @@ function filterTimesheets() {
 
     let visible = 0;
 
-    container.querySelectorAll("[data-text]").forEach(row => {
-        const matchSearch = row.dataset.text.includes(s);
-        const matchFilter = f === "" || row.dataset.billable === f;
+    container.querySelectorAll("tr").forEach(row => {
+        if (row.querySelectorAll("td").length === 0) return; // skip empty row
+
+        const desc = row.querySelector("td:nth-child(8)").innerText.toLowerCase();
+        const billable = row.querySelector("td:nth-child(7)").innerText;
+
+        const matchSearch = desc.includes(s);
+        const matchFilter = f === "" || billable === f;
 
         if (matchSearch && matchFilter) {
             row.style.display = "";
@@ -110,45 +127,14 @@ function filterTimesheets() {
         }
     });
 
+    // Show a message if no data
     if (visible === 0) {
-        container.innerHTML = `<p class='text-slate-400'>No data found</p>`;
+        container.innerHTML = `<tr><td colspan="9" class='text-center text-slate-500 py-6'>No data found</td></tr>`;
     }
 }
 
 search.addEventListener("keyup", filterTimesheets);
 filter.addEventListener("change", filterTimesheets);
-
-// Modal project → task dynamic load
-// document.addEventListener("change", function(e) {
-//     const modalForm = document.getElementById("modalContent").querySelector("form");
-//     if (!modalForm) return;
-
-//     if (e.target.id === "id_project") {
-//         const projectId = e.target.value;
-//         const taskSelect = modalForm.querySelector("#id_task");
-
-//         if (!taskSelect) return;
-
-//         if (!projectId) {
-//             taskSelect.innerHTML = '<option value="">Select task</option>';
-//             return;
-//         }
-
-//         fetch(`/tasks/by-project/${projectId}/`, {
-//             headers: { "X-Requested-With": "XMLHttpRequest" }
-//         })
-//         .then(res => res.json())
-//         .then(data => {
-//             taskSelect.innerHTML = '<option value="">Select task</option>';
-//             data.tasks.forEach(task => {
-//                 const option = new Option(task.name || task.title, task.id);
-//                 taskSelect.add(option);
-//             });
-//         })
-//         .catch(err => {
-//             console.error("Error fetching tasks:", err);
-//         });
-//     }
-// });
 </script>
+
 {% endblock %}
