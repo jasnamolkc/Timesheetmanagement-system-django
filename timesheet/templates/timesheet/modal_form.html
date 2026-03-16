@@ -25,11 +25,12 @@
             {{ form.task|as_crispy_field }}
         </div>
 
-       <!-- <button type="button"
-    onclick="openTaskModal('{% url 'task_create' %}?modal=1')"
-    class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg cursor-pointer">
-    +
-</button> -->
+     <button type="button"
+            id="addTaskBtn"
+            class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg"
+            disabled>
+            +
+        </button>
     </div>
 
     {{ form.date|as_crispy_field }}
@@ -53,7 +54,9 @@
         </button>
     </div>
 </form>
-
+<div id="modalOverlay" class="hidden fixed inset-0 bg-black bg-opacity-50 items-center justify-center z-50">
+    <div id="modalContent" class="bg-slate-800 p-6 rounded w-full max-w-lg"></div>
+</div>
 <style>
     /* Custom styles to match the dark theme for crispy forms */
     input, select, textarea {
@@ -65,8 +68,3 @@
     label { color: #94a3b8 !important; font-size: 0.875rem !important; margin-bottom: 0.25rem !important; }
     .text-danger { color: #f87171 !important; font-size: 0.75rem !important; margin-top: 0.25rem !important; }
 </style>
-<!-- <script>
-    document.getElementById("id_project").addEventListener("change", function(){
-    document.getElementById("addTaskBtn").disabled = !this.value;
-});
-</script> -->

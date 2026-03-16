@@ -732,6 +732,12 @@ class TaskCreateView(LoginRequiredMixin, CreateView):
     form_class = TaskForm
     template_name = "tasks/modal_form.html"
     success_url = reverse_lazy("task_page")
+    def get_initial(self):
+        initial = super().get_initial()
+        project_id = self.request.GET.get("project")  # get project from query string
+        if project_id:
+            initial["project"] = project_id
+        return initial
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["milestones"] = Milestone.objects.select_related("project")
