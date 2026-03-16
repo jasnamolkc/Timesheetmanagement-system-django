@@ -31,7 +31,21 @@
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-slate-400 mb-2">Password</label>
-                        <input type="password" name="password" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all">
+
+                        <div class="relative">
+                            <input 
+                                type="password" 
+                                name="password" 
+                                id="password"
+                                required
+                                class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 pr-12 text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                            >
+
+                            <span onclick="togglePassword()" 
+                                class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 cursor-pointer">
+                                <i id="toggleIcon" class="fa fa-eye"></i>
+                            </span>
+                        </div>
                     </div>
 
                     <button type="submit" class="w-full py-4 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white rounded-xl font-bold shadow-lg shadow-blue-500/20 transition-all transform hover:-translate-y-1">
@@ -52,5 +66,21 @@
             &copy; 2025 Timesheet Pro. All rights reserved.
         </p>
     </div>
+    <script>
+function togglePassword() {
+    const password = document.getElementById("password");
+    const icon = document.getElementById("toggleIcon");
+
+    if (password.type === "password") {
+        password.type = "text";
+        icon.classList.remove("fa-eye");
+        icon.classList.add("fa-eye-slash");
+    } else {
+        password.type = "password";
+        icon.classList.remove("fa-eye-slash");
+        icon.classList.add("fa-eye");
+    }
+}
+</script>
 </body>
 </html>

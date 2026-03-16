@@ -4,29 +4,15 @@ from django.core.exceptions import ValidationError
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import UserCreationForm
 from .models import *
-class MultipleFileInput(forms.ClearableFileInput):
-    allow_multiple_selected = True
-class MultipleFileField(forms.FileField):
 
-    def __init__(self, *args, **kwargs):
-        kwargs.setdefault("widget", MultipleFileInput())
-        super().__init__(*args, **kwargs)
-
-    def clean(self, data, initial=None):
-        if isinstance(data, (list, tuple)):
-            result = []
-            for d in data:
-                result.append(super().clean(d, initial))
-            return result
-        return super().clean(data, initial)
 class RegistrationForm(UserCreationForm):
-    first_name = forms.CharField(max_length=30, required=True)
-    last_name = forms.CharField(max_length=30, required=True)
+    # first_name = forms.CharField(max_length=30, required=True)
+    # last_name = forms.CharField(max_length=30, required=True)
     email = forms.EmailField(required=True)
 
     class Meta(UserCreationForm.Meta):
         model = User
-        fields = UserCreationForm.Meta.fields + ('first_name', 'last_name', 'email')
+        fields = UserCreationForm.Meta.fields + ('email',)
 
 class ProjectForm(forms.ModelForm):
     class Meta:
