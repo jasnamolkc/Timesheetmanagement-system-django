@@ -5,11 +5,13 @@
 
 <div class="flex items-center justify-between mb-6">
     <h2 class="text-3xl font-bold">Milestones</h2>
+    {% if request.user.is_superuser or request.user.employee.role == 'ADMIN' or request.user.employee.role == 'MANAGER' %}
 
     <button onclick="openModal('{% url 'milestone_create' %}')"
         class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg text-sm font-medium">
         + Create Milestone
     </button>
+    {% endif %}
 </div>
 
 <div class="bg-slate-800 rounded-xl border border-slate-700 overflow-hidden">

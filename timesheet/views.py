@@ -90,6 +90,20 @@ class DashboardView(LoginRequiredMixin, TemplateView):
 #     template_name = 'timesheet/project_list.html'
 #     context_object_name = 'projects'
 #     paginate_by = 10
+from django.db.models import Q
+
+from django.views.generic import ListView
+from django.contrib.auth.mixins import LoginRequiredMixin
+from .models import Project
+
+from django.views.generic import ListView
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.utils import timezone
+from .models import Project
+
+from django.utils import timezone
+from django.db.models import Prefetch, Q
+
 class ProjectListView(LoginRequiredMixin, ListView):
     model = Project
     template_name = 'timesheet/project_list.html'
@@ -97,30 +111,47 @@ class ProjectListView(LoginRequiredMixin, ListView):
     paginate_by = 10
 
     def get_queryset(self):
-        user_employee = self.request.user.employee
-        print(self.request.user.username)
+        user = self.request.user
+        user_employee = getattr(user, 'employee', None)
+        today = timezone.now().date()
         show_archived = self.request.GET.get('archived')
-        # queryset = Project.objects.annotate(
-        #     allocated_employees_count=Count('allocations', distinct=True)
-        # )
-        queryset = Project.objects.all()   # ✅ remove annotate
 
-        # Employee → only ACTIVE and not archived
-        if user_employee.role == 'EMPLOYEE':
-            queryset = queryset.filter(
-                status='ACTIVE',
-                is_archived=False
-            )
+        queryset = Project.objects.all()
 
-        else:
+        # Admin / Manager / Superuser → all projects
+        if user.is_superuser or (user_employee and user_employee.role in ['ADMIN', 'MANAGER']):
             if show_archived:
                 queryset = queryset.filter(is_archived=True)
             else:
                 queryset = queryset.filter(is_archived=False)
-       
 
-        return queryset
-        
+        # Employee → only allocated projects in current date range
+        elif user_employee and user_employee.role == 'EMPLOYEE':
+            queryset = queryset.filter(
+                allocations__employee=user_employee
+            ).filter(
+                Q(allocations__end_date__gte=today) | Q(allocations__end_date__isnull=True)
+            ).filter(
+                
+                is_archived=False
+            ).distinct()
+        else:
+            queryset = Project.objects.none()
+
+        # Prefetch active allocations
+        active_allocations = ProjectAllocation.objects.filter(
+            Q(end_date__gte=today) | Q(end_date__isnull=True)
+        ).select_related('employee__user')
+
+        queryset = queryset.prefetch_related(
+            Prefetch('allocations', queryset=active_allocations, to_attr='active_allocs')
+        )
+
+        return queryset.order_by('-id')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        return context
 # Archive Project View
 class ProjectArchiveView(ManagerRequiredMixin, View):
     def post(self, request, pk):
@@ -159,7 +190,7 @@ def allocate_employee(request, project_id):
 
         return redirect("project_list")
 
-    employees = Employee.objects.all()
+    employees = Employee.objects.filter(status = "APPROVED",role = 'EMPLOYEE')
 
     return render(request, "projects/allocate_employee.html", {
         "project": project,

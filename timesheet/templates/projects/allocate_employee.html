@@ -3,9 +3,9 @@
         Allocate Employee
     </h2>
 
-```
+
 <p class="text-sm text-slate-400 mb-4">
-    Project: <strong>{{ project.name }}</strong>
+    Project:: <strong>{{ project.name }}</strong>
 </p>
 
 <form method="POST" action="{% url 'allocate_employee' project.id %}">
@@ -14,13 +14,16 @@
     <!-- Employee -->
     <label class="block mb-1 text-sm text-slate-300">Employee</label>
     <select name="employee"
-        class="w-full bg-slate-800 border border-slate-700 text-white p-2 rounded mb-4 focus:ring-2 focus:ring-blue-500">
-        {% for employee in employees %}
-            <option value="{{ employee.id }}">
-                {{ employee.user.get_full_name }}
-            </option>
-        {% endfor %}
-    </select>
+    class="w-full bg-slate-800 border border-slate-700 p-2 rounded mb-4 text-white focus:ring-2 focus:ring-blue-500">
+    <!-- Default placeholder -->
+    <option value="" selected disabled>Select an employee</option>
+
+    {% for employee in employees %}
+        <option value="{{ employee.id }}">
+            {{ employee.user.username }}
+        </option>
+    {% endfor %}
+</select>
 
     <!-- Allocation Percentage -->
     <!-- <label class="block mb-1 text-sm text-slate-300">Allocation %</label>
