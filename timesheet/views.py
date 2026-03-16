@@ -805,21 +805,71 @@ from .models import TimesheetEntry
 from .forms import TimesheetEntryForm
 
 
+from django.views.generic import ListView
+from django.utils import timezone
+from django.db.models import Q
+from .models import TimesheetEntry, Project, ProjectAllocation
+
 class TimesheetListView(ListView):
     model = TimesheetEntry
     template_name = "timesheet/list.html"
     context_object_name = "entries"
+    paginate_by = 10  # optional
 
     def get_queryset(self):
-        qs = TimesheetEntry.objects.select_related("employee", "project", "task")
+        user = self.request.user
+        employee = getattr(user, 'employee', None)
+        today = timezone.now().date()
 
-        # optional filters (server side not required for JS search)
-        project = self.request.GET.get("project")
-        if project:
-            qs = qs.filter(project_id=project)
+        # Base queryset with related objects
+        qs = TimesheetEntry.objects.select_related("employee__user", "project", "task")
 
-        return qs
+        # Admin / Manager / Superuser → see all entries
+        if not (employee and employee.role == 'EMPLOYEE'):
+            pass  # leave qs as all entries
 
+        # Employee → filter by their allocated projects
+        else:
+            allocated_projects = ProjectAllocation.objects.filter(
+                employee=employee
+            ).filter(
+                Q(end_date__gte=today) | Q(end_date__isnull=True)
+            ).values_list('project_id', flat=True)
+
+            qs = qs.filter(
+                employee=employee,
+                project_id__in=allocated_projects
+            )
+
+        # Optional project filter from GET
+        project_id = self.request.GET.get("project")
+        if project_id:
+            qs = qs.filter(project_id=project_id)
+
+        return qs.order_by("-date")
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        user = self.request.user
+        employee = getattr(user, 'employee', None)
+        today = timezone.now().date()
+
+        # Projects for filter dropdown
+        if not (employee and employee.role == 'EMPLOYEE'):
+            context['all_projects'] = Project.objects.filter(is_archived=False)
+            context['all_employees'] = Employee.objects.filter(status='APPROVED')
+            context['can_manage'] = True
+        else:
+            allocated_projects = ProjectAllocation.objects.filter(
+                employee=employee
+            ).filter(
+                Q(end_date__gte=today) | Q(end_date__isnull=True)
+            ).values_list('project_id', flat=True)
+            context['all_projects'] = Project.objects.filter(id__in=allocated_projects, is_archived=False)
+            context['all_employees'] = None
+            context['can_manage'] = False
+
+        return context
 
 class TimesheetCreateView(LoginRequiredMixin, CreateView):
     model = TimesheetEntry
