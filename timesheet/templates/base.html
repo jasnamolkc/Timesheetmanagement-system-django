@@ -102,8 +102,224 @@
         </div>
     </div>
 
+<!-- Nested Modal Container -->
+<div id="modal-container-2" class="hidden fixed inset-0 z-60 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <div class="fixed inset-0 bg-slate-950/75 transition-opacity" aria-hidden="true" onclick="closeModal2()"></div>
+        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+        <div class="inline-block align-bottom bg-slate-800 rounded-xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full border border-slate-700">
+            <div id="modal-content-2" class="p-6">
+                <!-- Loaded via AJAX -->
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+// function openModal2(url) {
+//     const modalUrl = url.includes('?') ? `${url}&modal=1` : `${url}?modal=1`;
+//     fetch(modalUrl, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+//         .then(res => res.text())
+//         .then(html => {
+//             const modalContent2 = document.getElementById('modal-content-2');
+//             modalContent2.innerHTML = html;
+//             const modal2 = document.getElementById('modal-container-2');
+//             modal2.classList.remove('hidden');
+//             modal2.style.zIndex = 9999;   // ensure it’s above modal 1
+//             document.body.classList.add('overflow-hidden');
+//         });
+// }
 
-   
+// function openModal2(url) {
+//     const modalUrl = url.includes('?') ? `${url}&modal=1` : `${url}?modal=1`;
+//     fetch(modalUrl, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+//         .then(res => res.text())
+//         .then(html => {
+//             const modalContent2 = document.getElementById('modal-content-2');
+//             modalContent2.innerHTML = html;
+
+//             // Show modal
+//             const modal2 = document.getElementById('modal-container-2');
+//             modal2.classList.remove('hidden');
+//             modal2.style.zIndex = 9999;   // ensure it’s above modal 1
+//             document.body.classList.add('overflow-hidden');
+
+//             // ---------- Fields to hide ----------
+//             const fieldsToHide = ['#id_description', '#id_milestone', '#id_status'];
+
+//             fieldsToHide.forEach(selector => {
+//                 const field = modalContent2.querySelector(selector);
+//                 if (field) {
+//                     const wrapper = field.closest('.form-group') || field.parentElement;
+//                     if (wrapper) wrapper.style.display = 'none';
+//                     // Optional: if label is outside wrapper, hide explicitly
+//         const label = modalContent2.querySelector(`label[for="${field.id}"]`);
+//         if (label) label.style.display = 'none';
+//                 }
+//             });
+            
+//             // ---------- Prefill project if passed in URL ----------
+//             const params = new URLSearchParams(url.split('?')[1]);
+//             const projectId = params.get('project');
+//             if (projectId) {
+//                 const projectSelect = modalContent2.querySelector('#id_project');
+//                 if (projectSelect) {
+//                     projectSelect.value = projectId;
+
+//                     // Trigger change to load milestones & employees
+//                     projectSelect.dispatchEvent(new Event('change'));
+//                 }
+//             }
+//         });
+// }
+
+
+// function closeModal2() {
+//     document.getElementById('modal-container-2').classList.add('hidden');
+//     document.body.classList.remove('overflow-hidden');
+// }
+
+ </script>
+<script>
+    function openModal2(url) {
+    const modalUrl = url.includes('?') ? `${url}&modal=1` : `${url}?modal=1`;
+    fetch(modalUrl, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+        .then(res => res.text())
+        .then(html => {
+            const modalContent2 = document.getElementById('modal-content-2');
+            modalContent2.innerHTML = html;
+
+            // Show modal
+            const modal2 = document.getElementById('modal-container-2');
+            modal2.classList.remove('hidden');
+            modal2.style.zIndex = 9999;   // ensure it’s above modal 1
+            document.body.classList.add('overflow-hidden');
+
+            // ---------- Fields to hide ----------
+            const fieldsToHide = ['#id_description', '#id_milestone', '#id_status'];
+
+            fieldsToHide.forEach(selector => {
+                const field = modalContent2.querySelector(selector);
+                if (field) {
+                    const wrapper = field.closest('.form-group') || field.parentElement;
+                    if (wrapper) wrapper.style.display = 'none';
+
+                    // Hide label explicitly if needed
+                    const label = modalContent2.querySelector(`label[for="${field.id}"]`);
+                    if (label) label.style.display = 'none';
+                }
+            });
+            
+            // ---------- Prefill project if passed in URL ----------
+            const params = new URLSearchParams(url.split('?')[1]);
+            const projectId = params.get('project');
+            if (projectId) {
+                const projectSelect = modalContent2.querySelector('#id_project');
+                if (projectSelect) {
+                    projectSelect.value = projectId;
+
+                    // Trigger change to load milestones & employees
+                    projectSelect.dispatchEvent(new Event('change'));
+                }
+            }
+
+            // ---------- Attach submit handler ----------
+            const form2 = modalContent2.querySelector("form");
+            if (form2) {
+                form2.addEventListener("submit", function(e){
+                    e.preventDefault();
+                    const formData = new FormData(form2);
+                    fetch(form2.action, {
+                        method: form2.method,
+                        headers: { "X-Requested-With": "XMLHttpRequest" },
+                        body: formData
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            // 1️⃣ Close nested modal
+                            closeModal2();
+
+                            // 2️⃣ Add new task to parent timesheet modal
+                            const parentModal = document.getElementById('modal-content');
+                            const taskSelect = parentModal.querySelector("#id_task");
+                            if (taskSelect) {
+                                const option = new Option(data.task_name, data.task_id, true, true);
+                                taskSelect.add(option);
+                                taskSelect.dispatchEvent(new Event('change')); // trigger any handlers
+                            }
+                        } else if (data.html) {
+                            // If validation errors, reload nested modal content
+                            modalContent2.innerHTML = data.html;
+                        }
+                    });
+                });
+            }
+        });
+}
+
+function closeModal2() {
+    document.getElementById('modal-container-2').classList.add('hidden');
+    document.body.classList.remove('overflow-hidden');
+}
+</script>
+   <script>
+    document.addEventListener("DOMContentLoaded", function() {
+    const modalContent = document.getElementById('modal-content');
+
+    function attachTimesheetBehavior() {
+        const modalForm = modalContent.querySelector("form");
+
+        if (!modalForm || !modalForm.action.includes("timesheet")) return;
+
+        const projectSelect = modalForm.querySelector("#id_project");
+        const taskSelect = modalForm.querySelector("#id_task");
+        const addTaskBtn = modalForm.querySelector("#addTaskBtn");
+
+        if (!projectSelect || !taskSelect || !addTaskBtn) return;
+
+        // Enable/disable plus button based on project selection
+        function toggleAddButton() {
+            addTaskBtn.disabled = !projectSelect.value;
+        }
+
+        projectSelect.addEventListener("change", function() {
+            toggleAddButton();
+
+            const projectId = this.value;
+            if (!projectId) {
+                taskSelect.innerHTML = '<option value="">Select task</option>';
+                return;
+            }
+
+            fetch(`/tasks/by-project/${projectId}/`, {
+                headers: { "X-Requested-With": "XMLHttpRequest" }
+            })
+            .then(res => res.json())
+            .then(data => {
+                taskSelect.innerHTML = '<option value="">Select task</option>';
+                data.tasks.forEach(task => {
+                    const option = new Option(task.title, task.id);
+                    taskSelect.add(option);
+                });
+            });
+        });
+
+        toggleAddButton(); // initialize button state
+
+        // Open Task modal when + is clicked
+        addTaskBtn.addEventListener("click", function() {
+            const projectId = projectSelect.value;
+            if (!projectId) return;
+
+            openModal2(`/tasks/create/?modal=1&project=${projectId}`);
+        });
+    }
+
+    // Attach behavior whenever modal content changes
+    const observer = new MutationObserver(() => attachTimesheetBehavior());
+    observer.observe(modalContent, { childList: true, subtree: true });
+});
+   </script>
 
     <script>
         function openModal(url) {
@@ -124,6 +340,9 @@
     document.body.classList.add('overflow-hidden');
 
                    /////////////
+                   
+                   ////////////
+
 
 // --- Attach Timesheet-specific behavior ---
         const modalForm = modalContent.querySelector("form");
@@ -131,7 +350,6 @@
         if (modalForm && modalForm.action.includes("timesheet")) {
             const projectSelect = modalForm.querySelector("#id_project");
             const taskSelect = modalForm.querySelector("#id_task");
-
     if (projectSelect && taskSelect) {
         projectSelect.addEventListener("change", function() {
             const projectId = this.value;
@@ -372,5 +590,8 @@ alert("bvhgvhg");
 
 </script>
 
+<script>
+    
+</script>
 </body>
 </html>
