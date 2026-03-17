@@ -40,8 +40,44 @@
 
 {% else %}
 
-    {{ form|crispy }}
+{{ form.name|as_crispy_field }}
+{{ form.project_code|as_crispy_field }}
+{{ form.status|as_crispy_field }}
+{{ form.description|as_crispy_field }}
 
+<div class="grid grid-cols-2 gap-4">
+    {{ form.start_date|as_crispy_field }}
+    {{ form.end_date|as_crispy_field }}
+</div>    
+<h4 class="text-lg font-semibold mt-6 mb-3">Milestones</h4>
+
+{{ milestone_formset.management_form }}
+
+<div id="milestone-container">
+
+{% for milestone in milestone_formset %}
+<div class="bg-slate-900 p-4 rounded-lg mb-3">
+    {% if form.instance.pk %}
+    {{ milestone.id }}   <!-- 🔥 ADD THIS -->
+    {% endif %}
+    {{ milestone.non_field_errors }}  <!-- 🔥 ADD THIS -->
+
+    {{ milestone.name|as_crispy_field }}
+
+    <div class="grid grid-cols-2 gap-4">
+        {{ milestone.start_date|as_crispy_field }}
+        {{ milestone.due_date|as_crispy_field }}
+    </div>
+
+</div>
+{% endfor %}
+
+</div>
+<button type="button"
+        id="add-milestone"
+        class="mt-4 bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg text-sm">
+    + Add Milestone
+</button>
 {% endif %}
 
 </div>
@@ -53,10 +89,27 @@
             Save Changes
         </button>
     </div>
+    
 </form>
-<div id="modalOverlay" class="hidden fixed inset-0 bg-black bg-opacity-50 items-center justify-center z-50">
-    <div id="modalContent" class="bg-slate-800 p-6 rounded w-full max-w-lg"></div>
+
+<div id="empty-form-template" class="hidden">
+<div class="milestone-form bg-slate-900 p-4 rounded-lg space-y-3">
+{% if form.instance.pk %}
+    {{ milestone_formset.empty_form.id }}   <!-- 🔥 ADD THIS -->
+    {% endif %}
+    {{ milestone_formset.empty_form.name|as_crispy_field }}
+
+    <div class="grid grid-cols-2 gap-4">
+        {{ milestone_formset.empty_form.start_date|as_crispy_field }}
+        {{ milestone_formset.empty_form.due_date|as_crispy_field }}
+    </div>
+
 </div>
+</div>
+
+<!-- <div id="modalOverlay" class="hidden fixed inset-0 bg-black bg-opacity-50 items-center justify-center z-50">
+    <div id="modalContent" class="bg-slate-800 p-6 rounded w-full max-w-lg"></div>
+</div> -->
 <style>
     /* Custom styles to match the dark theme for crispy forms */
     input, select, textarea {
