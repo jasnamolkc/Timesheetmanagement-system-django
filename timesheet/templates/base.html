@@ -589,7 +589,34 @@ alert("bvhgvhg");
 
 
 </script>
+<script>
+document.addEventListener("click", function (e) {
 
+    // ✅ Detect dynamically added button
+    if (e.target && e.target.id === "add-milestone") {
+
+        console.log("Button clicked");
+
+        const container = document.getElementById("milestone-container");
+        const totalForms = document.querySelector('input[name$="-TOTAL_FORMS"]');
+        const templateEl = document.getElementById("empty-form-template");
+
+        if (!container || !totalForms || !templateEl) {
+            console.log("Missing elements");
+            return;
+        }
+
+        let formNum = parseInt(totalForms.value);
+
+        let template = templateEl.innerHTML.replace(/__prefix__/g, formNum);
+
+        container.insertAdjacentHTML("beforeend", template);
+
+        totalForms.value = formNum + 1;
+    }
+
+});
+</script>
 <script>
     
 </script>

@@ -167,11 +167,54 @@ class ProjectCreateView(ManagerRequiredMixin, AjaxTemplateMixin, CreateView):
     template_name = 'timesheet/form_page.html'
     success_url = reverse_lazy('project_list')
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        if self.request.POST:
+            context["milestone_formset"] = MilestoneFormSet(self.request.POST)
+        else:
+            context["milestone_formset"] = MilestoneFormSet()
+
+        return context
+
+    def form_valid(self, form):
+        context = self.get_context_data()
+        milestone_formset = context["milestone_formset"]
+
+        if milestone_formset.is_valid():
+            self.object = form.save()
+            milestone_formset.instance = self.object
+            milestone_formset.save()
+            return redirect(self.success_url)
+
+        return self.form_invalid(form)
 class ProjectUpdateView(ManagerRequiredMixin, AjaxTemplateMixin, UpdateView):
     model = Project
     form_class = ProjectForm
     template_name = 'timesheet/form_page.html'
     success_url = reverse_lazy('project_list')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        if self.request.POST:
+            context["milestone_formset"] = MilestoneFormSet(self.request.POST, instance=self.object)
+        else:
+            context["milestone_formset"] = MilestoneFormSet(instance=self.object)
+
+        return context
+
+    def form_valid(self, form):
+        context = self.get_context_data()
+        milestone_formset = context["milestone_formset"]
+
+        if milestone_formset.is_valid():
+            self.object = form.save()
+            milestone_formset.instance = self.object
+            milestone_formset.save()
+            return redirect(self.success_url)
+
+        return self.form_invalid(form)
 def allocate_employee(request, project_id):
     project = get_object_or_404(Project, pk=project_id)
 
