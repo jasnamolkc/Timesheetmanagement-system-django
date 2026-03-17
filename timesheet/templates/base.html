@@ -620,5 +620,30 @@ document.addEventListener("click", function (e) {
 <script>
     
 </script>
+<script>
+let currentProjectId = null;
+
+function openArchiveModal(projectId, projectName, isArchived) {
+    currentProjectId = projectId;
+
+    const action = (isArchived === "True") ? "unarchive" : "archive";
+
+    document.getElementById("archiveMessage").innerText =
+        `Are you sure you want to ${action} "${projectName}"?`;
+
+    document.getElementById("archiveModal").classList.remove("hidden");
+    document.getElementById("archiveModal").classList.add("flex");
+}
+
+function closeArchiveModal() {
+    document.getElementById("archiveModal").classList.add("hidden");
+}
+
+document.getElementById("confirmArchiveBtn").addEventListener("click", function () {
+    if (currentProjectId) {
+        document.getElementById(`archive-form-${currentProjectId}`).submit();
+    }
+});
+</script>
 </body>
 </html>
