@@ -137,7 +137,10 @@ class ProjectListView(LoginRequiredMixin, ListView):
             ).distinct()
         else:
             queryset = Project.objects.none()
-
+        # ✅ ADD THIS (VERY IMPORTANT)
+        queryset = queryset.annotate(
+            milestone_count=Count('milestones')   # 🔥 use your related_name
+        )
         # Prefetch active allocations
         active_allocations = ProjectAllocation.objects.filter(
             Q(end_date__gte=today) | Q(end_date__isnull=True)
@@ -1079,3 +1082,14 @@ def delete_task_image(request, pk):
     image.delete()
 
     return JsonResponse({"success": True})
+from datetime import date
+
+def project_milestones(request, pk):
+    project = Project.objects.get(pk=pk)
+    milestones = project.milestones.all()
+
+    return render(request, "timesheet/milestone_list.html", {
+        "project": project,
+        "milestones": milestones,
+        "today": date.today()   # 🔥 REQUIRED
+    })
