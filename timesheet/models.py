@@ -479,3 +479,8 @@ class TimesheetEntry(models.Model):
         total_logged = qs.aggregate(total=Sum('hours'))['total'] or 0
 
         return max(estimated - total_logged, 0)
+class Document(models.Model):
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name="documents")
+    file = models.FileField(upload_to="project_docs/")
+    name = models.CharField(max_length=255)
+    uploaded_at = models.DateTimeField(auto_now_add=True)
