@@ -3,121 +3,137 @@
 <div class="mb-6">
     <h3 class="text-xl font-bold text-white">
         {% if form.instance.pk %}Edit{% else %}Create{% endif %}
-        {% if 'project' in request.path %}Project{% elif 'timesheet' in request.path %}Timesheet Entry{% elif 'allocation' in request.path %}Allocation{% endif %}
     </h3>
 </div>
 
-<form method="post" action="{{ request.path }}">
+<form method="post" action="{{ request.path }}" enctype="multipart/form-data">
     {% csrf_token %}
-    <!-- <div class="space-y-4">
-        {{ form|crispy }}
-    </div> -->
+
 <div class="space-y-4">
 
-{% if 'timesheet' in request.path %}
+<!-- ================= TIMESHEET ================= -->
+{% if form.fields.project and form.fields.task %}
 
-    <!-- Project -->
     {{ form.project|as_crispy_field }}
 
-    <!-- Task + Plus button -->
     <div class="flex items-end gap-2">
         <div class="flex-1">
             {{ form.task|as_crispy_field }}
         </div>
 
-     <button type="button"
-            id="addTaskBtn"
-            class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg"
-            disabled>
+        <button type="button"
+                id="addTaskBtn"
+                class="bg-blue-600 text-white px-3 py-2 rounded-lg"
+                disabled>
             +
         </button>
     </div>
 
-    {{ form.date|as_crispy_field }}
-    {{ form.hours|as_crispy_field }}
-    {{ form.description|as_crispy_field }}
-    {{ form.billable|as_crispy_field }}
-
-{% else %}
-
-{{ form.name|as_crispy_field }}
-{{ form.project_code|as_crispy_field }}
-{{ form.status|as_crispy_field }}
-{{ form.description|as_crispy_field }}
-
-<div class="grid grid-cols-2 gap-4">
-    {{ form.start_date|as_crispy_field }}
-    {{ form.end_date|as_crispy_field }}
-</div>    
-<h4 class="text-lg font-semibold mt-6 mb-3">Milestones</h4>
-
-{{ milestone_formset.management_form }}
-
-<div id="milestone-container">
-
-{% for milestone in milestone_formset %}
-<div class="bg-slate-900 p-4 rounded-lg mb-3">
-    {% if form.instance.pk %}
-    {{ milestone.id }}   <!-- 🔥 ADD THIS -->
+    {% if form.fields.date %}
+        {{ form.date|as_crispy_field }}
     {% endif %}
-    {{ milestone.non_field_errors }}  <!-- 🔥 ADD THIS -->
 
-    {{ milestone.name|as_crispy_field }}
+    {% if form.fields.hours %}
+        {{ form.hours|as_crispy_field }}
+    {% endif %}
+
+    {% if form.fields.description %}
+        {{ form.description|as_crispy_field }}
+    {% endif %}
+
+    {% if form.fields.billable %}
+        {{ form.billable|as_crispy_field }}
+    {% endif %}
+
+<!-- ================= PROJECT ================= -->
+{% elif form.fields.project_code %}
+
+    {{ form.name|as_crispy_field }}
+    {{ form.project_code|as_crispy_field }}
+    {{ form.status|as_crispy_field }}
+    {{ form.description|as_crispy_field }}
 
     <div class="grid grid-cols-2 gap-4">
-        {{ milestone.start_date|as_crispy_field }}
-        {{ milestone.due_date|as_crispy_field }}
+        {{ form.start_date|as_crispy_field }}
+        {{ form.end_date|as_crispy_field }}
     </div>
 
-</div>
-{% endfor %}
+    <!-- ===== Milestones ===== -->
+    <h4 class="text-lg font-semibold mt-6 mb-3">Milestones</h4>
 
-</div>
-<button type="button"
-        id="add-milestone"
-        class="mt-4 bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg text-sm">
-    + Add Milestone
-</button>
+    {{ milestone_formset.management_form }}
+
+    <div id="milestone-container">
+        {% for milestone in milestone_formset %}
+        <div class="bg-slate-900 p-4 rounded-lg mb-3">
+            {{ milestone.id }}
+            {{ milestone.name|as_crispy_field }}
+
+            <div class="grid grid-cols-2 gap-4">
+                {{ milestone.start_date|as_crispy_field }}
+                {{ milestone.due_date|as_crispy_field }}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <button type="button" id="add-milestone"
+        class="mt-4 bg-blue-600 px-4 py-2 rounded-lg text-sm">
+        + Add Milestone
+    </button>
+
+    <!-- ===== Documents ===== -->
+    <h4 class="text-lg font-semibold mt-6 mb-3">Documents</h4>
+
+    {{ document_formset.management_form }}
+
+    <div id="document-container">
+        {% for doc in document_formset %}
+        <div class="bg-slate-900 p-4 rounded-lg mb-3 document-form">
+            {{ doc.id }}
+            {{ doc.name|as_crispy_field }}
+
+            {% if doc.instance.pk and doc.instance.file %}
+                <p class="text-xs text-green-400 mb-2">
+                    Existing:
+                    <a href="{{ doc.instance.file.url }}" target="_blank">
+                        {{ doc.instance.file.name }}
+                    </a>
+                </p>
+            {% endif %}
+
+            {{ doc.file|as_crispy_field }}
+        </div>
+        {% endfor %}
+    </div>
+
+    <button type="button" id="add-document"
+        class="mt-4 bg-purple-600 px-4 py-2 rounded-lg text-sm">
+        + Add Document
+    </button>
+
+<!-- ================= ALLOCATION ================= -->
+{% else %}
+
+    {% for field in form %}
+        {{ field|as_crispy_field }}
+    {% endfor %}
+
 {% endif %}
 
 </div>
-    <div class="mt-8 flex justify-end space-x-3">
-        <button type="button" onclick="closeModal()" class="px-6 py-2 bg-slate-700 text-white rounded-lg hover:bg-slate-600 transition-colors">
-            Cancel
-        </button>
-        <button type="submit" class="px-6 py-2 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg font-bold shadow-lg hover:from-blue-600 hover:to-indigo-700 transition-all">
-            Save Changes
-        </button>
-    </div>
-    
+
+<!-- ===== Buttons ===== -->
+<div class="mt-8 flex justify-end space-x-3">
+    <button type="button" onclick="closeModal()"
+        class="px-6 py-2 bg-slate-700 text-white rounded-lg">
+        Cancel
+    </button>
+
+    <button type="submit"
+        class="px-6 py-2 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg font-bold">
+        Save
+    </button>
+</div>
+
 </form>
-
-<div id="empty-form-template" class="hidden">
-<div class="milestone-form bg-slate-900 p-4 rounded-lg space-y-3">
-{% if form.instance.pk %}
-    {{ milestone_formset.empty_form.id }}   <!-- 🔥 ADD THIS -->
-    {% endif %}
-    {{ milestone_formset.empty_form.name|as_crispy_field }}
-
-    <div class="grid grid-cols-2 gap-4">
-        {{ milestone_formset.empty_form.start_date|as_crispy_field }}
-        {{ milestone_formset.empty_form.due_date|as_crispy_field }}
-    </div>
-
-</div>
-</div>
-
-<!-- <div id="modalOverlay" class="hidden fixed inset-0 bg-black bg-opacity-50 items-center justify-center z-50">
-    <div id="modalContent" class="bg-slate-800 p-6 rounded w-full max-w-lg"></div>
-</div> -->
-<style>
-    /* Custom styles to match the dark theme for crispy forms */
-    input, select, textarea {
-        background-color: #0f172a !important;
-        border-color: #334155 !important;
-        color: #f8fafc !important;
-        border-radius: 0.5rem !important;
-    }
-    label { color: #94a3b8 !important; font-size: 0.875rem !important; margin-bottom: 0.25rem !important; }
-    .text-danger { color: #f87171 !important; font-size: 0.75rem !important; margin-top: 0.25rem !important; }
-</style>

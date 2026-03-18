@@ -13,6 +13,39 @@
     </button>
     {% endif %}
 </div>
+<div class="mb-6 flex gap-4 flex-wrap">
+
+    <!-- Project Filter -->
+    <select id="projectFilter"
+        class="bg-slate-900 border border-slate-700 text-white rounded-lg px-4 py-2">
+        <option value="">All Projects</option>
+        {% for milestone in milestones %}
+            <option value="{{ milestone.project.name }}">
+                {{ milestone.project.name }}
+            </option>
+        {% endfor %}
+    </select>
+
+    <!-- Status Filter -->
+    <select id="statusFilter"
+        class="bg-slate-900 border border-slate-700 text-white rounded-lg px-4 py-2">
+        <option value="">All Status</option>
+        <option value="Completed">Completed</option>
+        <option value="In Progress">In Progress</option>
+        <option value="Pending">Pending</option>
+    </select>
+
+    <!-- Date Range -->
+    <input type="date" id="startDateFilter"
+        class="bg-slate-900 border border-slate-700 text-white rounded-lg px-4 py-2">
+
+    <input type="date" id="endDateFilter"
+        class="bg-slate-900 border border-slate-700 text-white rounded-lg px-4 py-2">
+<button onclick="location.reload()"
+    class="bg-slate-700 px-4 py-2 rounded-lg text-white">
+    Reset
+</button>
+</div>
 
 <div class="bg-slate-800 rounded-xl border border-slate-700 overflow-hidden">
 
@@ -33,8 +66,11 @@
 
 {% for milestone in milestones %}
 
-<tr class="border-t border-slate-700">
-
+<!-- <tr class="border-t border-slate-700"> -->
+<tr class="milestone-row border-t border-slate-700"
+    data-project="{{ milestone.project.name }}"
+    data-start="{{ milestone.start_date|date:'Y-m-d' }}"
+    data-due="{{ milestone.due_date|date:'Y-m-d' }}">
 <td class="p-3">
 {{ milestone.name }}
 </td>
@@ -55,19 +91,19 @@
 
 {% if milestone.status == "COMPLETED" %}
 
-<span class="text-green-400 bg-green-400/10 px-2 py-1 rounded text-xs">
+<span class="status-text text-green-400 bg-green-400/10 px-2 py-1 rounded text-xs">
 Completed
 </span>
 
 {% elif milestone.status == "IN_PROGRESS" %}
 
-<span class="text-blue-400 bg-blue-400/10 px-2 py-1 rounded text-xs">
+<span class="status-text text-blue-400 bg-blue-400/10 px-2 py-1 rounded text-xs">
 In Progress
 </span>
 
 {% else %}
 
-<span class="text-yellow-400 bg-yellow-400/10 px-2 py-1 rounded text-xs">
+<span class="status-text text-yellow-400 bg-yellow-400/10 px-2 py-1 rounded text-xs">
 Pending
 </span>
 

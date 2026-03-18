@@ -55,12 +55,19 @@
             </div>
             {% if request.user.is_superuser or request.user.employee.role == 'ADMIN' or request.user.employee.role == 'MANAGER' %}
             <div class="flex space-x-2">
+                <a href="{% url 'project_documents' project.pk %}"
+                class="flex items-center text-slate-400 text-xs hover:text-purple-400 transition">
+
+                    <i class="fas fa-file-alt mr-2"></i>
+
+                    
+                </a>
                 <a href="{% url 'project_milestones' project.pk %}"
                 class="flex items-center text-slate-400 text-xs hover:text-blue-400 transition">
 
                     <i class="fas fa-flag-checkered mr-2"></i>
 
-                    {{ project.milestone_count }} Milestones
+                    {{ project.milestone_count }} 
                 </a>
                 <a href="{% url 'allocate_employee' project.pk %}" 
                     onclick="openModal(this.href); return false;"
