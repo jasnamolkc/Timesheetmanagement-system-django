@@ -645,5 +645,173 @@ document.getElementById("confirmArchiveBtn").addEventListener("click", function 
     }
 });
 </script>
+<!-- <script>
+document.addEventListener("click", function (e) {
+
+    if (e.target.closest("#add-document")) {
+
+        const container = document.getElementById("document-container");
+        const templateDiv = document.getElementById("empty-document-form");
+
+        // 🔥 find TOTAL_FORMS dynamically
+        const totalForms = document.querySelector('[id$="-TOTAL_FORMS"]');
+
+        if (!container || !totalForms || !templateDiv) {
+            console.log("Form elements missing ❌");
+            return;
+        }
+
+        let formIdx = parseInt(totalForms.value);
+
+        let template = templateDiv.innerHTML;
+        template = template.replace(/__prefix__/g, formIdx);
+
+        container.insertAdjacentHTML("beforeend", template);
+
+        totalForms.value = formIdx + 1;
+
+        console.log("Document added ✅");
+        console.log(totalForms)
+    }
+
+});
+</script> -->
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const addDocumentBtn = document.getElementById("add-document");
+    const documentContainer = document.getElementById("document-container");
+    const emptyTemplate = document.getElementById("empty-document-form");
+    const totalFormsInput = document.querySelector('input[name="documents-TOTAL_FORMS"]');
+
+    if (!addDocumentBtn || !documentContainer || !emptyTemplate || !totalFormsInput) return;
+
+    addDocumentBtn.addEventListener("click", function() {
+        // Current number of forms
+        let formIdx = parseInt(totalFormsInput.value);
+
+        // Get template and replace __prefix__ with current index
+        let newFormHTML = emptyTemplate.innerHTML.replace(/__prefix__/g, formIdx);
+
+        // Append new form inside container
+        documentContainer.insertAdjacentHTML("beforeend", newFormHTML);
+
+        // Increment TOTAL_FORMS
+        totalFormsInput.value = formIdx + 1;
+    });
+});
+</script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const projectFilter = document.getElementById("projectFilter");
+    const statusFilter = document.getElementById("statusFilter");
+    const startDateFilter = document.getElementById("startDateFilter");
+    const endDateFilter = document.getElementById("endDateFilter");
+
+    const rows = document.querySelectorAll(".milestone-row");
+
+    function filterRows() {
+
+        const projectValue = projectFilter.value.toLowerCase();
+        const statusValue = statusFilter.value.toLowerCase();
+        const startDateValue = startDateFilter.value;
+        const endDateValue = endDateFilter.value;
+
+        rows.forEach(row => {
+
+            const project = row.dataset.project.toLowerCase();
+            const status = row.querySelector(".status-text").innerText.toLowerCase();
+            const dueDate = row.dataset.due;
+
+            let show = true;
+
+            // Project filter
+            if (projectValue && project !== projectValue) {
+                show = false;
+            }
+
+            // Status filter
+            if (statusValue && status !== statusValue) {
+                show = false;
+            }
+
+            // Date range filter (using due date)
+            if (startDateValue && dueDate < startDateValue) {
+                show = false;
+            }
+
+            if (endDateValue && dueDate > endDateValue) {
+                show = false;
+            }
+
+            row.style.display = show ? "" : "none";
+        });
+    }
+
+    projectFilter.addEventListener("change", filterRows);
+    statusFilter.addEventListener("change", filterRows);
+    startDateFilter.addEventListener("change", filterRows);
+    endDateFilter.addEventListener("change", filterRows);
+
+});
+</script>
+<style>
+/* ===== MATCH TASK FORM THEME ===== */
+
+input, select, textarea {
+    background-color: #020617 !important;   /* darker than before */
+    border: 1px solid #1e293b !important;
+    color: #e2e8f0 !important;
+    border-radius: 0.5rem !important;
+    padding: 0.5rem 0.75rem !important;
+}
+
+/* Focus effect */
+input:focus, select:focus, textarea:focus {
+    outline: none !important;
+    border-color: #3b82f6 !important;
+    box-shadow: 0 0 0 1px #3b82f6 !important;
+}
+
+/* Labels */
+label {
+    color: #94a3b8 !important;
+    font-size: 0.85rem !important;
+    margin-bottom: 4px !important;
+}
+
+/* Help text */
+.helptext {
+    color: #64748b !important;
+    font-size: 0.75rem !important;
+}
+
+/* Errors */
+.text-danger, .invalid-feedback {
+    color: #f87171 !important;
+    font-size: 0.75rem !important;
+}
+
+/* File input fix */
+input[type="file"] {
+    background-color: #020617 !important;
+    padding: 6px !important;
+}
+
+/* Checkbox */
+input[type="checkbox"] {
+    accent-color: #3b82f6;
+}
+
+/* Select dropdown arrow fix */
+select {
+    appearance: none;
+}
+
+/* Crispy wrapper spacing */
+.form-group {
+    margin-bottom: 12px;
+}
+</style>
 </body>
 </html>

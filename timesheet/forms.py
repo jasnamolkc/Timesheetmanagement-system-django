@@ -307,6 +307,10 @@ class MilestoneForm(forms.ModelForm):
                 field.widget.attrs.update({
                     "class": "w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200"
                 })
+class DocumentForm(forms.ModelForm):
+    class Meta:
+        model = Document
+        fields = ['name', 'file']
 from django.forms import inlineformset_factory
 
 MilestoneFormSet = inlineformset_factory(
@@ -314,5 +318,14 @@ MilestoneFormSet = inlineformset_factory(
     Milestone,
     form=MilestoneForm,
     extra=0,
+    can_delete=True
+
+)
+
+DocumentFormSet = inlineformset_factory(
+    Project,
+    Document,
+    form=DocumentForm,
+    extra=1,
     can_delete=True
 )

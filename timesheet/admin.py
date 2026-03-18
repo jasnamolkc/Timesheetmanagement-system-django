@@ -33,7 +33,19 @@ class EmployeeAdmin(admin.ModelAdmin):
 
 
 # ---------------- PROJECT ---------------- #
+class DocumentInline(admin.TabularInline):
+    model = Document
+    extra = 1
 
+    readonly_fields = ("file_preview",)
+
+    def file_preview(self, obj):
+        if obj.file:
+            return format_html(
+                '<a href="{}" target="_blank">View</a>',
+                obj.file.url
+            )
+        return "-"
 @admin.register(Project)
 class ProjectAdmin(admin.ModelAdmin):
 
@@ -61,6 +73,7 @@ class ProjectAdmin(admin.ModelAdmin):
     )
 
     ordering = ('-start_date',)
+    inlines = [DocumentInline]   # 🔥 ADD THIS
 
 
 # ---------------- PROJECT ALLOCATION ---------------- #
@@ -252,3 +265,37 @@ class TaskImageAdmin(admin.ModelAdmin):
         return "No Image"
 
     preview.short_description = "Image Preview"
+@admin.register(Document)
+class DocumentAdmin(admin.ModelAdmin):
+
+    list_display = (
+        "name",
+        "project",
+        "file_preview",
+        "uploaded_at",
+    )
+
+    list_filter = (
+        "project",
+        "uploaded_at",
+    )
+
+    search_fields = (
+        "name",
+        "project__name",
+        "project__project_code",
+    )
+
+    autocomplete_fields = ("project",)
+
+    readonly_fields = ("file_preview",)
+
+    def file_preview(self, obj):
+        if obj.file:
+            return format_html(
+                '<a href="{}" target="_blank">View File</a>',
+                obj.file.url
+            )
+        return "No File"
+
+    file_preview.short_description = "Preview"

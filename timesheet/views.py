@@ -175,19 +175,30 @@ class ProjectCreateView(ManagerRequiredMixin, AjaxTemplateMixin, CreateView):
 
         if self.request.POST:
             context["milestone_formset"] = MilestoneFormSet(self.request.POST)
+            context["document_formset"] = DocumentFormSet(self.request.POST, self.request.FILES)
+
         else:
             context["milestone_formset"] = MilestoneFormSet()
+            context["document_formset"] = DocumentFormSet()
 
         return context
 
     def form_valid(self, form):
         context = self.get_context_data()
         milestone_formset = context["milestone_formset"]
+        document_formset = context["document_formset"]
+        print("ccc",context)
 
-        if milestone_formset.is_valid():
-            self.object = form.save()
-            milestone_formset.instance = self.object
+        # 🔥 SAVE PROJECT FIRST
+        self.object = form.save()
+
+        # 🔥 ATTACH INSTANCE BEFORE VALIDATION
+        milestone_formset.instance = self.object
+        document_formset.instance = self.object
+
+        if milestone_formset.is_valid() and document_formset.is_valid():
             milestone_formset.save()
+            document_formset.save()
             return redirect(self.success_url)
 
         return self.form_invalid(form)
@@ -202,19 +213,30 @@ class ProjectUpdateView(ManagerRequiredMixin, AjaxTemplateMixin, UpdateView):
 
         if self.request.POST:
             context["milestone_formset"] = MilestoneFormSet(self.request.POST, instance=self.object)
+            context["document_formset"] = DocumentFormSet(self.request.POST, self.request.FILES, instance=self.object)
+
         else:
             context["milestone_formset"] = MilestoneFormSet(instance=self.object)
+            context["document_formset"] = DocumentFormSet(instance=self.object)
 
         return context
 
     def form_valid(self, form):
         context = self.get_context_data()
         milestone_formset = context["milestone_formset"]
+        document_formset = context["document_formset"]
+        print("ccc",context)
+        # 🔥 DON'T SAVE YET
+        self.object = form.save(commit=False)
 
-        if milestone_formset.is_valid():
-            self.object = form.save()
-            milestone_formset.instance = self.object
+        # attach instance BEFORE validation
+        milestone_formset.instance = self.object
+        document_formset.instance = self.object
+
+        if milestone_formset.is_valid() and document_formset.is_valid():
+            self.object.save()  # ✅ save project AFTER validation
             milestone_formset.save()
+            document_formset.save()
             return redirect(self.success_url)
 
         return self.form_invalid(form)
@@ -649,7 +671,7 @@ def task_page(request):
     today = timezone.now().date()
 
     # Base queryset
-    tasks = Task.objects.select_related("project", "assigned_to")
+    tasks = Task.objects.select_related("project", "assigned_to").order_by('-id')
 
     # Employee → filter tasks by allocated projects
     if employee and employee.role == "EMPLOYEE":
@@ -1092,4 +1114,12 @@ def project_milestones(request, pk):
         "project": project,
         "milestones": milestones,
         "today": date.today()   # 🔥 REQUIRED
+    })
+def project_documents(request, pk):
+    project = Project.objects.get(pk=pk)
+    documents = project.documents.all()
+
+    return render(request, "timesheet/document_list.html", {
+        "project": project,
+        "documents": documents
     })
