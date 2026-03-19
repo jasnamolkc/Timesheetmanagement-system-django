@@ -122,7 +122,25 @@
 {% endif %}
 
 </div>
+<!-- ===== empty code===== -->
+  <div id="empty-milestone-form" class="hidden">
+    <div class="bg-slate-900 p-4 rounded-lg mb-3">
+        {{ milestone_formset.empty_form.id }}
+        {{ milestone_formset.empty_form.name|as_crispy_field }}
 
+        <div class="grid grid-cols-2 gap-4">
+            {{ milestone_formset.empty_form.start_date|as_crispy_field }}
+            {{ milestone_formset.empty_form.due_date|as_crispy_field }}
+        </div>
+    </div>
+</div>
+ <div id="empty-document-form" class="hidden">
+    <div class="bg-slate-900 p-4 rounded-lg mb-3 document-form">
+        {{ document_formset.empty_form.id }}
+        {{ document_formset.empty_form.name|as_crispy_field }}
+        {{ document_formset.empty_form.file|as_crispy_field }}
+    </div>
+</div>
 <!-- ===== Buttons ===== -->
 <div class="mt-8 flex justify-end space-x-3">
     <button type="button" onclick="closeModal()"
