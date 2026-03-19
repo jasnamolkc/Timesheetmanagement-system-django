@@ -46,7 +46,8 @@
     {% endif %}
 
 <!-- ================= PROJECT ================= -->
-{% elif form.fields.project_code %}
+<!-- {% elif form.fields.project_code %} -->
+ {% elif 'project_code' in form.fields %}
 
     {{ form.name|as_crispy_field }}
     {{ form.project_code|as_crispy_field }}
