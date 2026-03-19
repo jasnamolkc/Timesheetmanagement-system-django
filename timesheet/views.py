@@ -670,25 +670,20 @@ def task_page(request):
     employee = getattr(user, "employee", None)
     today = timezone.now().date()
 
-    # Base queryset
-    tasks = Task.objects.select_related("project", "assigned_to").order_by('-id')
+   # 👑 SUPERUSER or ADMIN or MANAGER → ALL tasks
+    if user.is_superuser or not employee or employee.role in ["ADMIN", "MANAGER"]:
+        tasks = Task.objects.select_related("project", "assigned_to")\
+                            .order_by('-id')
 
-    # Employee → filter tasks by allocated projects
-    if employee and employee.role == "EMPLOYEE":
-        allocated_projects = ProjectAllocation.objects.filter(
-            employee=employee
-        ).filter(
-            Q(end_date__gte=today) | Q(end_date__isnull=True)
-        ).values_list('project_id', flat=True)
-
-        tasks = tasks.filter(project_id__in=allocated_projects)
-
-        # Projects dropdown → only allocated projects
-        projects = Project.objects.filter(id__in=allocated_projects)
-    else:
-        # Admin / Manager → all tasks & projects
         projects = Project.objects.all()
 
+    # 👤 EMPLOYEE → ONLY assigned tasks
+    else:
+        tasks = Task.objects.select_related("project", "assigned_to")\
+                            .filter(assigned_to=employee)\
+                            .order_by('-id')
+
+        projects = Project.objects.filter(tasks__assigned_to=employee).distinct()
     return render(request, "tasks/task_list.html", {
         "tasks": tasks,
         "projects": projects
