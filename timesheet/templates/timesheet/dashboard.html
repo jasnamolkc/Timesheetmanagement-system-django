@@ -58,7 +58,7 @@
                 <div class="flex justify-between items-center border-b border-slate-700 pb-3">
                     <div>
                         <p class="font-semibold text-white">
-                            {{ entry.project.project_code }}
+                            {{ entry.project.name }}
                         </p>
                         <p class="text-sm text-slate-400">
                             {{ entry.date }} • {{ entry.hours }} hrs
@@ -85,7 +85,7 @@
                 <div class="flex justify-between items-center border-b border-slate-700 pb-3">
                     <div>
                         <p class="font-semibold text-white">
-                            {{ allocation.project.project_code }}
+                            {{ allocation.project.name }}
                         </p>
                         <p class="text-sm text-slate-400">
                             Until {{ allocation.end_date }}
