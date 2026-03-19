@@ -111,17 +111,6 @@
         class="mt-4 bg-purple-600 px-4 py-2 rounded-lg text-sm">
         + Add Document
     </button>
-
-<!-- ================= ALLOCATION ================= -->
-{% else %}
-
-    {% for field in form %}
-        {{ field|as_crispy_field }}
-    {% endfor %}
-
-{% endif %}
-
-</div>
 <!-- ===== empty code===== -->
   <div id="empty-milestone-form" class="hidden">
     <div class="bg-slate-900 p-4 rounded-lg mb-3">
@@ -141,6 +130,21 @@
         {{ document_formset.empty_form.file|as_crispy_field }}
     </div>
 </div>
+<!-- ================= ALLOCATION ================= -->
+{% else %}
+
+    {{ form.employee|as_crispy_field }}
+    {{ form.project|as_crispy_field }}
+    {{ form.role_in_project|as_crispy_field }}
+                <div class="grid grid-cols-2 gap-4">
+
+    {{ form.start_date|as_crispy_field }}
+    {{ form.end_date|as_crispy_field }}
+</div>
+{% endif %}
+
+</div>
+
 <!-- ===== Buttons ===== -->
 <div class="mt-8 flex justify-end space-x-3">
     <button type="button" onclick="closeModal()"
