@@ -1,0 +1,12 @@
+{
+  "name": "timesheet-pro",
+  "version": "1.0.0",
+  "description": "Timesheet Management System",
+  "scripts": {
+    "build:css": "npx @tailwindcss/cli -i ./timesheet/static/css/input.css -o ./timesheet/static/css/output.css --minify"
+  },
+  "devDependencies": {
+    "@tailwindcss/cli": "latest",
+    "tailwindcss": "latest"
+  }
+}

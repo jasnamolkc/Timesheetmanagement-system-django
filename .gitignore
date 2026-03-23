@@ -1,3 +1,22 @@
+# Django
+*.log
+*.pot
+*.pyc
+__pycache__/
+local_settings.py
 db.sqlite3
-db.sqlite3
-db.sqlite3
+db.sqlite3-journal
+media/
+
+# Static root should be ignored (where collectstatic puts files)
+# but we want to KEEP the source static files in our app.
+# STATIC_ROOT in settings is os.path.join(os.path.dirname(BASE_DIR), "static")
+/static/
+
+# Node
+node_modules/
+
+# Environment
+.env
+venv/
+env/
