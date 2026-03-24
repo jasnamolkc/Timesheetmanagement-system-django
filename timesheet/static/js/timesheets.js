@@ -49,7 +49,16 @@ document.addEventListener('modalContentLoaded', function(e) {
                 addTaskBtn.addEventListener("click", function() {
                     const projectId = projectSelect.value;
                     if (!projectId) return;
-                    openModal2(`/tasks/create/?modal=1&project=${projectId}`);
+                    openModal2(`/tasks/create/?modal=1&project=${projectId}`, function(data) {
+                        closeModal2();
+                        const parentModal = document.getElementById('modal-content');
+                        const taskSelect = parentModal.querySelector("#id_task");
+                        if (taskSelect) {
+                            const option = new Option(data.task_name, data.task_id, true, true);
+                            taskSelect.add(option);
+                            taskSelect.dispatchEvent(new Event('change'));
+                        }
+                    });
                 });
             }
         }
@@ -79,34 +88,6 @@ document.addEventListener('modal2ContentLoaded', function(e) {
             projectSelect.value = projectId;
             projectSelect.dispatchEvent(new Event('change'));
         }
-    }
-
-    const form2 = modalContent2.querySelector("form");
-    if (form2) {
-        form2.addEventListener("submit", function(e){
-            e.preventDefault();
-            const formData = new FormData(form2);
-            fetch(form2.action, {
-                method: form2.method,
-                headers: { "X-Requested-With": "XMLHttpRequest" },
-                body: formData
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    closeModal2();
-                    const parentModal = document.getElementById('modal-content');
-                    const taskSelect = parentModal.querySelector("#id_task");
-                    if (taskSelect) {
-                        const option = new Option(data.task_name, data.task_id, true, true);
-                        taskSelect.add(option);
-                        taskSelect.dispatchEvent(new Event('change'));
-                    }
-                } else if (data.html) {
-                    modalContent2.innerHTML = data.html;
-                }
-            });
-        });
     }
 });
 
