@@ -3,212 +3,189 @@
 
 {% block content %}
 
-<div class="flex items-center justify-between mb-6">
-    <h2 class="text-3xl font-bold">Tasks</h2>
+<div class="page-header flex-col md:flex-row items-start md:items-center gap-6 mb-10">
+    <div class="flex-1">
+        <h1 class="page-title mb-4">Task Management</h1>
+        <p class="text-slate-400 text-sm">Organize and track individual task progress across all projects.</p>
+    </div>
 
     <button onclick="openModal('{% url 'task_create' %}')"
-        class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg text-sm font-medium">
-        + Create Task
+        class="btn btn-primary shadow-lg shadow-blue-500/20">
+        <i class="fas fa-plus"></i> Create New Task
     </button>
 </div>
 
-<!-- Search + Filter -->
-<div class="flex gap-3 mb-6">
+<!-- Filters -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10 bg-slate-800/50 p-6 rounded-2xl border border-slate-700/50">
+    <div class="flex flex-col gap-2">
+        <label for="searchInput" class="text-xs uppercase tracking-widest text-slate-500 font-bold ml-1">Search</label>
+        <div class="relative">
+            <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"></i>
+            <input
+                type="text"
+                id="searchInput"
+                placeholder="Search by title..."
+                class="pl-11 !bg-slate-900 border border-slate-700/80 px-4 py-3 rounded-xl text-sm"
+            />
+        </div>
+    </div>
 
-<input
-    type="text"
-    id="searchInput"
-    placeholder="Search task..."
-    class="bg-slate-800 border border-slate-700 px-4 py-2 rounded-lg text-sm w-64"
-/>
+    <div class="flex flex-col gap-2">
+        <label for="statusFilter" class="text-xs uppercase tracking-widest text-slate-500 font-bold ml-1">Status</label>
+        <div class="relative">
+            <i class="fas fa-filter absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"></i>
+            <select
+                id="statusFilter"
+                class="pl-11 !bg-slate-900 border border-slate-700/80 px-4 py-3 rounded-xl text-sm appearance-none"
+            >
+                <option value="">All Statuses</option>
+                <option value="PENDING">Pending</option>
+                <option value="IN_PROGRESS">In Progress</option>
+                <option value="COMPLETED">Completed</option>
+            </select>
+            <i class="fas fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-slate-600 pointer-events-none"></i>
+        </div>
+    </div>
 
-<select
-    id="statusFilter"
-    class="bg-slate-800 border border-slate-700 px-4 py-2 rounded-lg text-sm"
->
-<option value="">All Status</option>
-<option value="PENDING">Pending</option>
-<option value="IN_PROGRESS">In Progress</option>
-<option value="COMPLETED">Completed</option>
-</select>
-
-<select
-    id="projectFilter"
-    class="bg-slate-800 border border-slate-700 px-4 py-2 rounded-lg text-sm"
->
-<option value="">All Projects</option>
-
-{% for project in projects %}
-<option value="{{ project.id }}">{{ project.name }}</option>
-{% endfor %}
-
-</select>
-
+    <div class="flex flex-col gap-2">
+        <label for="projectFilter" class="text-xs uppercase tracking-widest text-slate-500 font-bold ml-1">Project</label>
+        <div class="relative">
+            <i class="fas fa-briefcase absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"></i>
+            <select
+                id="projectFilter"
+                class="pl-11 !bg-slate-900 border border-slate-700/80 px-4 py-3 rounded-xl text-sm appearance-none"
+            >
+                <option value="">All Projects</option>
+                {% for project in projects %}
+                <option value="{{ project.id }}">{{ project.name }}</option>
+                {% endfor %}
+            </select>
+            <i class="fas fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-slate-600 pointer-events-none"></i>
+        </div>
+    </div>
 </div>
 
-<!-- Tasks Table -->
-<div class="bg-slate-800 rounded-xl border border-slate-700 overflow-hidden">
+<!-- Task Table -->
+<div class="table-container border-slate-700/60 shadow-2xl">
+    <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+            <thead class="bg-slate-700/40 text-slate-400">
+                <tr>
+                    <th class="px-6 py-5 text-left font-bold uppercase tracking-wider text-[11px]">Task Title</th>
+                    <th class="px-6 py-5 text-left font-bold uppercase tracking-wider text-[11px]">Project</th>
+                    <th class="px-6 py-5 text-left font-bold uppercase tracking-wider text-[11px]">Assigned Person</th>
+                    <th class="px-6 py-5 text-left font-bold uppercase tracking-wider text-[11px]">Milestone</th>
+                    <th class="px-6 py-5 text-left font-bold uppercase tracking-wider text-[11px]">Status</th>
+                    <th class="px-6 py-5 text-right font-bold uppercase tracking-wider text-[11px]">Actions</th>
+                </tr>
+            </thead>
 
-<table class="w-full text-sm">
+            <tbody id="taskTable">
+                {% for task in tasks %}
+                <tr
+                    class="group border-t border-slate-700/50 hover:bg-slate-700/20 transition-all duration-200"
+                    data-title="{{ task.title|lower }}"
+                    data-project="{{ task.project.id }}"
+                    data-status="{{ task.status }}"
+                >
+                    <td class="px-6 py-5 font-semibold text-slate-200 group-hover:text-white transition-colors">
+                        {{ task.title }}
+                    </td>
 
-<thead class="bg-slate-700 text-slate-300">
-<tr>
-<th class="p-3 text-left">Title</th>
-<th class="p-3 text-left">Project</th>
-<th class="p-3 text-left">Assigned To</th>
-<th class="p-3 text-left">Milestone</th>
-<th class="p-3 text-left">Status</th>
-<th class="p-3 text-left">Action</th>
-</tr>
-</thead>
+                    <td class="px-6 py-5">
+                        <span class="text-blue-400/90 font-medium px-2 py-1 bg-blue-500/5 rounded border border-blue-500/10">
+                            {{ task.project.name }}
+                        </span>
+                    </td>
 
-<tbody id="taskTable">
+                    <td class="px-6 py-5">
+                        {% if task.assigned_to %}
+                        <div class="flex items-center gap-2">
+                            <div class="w-7 h-7 rounded-full bg-indigo-500/20 flex items-center justify-center text-[10px] font-bold text-indigo-400 border border-indigo-500/30">
+                                {{ task.assigned_to.user.username|slice:":2"|upper }}
+                            </div>
+                            <span class="text-slate-300 font-medium">
+                                {{ task.assigned_to.user.get_full_name|default:task.assigned_to.user.username }}
+                            </span>
+                        </div>
+                        {% else %}
+                        <span class="text-slate-500 italic text-xs">Unassigned</span>
+                        {% endif %}
+                    </td>
 
-{% for task in tasks %}
+                    <td class="px-6 py-5">
+                        {% if task.milestone %}
+                        <span class="text-slate-400 text-xs flex items-center gap-2">
+                            <i class="fas fa-flag-checkered text-[10px] text-slate-600"></i>
+                            {{ task.milestone.name }}
+                        </span>
+                        {% else %}
+                        <span class="text-slate-600 italic text-[10px]">No milestone</span>
+                        {% endif %}
+                    </td>
 
-<tr
-class="border-t border-slate-700"
-data-title="{{ task.title|lower }}"
-data-project="{{ task.project.id }}"
-data-status="{{ task.status }}"
->
+                    <td class="px-6 py-5">
+                        {% if task.status == "COMPLETED" %}
+                        <span class="badge badge-success flex items-center gap-1.5 w-fit">
+                            <span class="w-1 h-1 rounded-full bg-green-400"></span> Completed
+                        </span>
+                        {% elif task.status == "IN_PROGRESS" %}
+                        <span class="badge badge-info flex items-center gap-1.5 w-fit">
+                            <span class="w-1 h-1 rounded-full bg-blue-400 animate-pulse"></span> In Progress
+                        </span>
+                        {% else %}
+                        <span class="badge badge-warning flex items-center gap-1.5 w-fit">
+                            <span class="w-1 h-1 rounded-full bg-yellow-400"></span> Pending
+                        </span>
+                        {% endif %}
+                    </td>
 
-<td class="p-3">
-{{ task.title }}
-</td>
+                    <td class="px-6 py-5 text-right">
+                        <div class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button
+                                onclick="openModal('{% url 'task_update' task.id %}')"
+                                class="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-900 hover:bg-blue-500/20 border border-slate-700 hover:border-blue-500/50 text-blue-400 transition-all"
+                                title="Edit Task"
+                            >
+                                <i class="fas fa-edit text-xs"></i>
+                            </button>
 
-<td class="p-3">
-{{ task.project.name }}
-</td>
+                            <button
+                                onclick="openModal('{% url 'task_delete' task.id %}')"
+                                class="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-900 hover:bg-red-500/20 border border-slate-700 hover:border-red-500/50 text-red-400 transition-all"
+                                title="Delete Task"
+                            >
+                                <i class="fas fa-trash-alt text-xs"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr id="noDataRow">
+                    <td colspan="6" class="text-center text-slate-500 py-16 bg-slate-800/20">
+                        <div class="flex flex-col items-center gap-4">
+                            <i class="fas fa-tasks text-4xl text-slate-700/50"></i>
+                            <div class="flex flex-col gap-1">
+                                <p class="text-slate-400 font-medium text-lg">No tasks found</p>
+                                <p class="text-slate-600 text-sm">Create a task to get started</p>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
 
-<td class="p-3">
-{% if task.assigned_to %}
-{{ task.assigned_to.user.get_full_name|default:task.assigned_to.user.username }}
-{% else %}
-<span class="text-slate-400">Unassigned</span>
-{% endif %}
-</td>
-<td class="p-3">
-{% if task.milestone %}
-{{ task.milestone.name }}
-{% else %}
-<span class="text-slate-400">No milestone</span>
-{% endif %}
-</td>
-<td class="p-3">
-
-{% if task.status == "COMPLETED" %}
-
-<span class="text-green-400 bg-green-400/10 px-2 py-1 rounded text-xs">
-Completed
-</span>
-
-{% elif task.status == "IN_PROGRESS" %}
-
-<span class="text-blue-400 bg-blue-400/10 px-2 py-1 rounded text-xs">
-In Progress
-</span>
-
-{% else %}
-
-<span class="text-yellow-400 bg-yellow-400/10 px-2 py-1 rounded text-xs">
-Pending
-</span>
-
-{% endif %}
-
-</td>
-
-<td class="p-3 flex gap-3">
-
-<a
-onclick="openModal('{% url 'task_update' task.id %}')"
-class="text-blue-400 hover:text-blue-300 text-sm cursor-pointer">
-Edit
-</a>
-
-<a
-onclick="openModal('{% url 'task_delete' task.id %}')"
-class="text-red-400 hover:text-red-300 text-sm cursor-pointer">
-Delete
-</a>
-
-</td>
-
-</tr>
-
-{% empty %}
-
-<tr id="noDataRow">
-<td colspan="5" class="text-center text-slate-400 py-6">
-No data existing
-</td>
-</tr>
-
-{% endfor %}
-
-<tr id="noDataRow" style="display:none;">
-<td colspan="5" class="text-center text-slate-400 py-6">
-No data existing
-</td>
-</tr>
-
-</tbody>
-
-</table>
-
+                <tr id="noDataRow" style="display:none;">
+                    <td colspan="6" class="text-center text-slate-500 py-16 bg-slate-800/20">
+                        <div class="flex flex-col items-center gap-4">
+                            <i class="fas fa-search text-4xl text-slate-700/50"></i>
+                            <p class="text-slate-400 font-medium">No tasks match your filters</p>
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
 </div>
 
-<!-- JavaScript Filter -->
-
-<script>
-
-const searchInput = document.getElementById("searchInput");
-const statusFilter = document.getElementById("statusFilter");
-const projectFilter = document.getElementById("projectFilter");
-
-const rows = document.querySelectorAll("#taskTable tr[data-title]");
-const noDataRow = document.getElementById("noDataRow");
-
-function filterTasks() {
-
-    const searchValue = searchInput.value.toLowerCase();
-    const statusValue = statusFilter.value;
-    const projectValue = projectFilter.value;
-
-    let visibleCount = 0;
-
-    rows.forEach(row => {
-
-        const title = row.dataset.title || "";
-        const status = row.dataset.status || "";
-        const project = row.dataset.project || "";
-
-        const matchSearch = title.includes(searchValue);
-        const matchStatus = statusValue === "" || status === statusValue;
-        const matchProject = projectValue === "" || project === projectValue;
-
-        if (matchSearch && matchStatus && matchProject) {
-            row.style.display = "";
-            visibleCount++;
-        } else {
-            row.style.display = "none";
-        }
-
-    });
-
-    if (visibleCount === 0) {
-        noDataRow.style.display = "";
-    } else {
-        noDataRow.style.display = "none";
-    }
-
-}
-
-searchInput.addEventListener("keyup", filterTasks);
-statusFilter.addEventListener("change", filterTasks);
-projectFilter.addEventListener("change", filterTasks);
-
-</script>
 
 {% endblock %}

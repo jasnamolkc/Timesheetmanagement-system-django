@@ -1,200 +1,136 @@
 <!DOCTYPE html>
-<html lang="en" class="h-full" style="background-color: #0f172a;">
+<html lang="en" class="h-full">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Timesheet Pro - {% block title %}{% endblock %}</title>
+    <title>Timesheet Pro | {% block title %}{% endblock %}</title>
     {% load static %}
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
-        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-        body { font-family: 'Inter', sans-serif; background-color: #0f172a; }
-        .sidebar-active { background: linear-gradient(90deg, rgba(59, 130, 246, 0.2) 0%, rgba(59, 130, 246, 0) 100%); border-left: 4px solid #3b82f6; }
-        .bg-dark-navy { background-color: #0f172a; }
-        .bg-slate-800 { background-color: #1e293b; }
-    </style>
-   
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 </head>
 <body>
     <div class="layout">
-        <!-- Mobile Topbar -->
-    <div class="mobile-header">
-        <button onclick="toggleSidebar()">
-            <i class="fas fa-bars"></i>
-        </button>
-        <h1>Timesheet Pro</h1>
-    </div>
-        <!-- Sidebar -->
-    <aside id="sidebar" class="sidebar">
-        <div class="logo">Timesheet Pro</div>
+        <!-- Sidebar Navigation -->
+        <aside id="sidebar" class="sidebar">
+            <a href="{% url 'dashboard' %}" class="logo">Timesheet Pro</a>
 
-        <nav>
-            <a href="{% url 'dashboard' %}" class="{% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
-                <i class="fas fa-chart-line"></i> Dashboard
-            </a>
-
-            <a href="{% url 'project_list' %}" class="{% if 'project' in request.path %}active{% endif %}">
-                <i class="fas fa-project-diagram"></i> Projects
-            </a>
-
-            <a href="{% url 'milestone_list' %}" class="{% if 'milestone' in request.path %}active{% endif %}">
-                <i class="fas fa-flag-checkered"></i> Milestones
-            </a>
-
-            <a href="{% url 'task_page' %}" class="{% if 'task' in request.path %}active{% endif %}">
-                <i class="fas fa-tasks"></i> Tasks
-            </a>
-            {% if request.user.is_superuser or request.user.employee.role == 'ADMIN' or request.user.employee.role == 'MANAGER' %}
-                <a href="{% url 'allocation_list' %}" class="flex items-center px-4 py-3 text-sm font-medium rounded-lg hover:bg-slate-700 transition-colors {% if 'allocation' in request.path %}sidebar-active text-blue-400{% endif %}">
-                    <i class="fas fa-user-tag mr-3 w-5"></i> Allocations
+            <nav>
+                <a href="{% url 'dashboard' %}" class="{% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+                    <i class="fas fa-chart-line"></i> Dashboard
                 </a>
-                {% endif %}
-            <a href="{% url 'timesheet_list' %}" class="{% if 'timesheet' in request.path %}active{% endif %}">
-                <i class="fas fa-clock"></i> Timesheets
-            </a>
-            {% if request.user.is_superuser or request.user.employee.role == 'ADMIN' or request.user.employee.role == 'MANAGER' %}
 
-                <a href="{% url 'employee_list' %}"
-                class="flex items-center px-4 py-3 text-sm font-medium rounded-lg hover:bg-slate-700
-                {% if 'employees' in request.path %}sidebar-active text-blue-400{% endif %}">
-                <i class="fas fa-users mr-3 w-5"></i> Employees
+                <a href="{% url 'project_list' %}" class="{% if 'project' in request.path %}active{% endif %}">
+                    <i class="fas fa-layer-group"></i> Porjects
                 </a>
-                {% endif %}
+
+                <a href="{% url 'milestone_list' %}" class="{% if 'milestone' in request.path %}active{% endif %}">
+                    <i class="fas fa-flag-checkered"></i> Milestones
+                </a>
+
+                <a href="{% url 'task_page' %}" class="{% if 'task' in request.path %}active{% endif %}">
+                    <i class="fas fa-list-check"></i> Tasks
+                </a>
+
                 {% if request.user.is_superuser or request.user.employee.role == 'ADMIN' or request.user.employee.role == 'MANAGER' %}
-                <a href="{% url 'summary_report' %}" class="flex items-center px-4 py-3 text-sm font-medium rounded-lg hover:bg-slate-700 transition-colors {% if 'report' in request.path %}sidebar-active text-blue-400{% endif %}">
-                    <i class="fas fa-file-alt mr-3 w-5"></i> Reports
-                </a>
+                    <a href="{% url 'allocation_list' %}" class="{% if 'allocation' in request.path %}active{% endif %}">
+                        <i class="fas fa-users-viewfinder"></i> Employee Allocation
+                    </a>
                 {% endif %}
-        </nav>
 
-        <div class="sidebar-footer">
-            <div class="user-box">
-                <div class="avatar">
-                    {{ request.user.username|slice:":2"|upper }}
+                <a href="{% url 'timesheet_list' %}" class="{% if 'timesheet' in request.path %}active{% endif %}">
+                    <i class="fas fa-stopwatch"></i> Timesheet
+                </a>
+
+                {% if request.user.is_superuser or request.user.employee.role == 'ADMIN' or request.user.employee.role == 'MANAGER' %}
+                    <a href="{% url 'employee_list' %}" class="{% if 'employees' in request.path %}active{% endif %}">
+                        <i class="fas fa-id-badge"></i> Employees
+                    </a>
+                    <a href="{% url 'summary_report' %}" class="{% if 'report' in request.path %}active{% endif %}">
+                        <i class="fas fa-file-alt mr-3 w-5"></i> Summary Report
+                    </a>
+                {% endif %}
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="user-box">
+                    <div class="avatar shadow-lg shadow-blue-950/40">
+                        {{ request.user.username|slice:":2"|upper }}
+                    </div>
+                    <div class="overflow-hidden">
+                        <p class="user-name">{{ request.user.get_full_name|default:request.user.username }}</p>
+                        <p class="user-role uppercase tracking-widest text-[10px] font-black opacity-60">
+                            {% if request.user.is_superuser %}Super Admin{% else %}{{ request.user.employee.role|default:"Resource" }}{% endif %}
+                        </p>
+                    </div>
                 </div>
-                <div>
-                   <p class="user-name">
-    {{ request.user.get_full_name|default:request.user.username }}
-</p>
 
-<p class="user-role">
-    {% if request.user.is_superuser %}
-        Super Admin
-    {% else %}
-        {{ request.user.employee.role|default:"User" }}
-    {% endif %}
-</p>
- </div>
+                <form action="{% url 'logout' %}" method="post">
+                    {% csrf_token %}
+                    <button class="logout-btn">
+                        <i class="fas fa-power-off"></i> Terminate Session
+                    </button>
+                </form>
             </div>
+        </aside>
 
-            <form action="{% url 'logout' %}" method="post">
-                {% csrf_token %}
-                <button class="logout-btn">
-                    <i class="fas fa-sign-out-alt"></i> Logout
+        <div class="main-wrapper flex flex-col w-full overflow-hidden">
+            <!-- Mobile Navigation Trigger -->
+            <div class="mobile-header">
+                <button onclick="toggleSidebar()" class="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-900 border border-slate-800 text-slate-400">
+                    <i class="fas fa-bars-staggered"></i>
                 </button>
-            </form>
-        </div>
-    </aside>
-       <!-- Main -->
-    <div class="main">
-    <div class="main-container">
-        {% block content %}{% endblock %}
-    </div>
-</div>
-    </div>
+                <div class="logo text-xl mb-0" style="margin-bottom: 0;">Timesheet Pro</div>
+            </div>
 
-    <!-- Modal Container -->
-    <div id="modal-container" class="hidden fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-        <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-            <div class="fixed inset-0 bg-slate-950/75 transition-opacity" aria-hidden="true" onclick="closeModal()"></div>
-            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-            <div class="inline-block align-bottom bg-slate-800 rounded-xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full border border-slate-700">
-                <div id="modal-content" class="p-6">
-                    <!-- Loaded via AJAX or direct include -->
+            <main class="main">
+                <div class="main-container">
+                    {% block content %}{% endblock %}
                 </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- System Modals -->
+    <div id="modal-container" class="hidden fixed inset-0 z-[1000] overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <div class="flex items-center justify-center min-h-screen p-6">
+            <div class="fixed inset-0 bg-slate-950/90 backdrop-blur-md transition-opacity" aria-hidden="true" onclick="closeModal()"></div>
+            <div class="bg-slate-900 rounded-[2rem] text-left overflow-hidden shadow-2xl transform transition-all w-full max-w-sm border border-slate-800 z-[1001]">
+                <div id="modal-content" class="p-4 md:p-5"></div>
             </div>
         </div>
     </div>
 
-<!-- Nested Modal Container -->
-<div id="modal-container-2" class="hidden fixed inset-0 z-60 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-    <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-        <div class="fixed inset-0 bg-slate-950/75 transition-opacity" aria-hidden="true" onclick="closeModal2()"></div>
-        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-        <div class="inline-block align-bottom bg-slate-800 rounded-xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full border border-slate-700">
-            <div id="modal-content-2" class="p-6">
-                <!-- Loaded via AJAX -->
+    <div id="modal-container-2" class="hidden fixed inset-0 z-[110] overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <div class="flex items-center justify-center min-h-screen p-6">
+            <div class="fixed inset-0 bg-slate-950/90 backdrop-blur-md transition-opacity" aria-hidden="true" onclick="closeModal2()"></div>
+            <div class="bg-slate-900 rounded-[2rem] text-left overflow-hidden shadow-2xl transform transition-all w-full max-w-xl border border-slate-800 z-[111]">
+                <div id="modal-content-2"></div>
             </div>
+        </div>
+    </div>
+<!-- Archive Confirmation Modal -->
+<div id="archiveModal"
+     class="hidden fixed inset-0 z-[999] items-center justify-center p-4">
+         <div class="fixed inset-0 bg-slate-950/80 transition-opacity" onclick="closeArchiveModal()"></div>
+    <div class="bg-slate-800 rounded-2xl p-8 max-w-md w-full border border-slate-700 shadow-2xl z-[100]">
+        <h4 class="text-2xl font-bold text-white mb-4">Confirm Action</h4>
+        <p id="archiveMessage" class="text-slate-400 leading-relaxed mb-8"></p>
+        <div class="flex gap-4">
+            <button onclick="closeArchiveModal()" class="flex-1 btn bg-slate-700 hover:bg-slate-600">Cancel</button>
+            <button id="confirmArchiveBtn" class="flex-1 btn btn-primary">Confirm</button>
         </div>
     </div>
 </div>
-<script>
-// function openModal2(url) {
-//     const modalUrl = url.includes('?') ? `${url}&modal=1` : `${url}?modal=1`;
-//     fetch(modalUrl, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
-//         .then(res => res.text())
-//         .then(html => {
-//             const modalContent2 = document.getElementById('modal-content-2');
-//             modalContent2.innerHTML = html;
-//             const modal2 = document.getElementById('modal-container-2');
-//             modal2.classList.remove('hidden');
-//             modal2.style.zIndex = 9999;   // ensure it’s above modal 1
-//             document.body.classList.add('overflow-hidden');
-//         });
-// }
+    <!-- Core Intelligence Scripts -->
+     {% load static %}
 
-// function openModal2(url) {
-//     const modalUrl = url.includes('?') ? `${url}&modal=1` : `${url}?modal=1`;
-//     fetch(modalUrl, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
-//         .then(res => res.text())
-//         .then(html => {
-//             const modalContent2 = document.getElementById('modal-content-2');
-//             modalContent2.innerHTML = html;
-
-//             // Show modal
-//             const modal2 = document.getElementById('modal-container-2');
-//             modal2.classList.remove('hidden');
-//             modal2.style.zIndex = 9999;   // ensure it’s above modal 1
-//             document.body.classList.add('overflow-hidden');
-
-//             // ---------- Fields to hide ----------
-//             const fieldsToHide = ['#id_description', '#id_milestone', '#id_status'];
-
-//             fieldsToHide.forEach(selector => {
-//                 const field = modalContent2.querySelector(selector);
-//                 if (field) {
-//                     const wrapper = field.closest('.form-group') || field.parentElement;
-//                     if (wrapper) wrapper.style.display = 'none';
-//                     // Optional: if label is outside wrapper, hide explicitly
-//         const label = modalContent2.querySelector(`label[for="${field.id}"]`);
-//         if (label) label.style.display = 'none';
-//                 }
-//             });
-            
-//             // ---------- Prefill project if passed in URL ----------
-//             const params = new URLSearchParams(url.split('?')[1]);
-//             const projectId = params.get('project');
-//             if (projectId) {
-//                 const projectSelect = modalContent2.querySelector('#id_project');
-//                 if (projectSelect) {
-//                     projectSelect.value = projectId;
-
-//                     // Trigger change to load milestones & employees
-//                     projectSelect.dispatchEvent(new Event('change'));
-//                 }
-//             }
-//         });
-// }
-
-
-// function closeModal2() {
-//     document.getElementById('modal-container-2').classList.add('hidden');
-//     document.body.classList.remove('overflow-hidden');
-// }
-
- </script>
- <script>
+    <!-- <script src="{% static 'js/common.js' %}"></script>
+    <script src="{% static 'js/projects.js' %}"></script>
+    <script src="{% static 'js/tasks.js' %}"></script>
+    <script src="{% static 'js/timesheets.js' %}"></script>
+    <script src="{% static 'js/employees.js' %}"></script> -->
+     <script>
 function toggleSidebar(){
     document.getElementById("sidebar").classList.toggle("show");
 }
@@ -343,7 +279,10 @@ function closeModal2() {
 
     <script>
         function openModal(url) {
+            alert("hi");
+
             const modalUrl = url.includes('?') ? `${url}&modal=1` : `${url}?modal=1`;
+            alert(modalUrl)
             fetch(modalUrl, {
                 headers: {
                     'X-Requested-With': 'XMLHttpRequest'
@@ -355,6 +294,7 @@ function closeModal2() {
                     // document.getElementById('modal-container').classList.remove('hidden');
                     // document.body.classList.add('overflow-hidden');
                     const modalContent = document.getElementById('modal-content'); // define modalContent
+                    console.log(html);
     modalContent.innerHTML = html;
     document.getElementById('modal-container').classList.remove('hidden');
     document.body.classList.add('overflow-hidden');
@@ -582,7 +522,6 @@ if (modalForm && modalForm.action.includes("task")) {
     return cookieValue;
 }
     function deleteTaskImage(id){
-alert("bvhgvhg");
     fetch(`/delete-task-image/${id}/`, {
         method: "POST",
         headers: {
@@ -624,17 +563,28 @@ function openArchiveModal(projectId, projectName, isArchived) {
     document.getElementById("archiveMessage").innerText =
         `Are you sure you want to ${action} "${projectName}"?`;
 
-    document.getElementById("archiveModal").classList.remove("hidden");
-    document.getElementById("archiveModal").classList.add("flex");
+    const modal = document.getElementById("archiveModal");
+
+    modal.classList.remove("hidden");
+    modal.classList.add("flex");
 }
 
 function closeArchiveModal() {
-    document.getElementById("archiveModal").classList.add("hidden");
+    const modal = document.getElementById("archiveModal");
+
+    modal.classList.add("hidden");
+    modal.classList.remove("flex"); // ✅ IMPORTANT
 }
 
-document.getElementById("confirmArchiveBtn").addEventListener("click", function () {
-    if (currentProjectId) {
-        document.getElementById(`archive-form-${currentProjectId}`).submit();
+document.addEventListener("DOMContentLoaded", function () {
+    const confirmBtn = document.getElementById("confirmArchiveBtn");
+
+    if (confirmBtn) {
+        confirmBtn.addEventListener("click", function () {
+            if (currentProjectId) {
+                document.getElementById(`archive-form-${currentProjectId}`).submit();
+            }
+        });
     }
 });
 </script>
@@ -715,63 +665,26 @@ if (e.target && e.target.id === "add-milestone") {
 }
 });
 </script>
-<style>
-/* ===== MATCH TASK FORM THEME ===== */
-
-input, select, textarea {
-    background-color: #020617 !important;   /* darker than before */
-    border: 1px solid #1e293b !important;
-    color: #e2e8f0 !important;
-    border-radius: 0.5rem !important;
-    padding: 0.5rem 0.75rem !important;
+    <script>
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('show');
+        }
+    </script>
+    <style>
+        input, select, textarea {
+    width: 100%;
+    background: #0f172a;
+    border: 1px solid #334155;
+    color: white;
+    padding: 10px;
+    border-radius: 8px;
 }
 
-/* Focus effect */
-input:focus, select:focus, textarea:focus {
-    outline: none !important;
-    border-color: #3b82f6 !important;
-    box-shadow: 0 0 0 1px #3b82f6 !important;
-}
-
-/* Labels */
 label {
-    color: #94a3b8 !important;
-    font-size: 0.85rem !important;
-    margin-bottom: 4px !important;
+    color: #cbd5f5;
+    font-size: 14px;
 }
 
-/* Help text */
-.helptext {
-    color: #64748b !important;
-    font-size: 0.75rem !important;
-}
-
-/* Errors */
-.text-danger, .invalid-feedback {
-    color: #f87171 !important;
-    font-size: 0.75rem !important;
-}
-
-/* File input fix */
-input[type="file"] {
-    background-color: #020617 !important;
-    padding: 6px !important;
-}
-
-/* Checkbox */
-input[type="checkbox"] {
-    accent-color: #3b82f6;
-}
-
-/* Select dropdown arrow fix */
-select {
-    appearance: none;
-}
-
-/* Crispy wrapper spacing */
-.form-group {
-    margin-bottom: 12px;
-}
-</style>
+    </style>
 </body>
 </html>

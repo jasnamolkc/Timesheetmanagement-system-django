@@ -3,172 +3,146 @@
 
 {% block content %}
 
-<div class="flex items-center justify-between mb-6">
-    <h2 class="text-3xl font-bold">Employees</h2>
+<div class="page-header flex flex-col md:flex-row items-start md:items-center justify-between gap-10 mb-16">
+    <div class="max-w-2xl">
+        <h1 class="page-title text-5xl font-black tracking-tighter mb-4">Human Capital</h1>
+        <p class="page-subtitle text-lg text-slate-500 font-medium">Strategic administration of team members, departmental roles, and organizational status.</p>
+    </div>
 </div>
 
-<!-- Search + Filter -->
-<div class="flex gap-3 mb-6">
+<!-- Refined Filters -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16 bg-slate-900/40 p-8 rounded-3xl border border-slate-800/60 backdrop-blur-md">
+    <div class="flex flex-col gap-3">
+        <label for="searchInput" class="text-[10px] uppercase tracking-[0.2em] text-slate-500 font-black ml-1">Identity Search</label>
+        <div class="relative group">
+            <i class="fas fa-search absolute left-5 top-1/2 -translate-y-1/2 text-slate-600 group-focus-within:text-blue-500 transition-colors"></i>
+            <input
+                type="text"
+                id="searchInput"
+                placeholder="Search by name or employee code..."
+                class="pl-14 !py-5 !bg-slate-950 border-slate-800 focus:!border-blue-500/50 shadow-inner"
+            />
+        </div>
+    </div>
 
-<input
-    type="text"
-    id="searchInput"
-    placeholder="Search employee..."
-    class="bg-slate-800 border border-slate-700 px-4 py-2 rounded-lg text-sm w-64"
-/>
-
-<select
-    id="roleFilter"
-    class="bg-slate-800 border border-slate-700 px-4 py-2 rounded-lg text-sm"
->
-<option value="">All Roles</option>
-<option value="ADMIN">Admin</option>
-<option value="MANAGER">Manager</option>
-<option value="EMPLOYEE">Employee</option>
-</select>
-
+    <div class="flex flex-col gap-3">
+        <label for="roleFilter" class="text-[10px] uppercase tracking-[0.2em] text-slate-500 font-black ml-1">Hierarchical Filter</label>
+        <div class="relative group">
+            <i class="fas fa-id-badge absolute left-5 top-1/2 -translate-y-1/2 text-slate-600 group-focus-within:text-purple-500 transition-colors"></i>
+            <select
+                id="roleFilter"
+                class="pl-14 !py-5 !bg-slate-950 border-slate-800 focus:!border-purple-500/50 appearance-none shadow-inner"
+            >
+                <option value="">All Organizational Roles</option>
+                <option value="ADMIN">Administrative Authority</option>
+                <option value="MANAGER">Operational Management</option>
+                <option value="EMPLOYEE">Technical Resource</option>
+            </select>
+            <i class="fas fa-chevron-down absolute right-6 top-1/2 -translate-y-1/2 text-slate-600 pointer-events-none group-hover:text-slate-400 transition-colors"></i>
+        </div>
+    </div>
 </div>
 
-<!-- Employees Table -->
-<div class="bg-slate-800 rounded-xl border border-slate-700 overflow-hidden">
+<!-- Employees Table Polish -->
+<div class="table-container !bg-slate-900/40 !border-slate-800 shadow-2xl">
+    <div class="overflow-x-auto">
+        <table class="w-full">
+            <thead class="bg-slate-950/60">
+                <tr>
+                    <th class="px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Resource Name</th>
+                    <th class="px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Employee Code</th>
+                    <th class="px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Designation</th>
+                    <th class="px-8 py-6 text-center text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">System Status</th>
+                    <th class="px-8 py-6 text-right text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Actions</th>
+                </tr>
+            </thead>
 
-<table class="w-full text-sm">
+            <tbody id="employeeTable">
+                {% for emp in employees %}
+                <tr
+                    class="group border-t border-slate-800/60 hover:bg-slate-800/30 transition-all duration-300"
+                    data-name="{{ emp.user.get_full_name|default:emp.user.username|lower }}"
+                    data-code="{{ emp.employee_code|lower }}"
+                    data-role="{{ emp.role }}"
+                >
+                    <td class="px-8 py-6 whitespace-nowrap">
+                        <div class="flex items-center">
+                            <div class="w-12 h-12 rounded-2xl bg-slate-950 flex items-center justify-center text-sm font-black text-slate-400 border border-slate-800 group-hover:bg-blue-600/10 group-hover:border-blue-500/30 group-hover:text-blue-400 transition-all duration-300 shadow-inner">
+                                {{ emp.user.username|slice:":2"|upper }}
+                            </div>
+                            <div class="ml-4">
+                                <span class="font-black text-white block text-base group-hover:text-blue-400 transition-colors tracking-tight">
+                                    {{ emp.user.get_full_name|default:emp.user.username }}
+                                </span>
+                                <span class="text-[10px] text-slate-600 font-bold uppercase tracking-widest">{{ emp.user.email|default:emp.user.username|add:"@system.pro" }}</span>
+                            </div>
+                        </div>
+                    </td>
 
-<thead class="bg-slate-700 text-slate-300">
-<tr>
-<th class="p-3 text-left">Name</th>
-<th class="p-3 text-left">Employee Code</th>
-<th class="p-3 text-left">Role</th>
-<th class="p-3 text-left">Status</th>
-<th class="p-3 text-left">Action</th>
-</tr>
-</thead>
+                    <td class="px-8 py-6">
+                         <span class="font-mono text-xs font-black text-blue-500/70 bg-blue-500/5 px-3 py-1.5 rounded-lg border border-blue-500/10 group-hover:text-blue-400 transition-colors">
+                            {{ emp.employee_code }}
+                        </span>
+                    </td>
 
-<tbody id="employeeTable">
+                    <td class="px-8 py-6">
+                        <span class="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 group-hover:text-slate-300 transition-colors">
+                            {{ emp.role }}
+                        </span>
+                    </td>
 
-{% for emp in employees %}
+                    <td class="px-8 py-6 text-center">
+                        {% if emp.status == "APPROVED" %}
+                        <span class="badge badge-success !bg-emerald-500/10 !text-emerald-500 !py-2 !px-5 !rounded-xl !border-emerald-500/20 mx-auto">
+                            Active
+                        </span>
+                        {% else %}
+                        <span class="badge badge-warning !bg-amber-500/10 !text-amber-500 !py-2 !px-5 !rounded-xl !border-amber-500/20 mx-auto animate-pulse">
+                            Pending
+                        </span>
+                        {% endif %}
+                    </td>
 
-<tr
-class="border-t border-slate-700"
-data-name="{{ emp.user.get_full_name|default:emp.user.username|lower }}"
-data-code="{{ emp.employee_code|lower }}"
-data-role="{{ emp.role }}"
->
-
-<td class="p-3">
-{{ emp.user.get_full_name|default:emp.user.username }}
-</td>
-
-<td class="p-3">
-{{ emp.employee_code }}
-</td>
-
-<td class="p-3">
-{{ emp.role }}
-</td>
-
-<td class="p-3">
-
-{% if emp.status == "APPROVED" %}
-
-<span class="text-green-400 bg-green-400/10 px-2 py-1 rounded text-xs">
-Approved
-</span>
-
-{% else %}
-
-<span class="text-yellow-400 bg-yellow-400/10 px-2 py-1 rounded text-xs">
-Pending
-</span>
-
-{% endif %}
-
-</td>
-
-<td class="p-3">
-
-{% if emp.status == "PENDING" %}
-
-<a href="{% url 'approve_employee' emp.id %}"
-class="text-green-400 hover:text-green-300 text-sm">
-Approve
-</a>
-
-{% else %}
-
-<span class="text-slate-500 text-sm">—</span>
-
-{% endif %}
-
-</td>
-
-</tr>
-{% empty %}
-
-<tr id="noDataRow">
-<td colspan="5" class="text-center text-slate-400 py-6">
-No data existing
-</td>
-</tr>
-
-{% endfor %}
-<tr id="noDataRow" style="display:none;">
-<td colspan="5" class="text-center text-slate-400 py-6">
-No data existing
-</td>
-</tr>
-
-</tbody>
-
-</table>
-
+                    <td class="px-8 py-6 text-right">
+                        {% if emp.status == "PENDING" %}
+                        <a href="{% url 'approve_employee' emp.id %}"
+                           class="btn !py-2.5 !px-6 !text-[10px] !bg-emerald-500/10 !text-emerald-400 hover:!bg-emerald-500 hover:!text-white border border-emerald-500/20 shadow-lg shadow-emerald-950/20 transition-all hover:scale-105 active:scale-95">
+                            <i class="fas fa-user-check"></i> Authorize
+                        </a>
+                        {% else %}
+                        <div class="flex items-center justify-end gap-2 text-slate-800 opacity-20">
+                            <i class="fas fa-shield-halved"></i>
+                        </div>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr id="noDataRow">
+                    <td colspan="5" class="text-center py-32">
+                         <div class="empty-state !bg-transparent border-none">
+                            <div class="w-24 h-24 bg-slate-950 rounded-full flex items-center justify-center mx-auto mb-8 border border-slate-800 shadow-2xl">
+                                <i class="fas fa-users-slash text-3xl text-slate-700"></i>
+                            </div>
+                            <h4 class="text-2xl font-black text-slate-400">Team is Isolated</h4>
+                            <p class="text-slate-600 mt-2">No employee records discovered within the current context.</p>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+                <tr id="noResultsRow" style="display:none;">
+                    <td colspan="5" class="text-center py-32">
+                         <div class="empty-state !bg-transparent border-none">
+                            <div class="w-24 h-24 bg-slate-950 rounded-full flex items-center justify-center mx-auto mb-8 border border-slate-800 shadow-2xl">
+                                <i class="fas fa-user-secret text-3xl text-slate-700"></i>
+                            </div>
+                            <h4 class="text-2xl font-black text-slate-400">Identity Not Found</h4>
+                            <p class="text-slate-600 mt-2">No team members match your specific hierarchical criteria.</p>
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
 </div>
-
-<!-- JavaScript Filter -->
-
-<script>
-
-const searchInput = document.getElementById("searchInput");
-const roleFilter = document.getElementById("roleFilter");
-const rows = document.querySelectorAll("#employeeTable tr[data-name]");
-const noDataRow = document.getElementById("noDataRow");
-
-function filterEmployees() {
-
-    const searchValue = searchInput.value.toLowerCase();
-    const roleValue = roleFilter.value;
-
-    let visibleCount = 0;
-
-    rows.forEach(row => {
-
-        const name = row.dataset.name || "";
-        const code = row.dataset.code || "";
-        const role = row.dataset.role || "";
-
-        const matchSearch = name.includes(searchValue) || code.includes(searchValue);
-        const matchRole = roleValue === "" || role === roleValue;
-
-        if (matchSearch && matchRole) {
-            row.style.display = "";
-            visibleCount++;
-        } else {
-            row.style.display = "none";
-        }
-
-    });
-
-    if (visibleCount === 0) {
-        noDataRow.style.display = "";
-    } else {
-        noDataRow.style.display = "none";
-    }
-
-}
-
-searchInput.addEventListener("keyup", filterEmployees);
-roleFilter.addEventListener("change", filterEmployees);
-
-</script>
 
 {% endblock %}

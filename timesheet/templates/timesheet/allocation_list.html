@@ -1,66 +1,101 @@
 {% extends "base.html" %}
-
 {% block title %}Allocations{% endblock %}
 
 {% block content %}
-<div class="flex justify-between items-center mb-8">
-    <h2 class="text-3xl font-bold">Project Allocations</h2>
-    <a href="{% url 'allocation_create' %}" onclick="openModal(this.href); return false;" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-semibold transition-colors flex items-center">
-        <i class="fas fa-plus mr-2"></i> New Allocation
-    </a>
+<div class="page-header flex-col md:flex-row items-start md:items-center gap-6 mb-10">
+    <div class="flex-1">
+        <h1 class="page-title mb-4">Project Allocations</h1>
+        <p class="text-slate-400 text-sm">Monitor employee distribution and resource planning across active projects.</p>
+    </div>
+
+    <button onclick="openModal('{% url 'allocation_create' %}')" 
+            class="btn btn-primary shadow-lg shadow-blue-500/20">
+        <i class="fas fa-plus"></i> New Allocation
+    </button>
 </div>
 
-<div class="bg-slate-800 rounded-2xl border border-slate-700 overflow-hidden shadow-xl">
-    <table class="w-full text-left">
-        <thead class="bg-slate-700/50 text-slate-400 text-xs uppercase tracking-wider">
-            <tr>
-                <th class="px-6 py-4 font-semibold">Employee</th>
-                <th class="px-6 py-4 font-semibold">Project</th>
-                <th class="px-6 py-4 font-semibold text-center">Allocation %</th>
-                <th class="px-6 py-4 font-semibold">Role</th>
-                <th class="px-6 py-4 font-semibold">Period</th>
-                <th class="px-6 py-4 font-semibold text-right">Actions</th>
-            </tr>
-        </thead>
-        <tbody class="divide-y divide-slate-700">
-            {% for allocation in allocations %}
-            <tr class="hover:bg-slate-700/30 transition-colors">
-                <td class="px-6 py-4 whitespace-nowrap">
-                    <div class="flex items-center">
-                        <div class="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center text-xs mr-3">
-                            {{ allocation.employee.user.username|slice:":2"|upper }}
+<div class="table-container border-slate-700/60 shadow-2xl">
+    <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+            <thead class="bg-slate-700/40 text-slate-400">
+                <tr>
+                    <th class="px-6 py-5 text-left font-bold uppercase tracking-wider text-[11px]">Employee</th>
+                    <th class="px-6 py-5 text-left font-bold uppercase tracking-wider text-[11px]">Project</th>
+                    <th class="px-6 py-5 text-center font-bold uppercase tracking-wider text-[11px]">Allocation %</th>
+                    <th class="px-6 py-5 text-left font-bold uppercase tracking-wider text-[11px]">Role</th>
+                    <th class="px-6 py-5 text-left font-bold uppercase tracking-wider text-[11px]">Period</th>
+                    <th class="px-6 py-5 text-right font-bold uppercase tracking-wider text-[11px]">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-700/50">
+                {% for allocation in allocations %}
+                <tr class="group border-t border-slate-700/50 hover:bg-slate-700/20 transition-all duration-200">
+                    <td class="px-6 py-5 whitespace-nowrap">
+                        <div class="flex items-center">
+                            <div class="w-9 h-9 rounded-xl bg-indigo-500/10 flex items-center justify-center text-xs font-bold text-indigo-400 border border-indigo-500/20 mr-4">
+                                {{ allocation.employee.user.username|slice:":2"|upper }}
+                            </div>
+                            <div>
+                                <span class="font-bold text-slate-200 block leading-tight">{{ allocation.employee.user.get_full_name|default:allocation.employee.user.username }}</span>
+                                <span class="text-[10px] text-slate-500 uppercase tracking-widest">{{ allocation.employee.employee_code }}</span>
+                            </div>
                         </div>
-                        <span class="font-medium text-slate-200">{{ allocation.employee.user.get_full_name|default:allocation.employee.user.username }}</span>
-                    </div>
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap font-medium text-blue-400">
-                    {{ allocation.project.name }}
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap text-center">
-                    <div class="w-full bg-slate-900 rounded-full h-2 w-24 mx-auto mb-1">
-                        <div class="bg-blue-500 h-2 rounded-full" style="width: {{ allocation.allocation_percentage }}%"></div>
-                    </div>
-                    <span class="text-xs font-bold">{{ allocation.allocation_percentage }}%</span>
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-400">
-                    {{ allocation.role_in_project }}
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap text-xs text-slate-400">
-                    {{ allocation.start_date }} - {{ allocation.end_date }}
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <a href="{% url 'allocation_edit' allocation.pk %}" onclick="openModal(this.href); return false;" class="text-blue-400 hover:text-blue-300 mr-3"><i class="fas fa-edit"></i></a>
-                    <a href="{% url 'allocation_delete' allocation.pk %}" class="text-red-400 hover:text-red-300"><i class="fas fa-trash"></i></a>
-                </td>
-            </tr>
-            {% empty %}
-            <tr>
-                <td colspan="6" class="px-6 py-12 text-center text-slate-500 italic">
-                    No allocations found.
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="text-blue-400/90 font-bold bg-blue-500/5 px-2 py-1 rounded border border-blue-500/10">{{ allocation.project.name }}</span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-center">
+                        <div class="flex flex-col gap-1 items-center">
+                            <div class="w-full bg-slate-900 rounded-full h-1.5 w-24 border border-slate-800">
+                                <div class="bg-gradient-to-r from-blue-500 to-indigo-600 h-1.5 rounded-full" style="width: {{ allocation.allocation_percentage }}%"></div>
+                            </div>
+                            <span class="text-[10px] font-bold text-slate-400 tracking-tighter">{{ allocation.allocation_percentage }}% Capacity</span>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="text-xs text-slate-300 font-medium bg-slate-700/50 px-3 py-1 rounded-lg border border-slate-600/30">
+                            {{ allocation.role_in_project }}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="flex flex-col">
+                            <span class="text-[11px] text-slate-400 font-mono flex items-center gap-1.5">
+                                <i class="far fa-calendar-alt text-[10px] text-slate-600"></i> {{ allocation.start_date|date:"M d, Y" }}
+                            </span>
+                            <span class="text-[11px] text-slate-500 font-mono flex items-center gap-1.5 mt-0.5">
+                                <i class="fas fa-arrow-right text-[10px] text-slate-700"></i> {{ allocation.end_date|date:"M d, Y" }}
+                            </span>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-right">
+                        <div class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button onclick="openModal('{% url 'allocation_edit' allocation.pk %}')" 
+                               class="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-900 hover:bg-blue-500/20 border border-slate-700 hover:border-blue-500/50 text-blue-400 transition-all"
+                               title="Edit Allocation"
+                            >
+                                <i class="fas fa-edit text-xs"></i>
+                            </button>
+                            <a href="{% url 'allocation_delete' allocation.pk %}" 
+                               class="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-900 hover:bg-red-500/20 border border-slate-700 hover:border-red-500/50 text-red-400 transition-all"
+                               title="Delete Allocation"
+                            >
+                                <i class="fas fa-trash-alt text-xs"></i>
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="px-6 py-16 text-center text-slate-500 bg-slate-800/20 italic">
+                        <div class="flex flex-col items-center gap-4">
+                            <i class="fas fa-user-tag text-4xl text-slate-700/50"></i>
+                            <p class="text-slate-400 font-medium text-lg">No allocations found</p>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 </div>
 {% endblock %}

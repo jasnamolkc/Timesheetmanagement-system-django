@@ -1,16 +1,37 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="max-w-lg mx-auto bg-slate-800 rounded-2xl border border-slate-700 p-8 shadow-2xl">
-    <h2 class="text-2xl font-bold mb-6 text-white">Delete Timesheet Entry</h2>
-    <p class="text-slate-400 mb-8">Are you sure you want to delete this entry for <span class="text-blue-400 font-bold">{{ object.project.project_code }}</span> on <span class="text-white">{{ object.date }}</span>?</p>
+<div class="max-w-lg mx-auto bg-slate-800 rounded-3xl border border-slate-700 p-10 shadow-2xl mt-12 relative overflow-hidden">
+    <!-- Red Accent Top Bar -->
+    <div class="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-red-500 to-rose-600"></div>
 
-    <form method="post">
-        {% csrf_token %}
-        <div class="flex justify-end space-x-4">
-            <a href="{% url 'timesheet_list' %}" class="px-6 py-2 bg-slate-700 text-white rounded-lg hover:bg-slate-600 transition-colors">Cancel</a>
-            <button type="submit" class="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 font-bold shadow-lg transition-all">Confirm Delete</button>
+    <div class="flex flex-col items-center gap-6 text-center">
+        <div class="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center text-red-500 border border-red-500/20 shadow-xl">
+            <i class="fas fa-trash-alt text-2xl"></i>
         </div>
-    </form>
+        
+        <h2 class="text-3xl font-extrabold text-white tracking-tight">Delete Confirmation</h2>
+        
+        <p class="text-slate-400 leading-relaxed max-w-sm">
+            Are you sure you want to permanently delete this entry for 
+            <span class="text-blue-400 font-bold bg-blue-500/5 px-2 py-0.5 rounded border border-blue-500/10">{{ object.project.name|default:object }}</span>?
+            <br><br>
+            <span class="text-xs uppercase tracking-widest text-slate-500 font-bold">This action cannot be undone</span>
+        </p>
+
+        <form method="post" class="w-full mt-4">
+            {% csrf_token %}
+            <div class="grid grid-cols-2 gap-4">
+                <a href="{{ request.META.HTTP_REFERER|default:success_url }}" 
+                   class="btn !bg-slate-700/50 hover:!bg-slate-700 border border-slate-600/30 text-slate-300 font-bold !py-3">
+                    Cancel
+                </a>
+                <button type="submit" 
+                        class="btn !bg-red-600 hover:!bg-red-700 text-white font-extrabold !py-3 shadow-xl shadow-red-500/20 active:scale-[0.98] transition-all">
+                    Delete Now
+                </button>
+            </div>
+        </form>
+    </div>
 </div>
 {% endblock %}
