@@ -3,138 +3,164 @@
 
 {% block content %}
 
-<div class="flex justify-between items-center mb-6">
-    <h2 class="text-2xl font-bold text-white">Timesheets</h2>
+<div class="page-header flex-col md:flex-row items-start md:items-center gap-6 mb-10">
+    <div class="flex-1">
+        <h1 class="page-title mb-4">Timesheet Log</h1>
+        <p class="text-slate-400 text-sm">Review and manage time entries across all projects and team members.</p>
+    </div>
 
     <button onclick="openModal('{% url 'timesheet_create' %}')"
-            class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded flex items-center">
-        <i class="fas fa-plus mr-2"></i> Create
+            class="btn btn-primary shadow-lg shadow-blue-500/20">
+        <i class="fas fa-plus"></i> Create Entry
     </button>
 </div>
 
-<!-- Search & Filter -->
-<div class="flex gap-3 mb-4">
-    <input id="search"
-           placeholder="Search description or task..."
-           class="bg-slate-800 border border-slate-700 text-white px-3 py-2 rounded w-full">
+<!-- Filters -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10 bg-slate-800/50 p-6 rounded-2xl border border-slate-700/50">
+    <div class="flex flex-col gap-2">
+        <label for="search" class="text-xs uppercase tracking-widest text-slate-500 font-bold ml-1">Search</label>
+        <div class="relative">
+            <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"></i>
+            <input id="search"
+                   placeholder="Search by description or task..."
+                   class="pl-11 !bg-slate-900 border border-slate-700/80 px-4 py-3 rounded-xl text-sm"
+            />
+        </div>
+    </div>
 
-    <select id="filter"
-            class="bg-slate-800 border border-slate-700 text-white px-3 py-2 rounded">
-        <option value="">All</option>
-        <option value="Yes">Billable</option>
-        <option value="No">Non-Billable</option>
-    </select>
+    <div class="flex flex-col gap-2">
+        <label for="filter" class="text-xs uppercase tracking-widest text-slate-500 font-bold ml-1">Billable Filter</label>
+        <div class="relative">
+            <i class="fas fa-filter absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"></i>
+            <select id="filter"
+                    class="pl-11 !bg-slate-900 border border-slate-700/80 px-4 py-3 rounded-xl text-sm appearance-none"
+            >
+                <option value="">All Entries</option>
+                <option value="Yes">Billable Only</option>
+                <option value="No">Non-Billable Only</option>
+            </select>
+            <i class="fas fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-slate-600 pointer-events-none"></i>
+        </div>
+    </div>
 </div>
 
 <!-- Timesheet Table -->
-<div class="bg-slate-800 rounded-2xl border border-slate-700 overflow-x-auto">
-    <table class="w-full text-left text-sm divide-y divide-slate-700">
-        <thead class="bg-slate-700 text-slate-400 uppercase text-xs">
-            <tr>
-                <th class="px-6 py-3">Date</th>
-                <th class="px-6 py-3">Project</th>
-                 <th class="px-6 py-3">Employee</th>
-                <th class="px-6 py-3">Task</th>
-                <th class="px-6 py-3 text-center">Allocated (hrs)</th>
-                <th class="px-6 py-3 text-center">Used (hrs)</th>
-                <th class="px-6 py-3 text-center">Pending (hrs)</th>
-                <th class="px-6 py-3 text-center">Billable</th>
-                <th class="px-6 py-3 text-right">Actions</th>
-            </tr>
-        </thead>
+<div class="table-container border-slate-700/60 shadow-2xl">
+    <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+            <thead class="bg-slate-700/40 text-slate-400">
+                <tr>
+                    <th class="px-6 py-5 text-left font-bold uppercase tracking-wider text-[11px]">Date</th>
+                    <th class="px-6 py-5 text-left font-bold uppercase tracking-wider text-[11px]">Project</th>
+                    <th class="px-6 py-5 text-left font-bold uppercase tracking-wider text-[11px]">Employee</th>
+                    <th class="px-6 py-5 text-left font-bold uppercase tracking-wider text-[11px]">Task</th>
+                    <th class="px-6 py-5 text-center font-bold uppercase tracking-wider text-[11px]">Allocated (hrs)</th>
+                    <th class="px-6 py-5 text-center font-bold uppercase tracking-wider text-[11px]">Used (hrs)</th>
+                    <th class="px-6 py-5 text-center font-bold uppercase tracking-wider text-[11px]">Billable</th>
+                    <th class="px-6 py-5 text-right font-bold uppercase tracking-wider text-[11px]">Actions</th>
+                </tr>
+            </thead>
 
-        <tbody class="text-slate-300">
-            {% for entry in entries %}
-            <tr class="hover:bg-slate-700/40 transition-colors">
-                <td class="px-6 py-3">{{ entry.date|date:"d M Y" }}</td>
-                <td class="px-6 py-3 text-blue-400 font-semibold">{{ entry.project.name }}</td>
-                <td class="px-6 py-3 font-medium">{{ entry.employee.user.username}}</td>
-                <td class="px-6 py-3 font-medium">{{ entry.task.title}}</td>
-                <td class="px-6 py-3 text-center">{{ entry.task.estimated_hours }}</td>
-                <td class="px-6 py-3 text-center font-bold">{{ entry.hours }}</td>
-                <td class="px-6 py-3 text-center">{{ entry.pending_hours }}</td>
-                <td class="px-6 py-3 text-center">
-                    {% if entry.billable %}
-                        <span class="px-2 py-1 text-xs bg-emerald-500/10 text-emerald-400 rounded-full">Yes</span>
-                    {% else %}
-                        <span class="px-2 py-1 text-xs bg-slate-500/10 text-slate-400 rounded-full">No</span>
-                    {% endif %}
-                </td>
-                <td class="px-6 py-3 text-right flex justify-end gap-3">
-                    <a href="{% url 'timesheet_edit' entry.pk %}" class="text-blue-400 hover:text-blue-300">
-                        <i class="fas fa-edit"></i>
-                    </a>
-                    <a href="{% url 'timesheet_delete' entry.pk %}" class="text-red-400 hover:text-red-300">
-                        <i class="fas fa-trash"></i>
-                    </a>
-                </td>
-            </tr>
-            {% empty %}
-            <tr>
-                <td colspan="9" class="px-6 py-12 text-center text-slate-500">
-                    No timesheet entries found.
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+            <tbody id="timesheetTable" class="text-slate-300">
+                {% for entry in entries %}
+                <tr class="group border-t border-slate-700/50 hover:bg-slate-700/20 transition-all duration-200">
+                    <td class="px-6 py-5 whitespace-nowrap text-xs text-slate-400 font-mono">
+                        {{ entry.date|date:"d M Y" }}
+                    </td>
+                    <td class="px-6 py-5">
+                        <span class="text-blue-400/90 font-bold tracking-tight">
+                            {{ entry.project.name }}
+                        </span>
+                    </td>
+                    <td class="px-6 py-5">
+                        <div class="flex items-center gap-2">
+                            <div class="w-7 h-7 rounded-full bg-slate-700/50 flex items-center justify-center text-[10px] font-bold text-slate-400 border border-slate-600/50">
+                                {{ entry.employee.user.username|slice:":2"|upper }}
+                            </div>
+                            <span class="text-slate-300 font-medium">
+                                {{ entry.employee.user.username }}
+                            </span>
+                        </div>
+                    </td>
+                    <td class="px-6 py-5">
+                        <span class="text-slate-200 font-medium">{{ entry.task.title }}</span>
+                    </td>
+                    <td class="px-6 py-5 text-center">
+                        <span class="px-2 py-1 bg-slate-900 rounded font-mono text-[11px] border border-slate-700 text-slate-500">
+                            {{ entry.task.estimated_hours }}
+                        </span>
+                    </td>
+                    <td class="px-6 py-5 text-center">
+                        <span class="text-lg font-bold text-white tracking-tighter">{{ entry.hours }}</span>
+                    </td>
+                    <td class="px-6 py-5 text-center">
+                        {% if entry.billable %}
+                            <span class="badge badge-success flex items-center gap-1.5 w-fit mx-auto">
+                                <span class="w-1 h-1 rounded-full bg-green-400"></span> Yes
+                            </span>
+                        {% else %}
+                            <span class="badge bg-slate-700/50 text-slate-500 flex items-center gap-1.5 w-fit mx-auto">
+                                <span class="w-1 h-1 rounded-full bg-slate-500"></span> No
+                            </span>
+                        {% endif %}
+                    </td>
+                    <td class="px-6 py-5 text-right">
+                        <div class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button onclick="openModal('{% url 'timesheet_edit' entry.pk %}')"
+                               class="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-900 hover:bg-blue-500/20 border border-slate-700 hover:border-blue-500/50 text-blue-400 transition-all"
+                               title="Edit Entry"
+                            >
+                                <i class="fas fa-edit text-xs"></i>
+                            </button>
+                            <a href="{% url 'timesheet_delete' entry.pk %}"
+                               class="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-900 hover:bg-red-500/20 border border-slate-700 hover:border-red-500/50 text-red-400 transition-all"
+                               title="Delete Entry"
+                            >
+                                <i class="fas fa-trash-alt text-xs"></i>
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="8" class="px-6 py-16 text-center text-slate-500 bg-slate-800/20">
+                        <div class="flex flex-col items-center gap-4">
+                            <i class="fas fa-clock text-4xl text-slate-700/50"></i>
+                            <div class="flex flex-col gap-1">
+                                <p class="text-slate-400 font-medium text-lg">No entries found</p>
+                                <p class="text-slate-600 text-sm">Start by logging your time</p>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 </div>
 
 <!-- Pagination -->
 {% if is_paginated %}
-<div class="mt-6 flex justify-center">
-    <nav class="flex space-x-2">
+<div class="mt-12 flex justify-center">
+    <div class="flex items-center gap-3">
         {% if page_obj.has_previous %}
-        <a href="?page={{ page_obj.previous_page_number }}" class="px-4 py-2 bg-slate-800 border border-slate-700 rounded-lg hover:bg-slate-700">
-            Previous
+        <a href="?page={{ page_obj.previous_page_number }}" class="btn bg-slate-800 hover:bg-slate-700 border border-slate-700">
+            <i class="fas fa-chevron-left"></i> Previous
         </a>
         {% endif %}
-        <span class="px-4 py-2 bg-blue-600 rounded-lg text-white">{{ page_obj.number }}</span>
+
+        <span class="flex items-center justify-center w-10 h-10 bg-blue-600 rounded-xl text-white font-bold shadow-lg shadow-blue-500/20">
+            {{ page_obj.number }}
+        </span>
+
         {% if page_obj.has_next %}
-        <a href="?page={{ page_obj.next_page_number }}" class="px-4 py-2 bg-slate-800 border border-slate-700 rounded-lg hover:bg-slate-700">
-            Next
+        <a href="?page={{ page_obj.next_page_number }}" class="btn bg-slate-800 hover:bg-slate-700 border border-slate-700">
+            Next <i class="fas fa-chevron-right"></i>
         </a>
         {% endif %}
-    </nav>
+    </div>
 </div>
 {% endif %}
 
-<script>
-const search = document.getElementById("search");
-const filter = document.getElementById("filter");
-const container = document.querySelector("tbody");
-
-function filterTimesheets() {
-    const s = search.value.toLowerCase();
-    const f = filter.value;
-
-    let visible = 0;
-
-    container.querySelectorAll("tr").forEach(row => {
-        if (row.querySelectorAll("td").length === 0) return; // skip empty row
-
-        const desc = row.querySelector("td:nth-child(8)").innerText.toLowerCase();
-        const billable = row.querySelector("td:nth-child(7)").innerText;
-
-        const matchSearch = desc.includes(s);
-        const matchFilter = f === "" || billable === f;
-
-        if (matchSearch && matchFilter) {
-            row.style.display = "";
-            visible++;
-        } else {
-            row.style.display = "none";
-        }
-    });
-
-    // Show a message if no data
-    if (visible === 0) {
-        container.innerHTML = `<tr><td colspan="9" class='text-center text-slate-500 py-6'>No data found</td></tr>`;
-    }
-}
-
-search.addEventListener("keyup", filterTimesheets);
-filter.addEventListener("change", filterTimesheets);
-</script>
 
 {% endblock %}

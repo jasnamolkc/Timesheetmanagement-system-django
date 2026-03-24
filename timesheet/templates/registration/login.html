@@ -5,83 +5,84 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - Timesheet Pro</title>
+    <title>Sign In - Timesheet Pro</title>
 
-    <!-- Local CSS -->
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
-
-    <!-- Font Awesome -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-
-    <!-- Google Font -->
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
 
-<body>
-
-<div class="container">
-
-    <div class="header">
-        <h1 class="title">Timesheet Pro</h1>
-        <p class="subtitle">Sign in to manage your time and projects</p>
+<body class="login-body h-screen bg-slate-950 overflow-hidden relative">
+    <!-- Abstract Background Pattern -->
+    <div class="absolute inset-0 z-0 overflow-hidden pointer-events-none opacity-20">
+        <div class="absolute -top-[20%] -left-[10%] w-[600px] h-[600px] bg-blue-600/30 blur-[120px] rounded-full"></div>
+        <div class="absolute -bottom-[20%] -right-[10%] w-[600px] h-[600px] bg-indigo-600/30 blur-[120px] rounded-full"></div>
     </div>
 
-    <div class="card">
-        <form method="post">
-            {% csrf_token %}
-
-            <div class="form-group">
-                <label>Username</label>
-                <input type="text" name="username" required>
-            </div>
-
-            <div class="form-group">
-                <label>Password</label>
-
-                <div class="password-wrapper">
-                    <input type="password" name="password" id="password" required>
-
-                    <span onclick="togglePassword()" class="toggle-icon">
-                        <i id="toggleIcon" class="fa fa-eye"></i>
-                    </span>
-                </div>
-            </div>
-
-            <button type="submit">Sign In</button>
-        </form>
-
-        <div class="signup-text">
-            <p>
-                Don't have an account?
-                <a href="{% url 'register' %}">Sign Up</a>
-            </p>
+    <div class="login-container relative z-10 w-full max-w-md px-6">
+        <div class="text-center mb-10">
+            <h1 class="text-4xl font-extrabold tracking-tighter bg-gradient-to-r from-blue-400 to-indigo-500 bg-clip-text text-transparent mb-3">
+                Timesheet Pro
+            </h1>
+            <p class="text-slate-400 font-medium text-sm">Sign in to manage your time and projects</p>
         </div>
+
+        <div class="card p-8 border-slate-700/50 shadow-2xl shadow-blue-500/10 backdrop-blur-xl bg-slate-800/80">
+            <form method="post" class="space-y-6">
+                {% csrf_token %}
+
+                <div class="space-y-2">
+                    <label class="text-xs uppercase tracking-widest text-slate-500 font-bold ml-1">Username</label>
+                    <div class="relative">
+                        <i class="fas fa-user absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-sm"></i>
+                        <input type="text" name="username" required class="pl-11 !bg-slate-900 border-slate-700/80 transition-all focus:border-blue-500/50" placeholder="Enter username">
+                    </div>
+                </div>
+
+                <div class="space-y-2">
+                    <div class="flex items-center justify-between px-1">
+                        <label class="text-xs uppercase tracking-widest text-slate-500 font-bold">Password</label>
+                    </div>
+                    <div class="relative">
+                        <i class="fas fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-sm"></i>
+                        <input type="password" name="password" id="password" required class="pl-11 pr-11 !bg-slate-900 border-slate-700/80 transition-all focus:border-blue-500/50" placeholder="••••••••">
+                        <button type="button" onclick="togglePassword()" class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-blue-400 transition-colors">
+                            <i id="toggleIcon" class="fa fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <button type="submit" class="w-full btn btn-primary !py-4 text-base font-extrabold uppercase tracking-widest shadow-xl shadow-blue-500/20 hover:scale-[1.02] active:scale-[0.98]">
+                    Sign In
+                </button>
+            </form>
+
+            <div class="mt-8 pt-8 border-t border-slate-700/50 text-center">
+                <p class="text-slate-400 text-sm font-medium">
+                    Don't have an account?
+                    <a href="{% url 'register' %}" class="text-blue-400 hover:text-blue-300 font-bold hover:underline underline-offset-4 decoration-2">Sign Up</a>
+                </p>
+            </div>
+        </div>
+
+        <p class="text-center mt-10 text-slate-600 text-xs font-bold uppercase tracking-widest opacity-60">
+            &copy; 2025 Timesheet Pro. All rights reserved.
+        </p>
     </div>
 
-    <p class="footer">
-        &copy; 2025 Timesheet Pro. All rights reserved.
-    </p>
+    <script>
+    function togglePassword() {
+        const passwordField = document.getElementById("password");
+        const icon = document.getElementById("toggleIcon");
 
-</div>
-
-<script>
-function togglePassword() {
-    const password = document.getElementById("password");
-    const icon = document.getElementById("toggleIcon");
-
-    if (password.type === "password") {
-        password.type = "text";
-        icon.classList.remove("fa-eye");
-        icon.classList.add("fa-eye-slash");
-    } else {
-        password.type = "password";
-        icon.classList.remove("fa-eye-slash");
-        icon.classList.add("fa-eye");
+        if (passwordField.type === "password") {
+            passwordField.type = "text";
+            icon.classList.replace("fa-eye", "fa-eye-slash");
+        } else {
+            passwordField.type = "password";
+            icon.classList.replace("fa-eye-slash", "fa-eye");
+        }
     }
-}
-</script>
-
+    </script>
 </body>
 </html>

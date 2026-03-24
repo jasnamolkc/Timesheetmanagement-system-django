@@ -2,145 +2,125 @@
 {% block title %}Milestones{% endblock %}
 
 {% block content %}
+<div class="page-header flex-col md:flex-row items-start md:items-center gap-6 mb-10">
+    <div class="flex-1">
+        <h1 class="page-title mb-4">Milestones</h1>
+        <p class="text-slate-400 text-sm">Track key project phases and delivery goals.</p>
+    </div>
 
-<div class="flex items-center justify-between mb-6">
-    <h2 class="text-3xl font-bold">Milestones</h2>
     {% if request.user.is_superuser or request.user.employee.role == 'ADMIN' or request.user.employee.role == 'MANAGER' %}
-
     <button onclick="openModal('{% url 'milestone_create' %}')"
-        class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg text-sm font-medium">
-        + Create Milestone
+            class="btn btn-primary shadow-lg shadow-blue-500/20">
+        <i class="fas fa-plus"></i> New Milestone
     </button>
     {% endif %}
 </div>
-<div class="mb-6 flex gap-4 flex-wrap">
 
-    <!-- Project Filter -->
-    <select id="projectFilter"
-        class="bg-slate-900 border border-slate-700 text-white rounded-lg px-4 py-2">
-        <option value="">All Projects</option>
-        {% for milestone in milestones %}
-            <option value="{{ milestone.project.name }}">
-                {{ milestone.project.name }}
-            </option>
-        {% endfor %}
-    </select>
+<!-- Filters -->
+<div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8 bg-slate-800/50 p-6 rounded-2xl border border-slate-700/50">
+    <div class="flex flex-col gap-2">
+        <label class="text-[10px] uppercase tracking-widest text-slate-500 font-bold ml-1">Project</label>
+        <select id="projectFilter" class="!bg-slate-900 border border-slate-700/80 px-4 py-2.5 rounded-xl text-sm">
+            <option value="">All Projects</option>
+            {% regroup milestones by project as project_list %}
+            {% for project in project_list %}
+                <option value="{{ project.grouper.name }}">{{ project.grouper.name }}</option>
+            {% endfor %}
+        </select>
+    </div>
 
-    <!-- Status Filter -->
-    <select id="statusFilter"
-        class="bg-slate-900 border border-slate-700 text-white rounded-lg px-4 py-2">
-        <option value="">All Status</option>
-        <option value="Completed">Completed</option>
-        <option value="In Progress">In Progress</option>
-        <option value="Pending">Pending</option>
-    </select>
+    <div class="flex flex-col gap-2">
+        <label class="text-[10px] uppercase tracking-widest text-slate-500 font-bold ml-1">Status</label>
+        <select id="statusFilter" class="!bg-slate-900 border border-slate-700/80 px-4 py-2.5 rounded-xl text-sm">
+            <option value="">All Statuses</option>
+            <option value="COMPLETED">Completed</option>
+            <option value="IN_PROGRESS">In Progress</option>
+            <option value="PENDING">Pending</option>
+        </select>
+    </div>
 
-    <!-- Date Range -->
-    <input type="date" id="startDateFilter"
-        class="bg-slate-900 border border-slate-700 text-white rounded-lg px-4 py-2">
+    <div class="flex flex-col gap-2">
+        <label class="text-[10px] uppercase tracking-widest text-slate-500 font-bold ml-1">Start Date</label>
+        <input type="date" id="startDateFilter" class="!bg-slate-900 border border-slate-700/80 px-4 py-2.5 rounded-xl text-sm">
+    </div>
 
-    <input type="date" id="endDateFilter"
-        class="bg-slate-900 border border-slate-700 text-white rounded-lg px-4 py-2">
-<button onclick="location.reload()"
-    class="bg-slate-700 px-4 py-2 rounded-lg text-white">
-    Reset
-</button>
+    <div class="flex flex-col gap-2">
+        <label class="text-[10px] uppercase tracking-widest text-slate-500 font-bold ml-1">Due Date</label>
+        <div class="flex gap-2">
+            <input type="date" id="endDateFilter" class="!bg-slate-900 border border-slate-700/80 px-4 py-2.5 rounded-xl text-sm flex-1">
+            <button onclick="location.reload()" class="btn bg-slate-700 hover:bg-slate-600 px-3 py-2 rounded-xl text-white">
+                <i class="fas fa-undo"></i>
+            </button>
+        </div>
+    </div>
 </div>
 
-<div class="bg-slate-800 rounded-xl border border-slate-700 overflow-hidden">
-
-<table class="w-full text-sm">
-
-<thead class="bg-slate-700 text-slate-300">
-<tr>
-<th class="p-3 text-left">Name</th>
-<th class="p-3 text-left">Project</th>
-<th class="p-3 text-left">Start</th>
-<th class="p-3 text-left">Due Date</th>
-<th class="p-3 text-left">Status</th>
-<th class="p-3 text-left">Action</th>
-</tr>
-</thead>
-
-<tbody>
-
-{% for milestone in milestones %}
-
-<!-- <tr class="border-t border-slate-700"> -->
-<tr class="milestone-row border-t border-slate-700"
-    data-project="{{ milestone.project.name }}"
-    data-start="{{ milestone.start_date|date:'Y-m-d' }}"
-    data-due="{{ milestone.due_date|date:'Y-m-d' }}">
-<td class="p-3">
-{{ milestone.name }}
-</td>
-
-<td class="p-3">
-{{ milestone.project.name }}
-</td>
-
-<td class="p-3">
-{{ milestone.start_date }}
-</td>
-
-<td class="p-3">
-{{ milestone.due_date }}
-</td>
-
-<td class="p-3">
-
-{% if milestone.status == "COMPLETED" %}
-
-<span class="status-text text-green-400 bg-green-400/10 px-2 py-1 rounded text-xs">
-Completed
-</span>
-
-{% elif milestone.status == "IN_PROGRESS" %}
-
-<span class="status-text text-blue-400 bg-blue-400/10 px-2 py-1 rounded text-xs">
-In Progress
-</span>
-
-{% else %}
-
-<span class="status-text text-yellow-400 bg-yellow-400/10 px-2 py-1 rounded text-xs">
-Pending
-</span>
-
-{% endif %}
-
-</td>
-
-<td class="p-3 flex gap-3">
-
-<a onclick="openModal('{% url 'milestone_update' milestone.id %}')"
-class="text-blue-400 hover:text-blue-300 cursor-pointer">
-Edit
-</a>
-
-<a onclick="openModal('{% url 'milestone_delete' milestone.id %}')"
-class="text-red-400 hover:text-red-300 cursor-pointer">
-Delete
-</a>
-
-</td>
-
-</tr>
-
-{% empty %}
-
-<tr>
-<td colspan="6" class="text-center text-slate-400 py-6">
-No milestones
-</td>
-</tr>
-
-{% endfor %}
-
-</tbody>
-
-</table>
-
+<div class="table-container border-slate-700/60 shadow-2xl">
+    <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+            <thead class="bg-slate-700/40 text-slate-400">
+                <tr>
+                    <th class="px-6 py-5 text-left font-bold uppercase tracking-wider text-[11px]">Milestone Name</th>
+                    <th class="px-6 py-5 text-left font-bold uppercase tracking-wider text-[11px]">Project</th>
+                    <th class="px-6 py-5 text-left font-bold uppercase tracking-wider text-[11px]">Period</th>
+                    <th class="px-6 py-5 text-center font-bold uppercase tracking-wider text-[11px]">Status</th>
+                    <th class="px-6 py-5 text-right font-bold uppercase tracking-wider text-[11px]">Actions</th>
+                </tr>
+            </thead>
+            <tbody id="milestoneTable">
+                {% for milestone in milestones %}
+                <tr class="milestone-row group border-t border-slate-700/50 hover:bg-slate-700/20 transition-all duration-200"
+                    data-project="{{ milestone.project.name }}"
+                    data-status="{{ milestone.status }}"
+                    data-start="{{ milestone.start_date|date:'Y-m-d' }}"
+                    data-due="{{ milestone.due_date|date:'Y-m-d' }}">
+                    <td class="px-6 py-5 whitespace-nowrap font-bold text-slate-200">
+                        {{ milestone.name }}
+                    </td>
+                    <td class="px-6 py-5 whitespace-nowrap">
+                        <span class="text-blue-400/90 font-bold bg-blue-500/5 px-2 py-1 rounded border border-blue-500/10">{{ milestone.project.name }}</span>
+                    </td>
+                    <td class="px-6 py-5 whitespace-nowrap">
+                        <div class="flex flex-col">
+                            <span class="text-[11px] text-slate-400 font-mono flex items-center gap-1.5">
+                                <i class="far fa-calendar-alt text-[10px] text-slate-600"></i> {{ milestone.start_date|date:"M d, Y" }}
+                            </span>
+                            <span class="text-[11px] text-slate-500 font-mono flex items-center gap-1.5 mt-0.5">
+                                <i class="fas fa-arrow-right text-[10px] text-slate-700"></i> {{ milestone.due_date|date:"M d, Y" }}
+                            </span>
+                        </div>
+                    </td>
+                    <td class="px-6 py-5 text-center">
+                        {% if milestone.status == "COMPLETED" %}
+                            <span class="badge badge-success">Completed</span>
+                        {% elif milestone.status == "IN_PROGRESS" %}
+                            <span class="badge badge-info">In Progress</span>
+                        {% else %}
+                            <span class="badge badge-warning">Pending</span>
+                        {% endif %}
+                    </td>
+                    <td class="px-6 py-5 text-right">
+                        <div class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button onclick="openModal('{% url 'milestone_update' milestone.id %}')"
+                                    class="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-900 hover:bg-blue-500/20 border border-slate-700 hover:border-blue-500/50 text-blue-400 transition-all">
+                                <i class="fas fa-edit text-xs"></i>
+                            </button>
+                            <button onclick="openModal('{% url 'milestone_delete' milestone.id %}')"
+                                    class="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-900 hover:bg-red-500/20 border border-slate-700 hover:border-red-500/50 text-red-400 transition-all">
+                                <i class="fas fa-trash-alt text-xs"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" class="px-6 py-16 text-center text-slate-500 bg-slate-800/20 italic">
+                        No milestones found.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 </div>
-
 {% endblock %}

@@ -64,7 +64,7 @@ class DashboardView(LoginRequiredMixin, TemplateView):
                 end_date__gte=today
             ).select_related('project')
 
-        if self.request.user.employee.role in ['ADMIN', 'MANAGER']:
+        if employee and employee.role in ['ADMIN', 'MANAGER']:
             context['total_employees_allocated'] = Employee.objects.filter(
                 allocations__end_date__gte=today
             ).distinct().count()
@@ -81,7 +81,6 @@ class DashboardView(LoginRequiredMixin, TemplateView):
             context['allocations'] = ProjectAllocation.objects.filter(
                 end_date__gte=today
             ).select_related('employee__user', 'project')
-            print(context)
         return context
 
 # Project Views

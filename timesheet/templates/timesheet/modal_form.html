@@ -1,162 +1,43 @@
 {% load crispy_forms_tags %}
-
-<div class="mb-6">
-    <h3 class="text-xl font-bold text-white">
-        {% if form.instance.pk %}Edit{% else %}Create{% endif %}
-    </h3>
+<div class="flex items-center justify-between mb-8">
+    <h2 class="text-3xl font-bold text-white tracking-tight flex items-center gap-3">
+        <i class="fas fa-edit text-blue-400"></i> {{ view.get_form_title|default:"Form Entry" }}
+    </h2>
+    <button type="button" onclick="closeModal()" class="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-900 text-slate-400 hover:text-white hover:bg-red-500/20 hover:border-red-500/50 border border-slate-700/50 transition-all">
+        <i class="fas fa-times text-lg"></i>
+    </button>
 </div>
 
-<form method="post" action="{{ request.path }}" enctype="multipart/form-data">
+<form method="post" action="{{ request.path }}" enctype="multipart/form-data" class="space-y-6" id="mainModalForm">
     {% csrf_token %}
 
-<div class="space-y-4">
+    <div class="modal-form-body grid grid-cols-1 gap-4">
+        {% crispy form %}
+    </div>
 
-<!-- ================= TIMESHEET ================= -->
-{% if form.fields.project and form.fields.task %}
-
-    {{ form.project|as_crispy_field }}
-
-    <div class="flex items-end gap-2">
-        <div class="flex-1">
-            {{ form.task|as_crispy_field }}
-        </div>
-
-        <button type="button"
-                id="addTaskBtn"
-                class="bg-blue-600 text-white px-3 py-2 rounded-lg"
-                disabled>
-            +
+    <!-- Custom Task Add Button in Timesheet Form -->
+    {% if "timesheet" in request.path %}
+    <div class="mt-2 text-right">
+        <button type="button" id="addTaskBtn" disabled class="text-blue-400 hover:text-blue-300 text-xs font-bold flex items-center gap-2 ml-auto bg-blue-500/5 px-3 py-1.5 rounded-lg border border-blue-500/10 hover:border-blue-500/30 transition-all">
+            <i class="fas fa-plus-circle"></i> Create New Task for this Project
         </button>
     </div>
-
-    {% if form.fields.date %}
-        {{ form.date|as_crispy_field }}
     {% endif %}
 
-    {% if form.fields.hours %}
-        {{ form.hours|as_crispy_field }}
-    {% endif %}
-
-    {% if form.fields.description %}
-        {{ form.description|as_crispy_field }}
-    {% endif %}
-
-    {% if form.fields.billable %}
-        {{ form.billable|as_crispy_field }}
-    {% endif %}
-
-<!-- ================= PROJECT ================= -->
-<!-- {% elif form.fields.project_code %} -->
- {% elif 'project_code' in form.fields %}
-
-    {{ form.name|as_crispy_field }}
-    {{ form.project_code|as_crispy_field }}
-    {{ form.status|as_crispy_field }}
-    {{ form.description|as_crispy_field }}
-
-    <div class="grid grid-cols-2 gap-4">
-        {{ form.start_date|as_crispy_field }}
-        {{ form.end_date|as_crispy_field }}
+    <div class="flex items-center gap-4 pt-6 mt-6 border-t border-slate-700/50">
+        <button type="button" onclick="closeModal()" class="flex-1 btn !bg-slate-700/50 hover:!bg-slate-700 border border-slate-600/30 text-slate-400 hover:text-white transition-all font-bold">
+            Cancel
+        </button>
+        <button type="submit" class="flex-1 btn btn-primary font-bold shadow-lg shadow-blue-500/20">
+            <i class="fas fa-save"></i> Save Changes
+        </button>
     </div>
-
-    <!-- ===== Milestones ===== -->
-    <h4 class="text-lg font-semibold mt-6 mb-3">Milestones</h4>
-
-    {{ milestone_formset.management_form }}
-
-    <div id="milestone-container">
-        {% for milestone in milestone_formset %}
-        <div class="bg-slate-900 p-4 rounded-lg mb-3">
-            {{ milestone.id }}
-            {{ milestone.name|as_crispy_field }}
-
-            <div class="grid grid-cols-2 gap-4">
-                {{ milestone.start_date|as_crispy_field }}
-                {{ milestone.due_date|as_crispy_field }}
-            </div>
-        </div>
-        {% endfor %}
-    </div>
-
-    <button type="button" id="add-milestone"
-        class="mt-4 bg-blue-600 px-4 py-2 rounded-lg text-sm">
-        + Add Milestone
-    </button>
-
-    <!-- ===== Documents ===== -->
-    <h4 class="text-lg font-semibold mt-6 mb-3">Documents</h4>
-
-    {{ document_formset.management_form }}
-
-    <div id="document-container">
-        {% for doc in document_formset %}
-        <div class="bg-slate-900 p-4 rounded-lg mb-3 document-form">
-            {{ doc.id }}
-            {{ doc.name|as_crispy_field }}
-
-            {% if doc.instance.pk and doc.instance.file %}
-                <p class="text-xs text-green-400 mb-2">
-                    Existing:
-                    <a href="{{ doc.instance.file.url }}" target="_blank">
-                        {{ doc.instance.file.name }}
-                    </a>
-                </p>
-            {% endif %}
-
-            {{ doc.file|as_crispy_field }}
-        </div>
-        {% endfor %}
-    </div>
-
-    <button type="button" id="add-document"
-        class="mt-4 bg-purple-600 px-4 py-2 rounded-lg text-sm">
-        + Add Document
-    </button>
-<!-- ===== empty code===== -->
-  <div id="empty-milestone-form" class="hidden">
-    <div class="bg-slate-900 p-4 rounded-lg mb-3">
-        {{ milestone_formset.empty_form.id }}
-        {{ milestone_formset.empty_form.name|as_crispy_field }}
-
-        <div class="grid grid-cols-2 gap-4">
-            {{ milestone_formset.empty_form.start_date|as_crispy_field }}
-            {{ milestone_formset.empty_form.due_date|as_crispy_field }}
-        </div>
-    </div>
-</div>
- <div id="empty-document-form" class="hidden">
-    <div class="bg-slate-900 p-4 rounded-lg mb-3 document-form">
-        {{ document_formset.empty_form.id }}
-        {{ document_formset.empty_form.name|as_crispy_field }}
-        {{ document_formset.empty_form.file|as_crispy_field }}
-    </div>
-</div>
-<!-- ================= ALLOCATION ================= -->
-{% else %}
-
-    {{ form.employee|as_crispy_field }}
-    {{ form.project|as_crispy_field }}
-    {{ form.role_in_project|as_crispy_field }}
-                <div class="grid grid-cols-2 gap-4">
-
-    {{ form.start_date|as_crispy_field }}
-    {{ form.end_date|as_crispy_field }}
-</div>
-{% endif %}
-
-</div>
-
-<!-- ===== Buttons ===== -->
-<div class="mt-8 flex justify-end space-x-3">
-    <button type="button" onclick="closeModal()"
-        class="px-6 py-2 bg-slate-700 text-white rounded-lg">
-        Cancel
-    </button>
-
-    <button type="submit"
-        class="px-6 py-2 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg font-bold">
-        Save
-    </button>
-</div>
-
 </form>
+
+<style>
+/* Refined form appearance within modals */
+#modal-content .form-group { margin-bottom: 20px; }
+#modal-content .asteriskField { color: #f87171; }
+#modal-content .invalid-feedback { font-size: 11px; font-weight: 600; color: #f87171; margin-top: 4px; }
+#modal-content .help-block { font-size: 11px; color: #64748b; margin-top: 4px; }
+</style>
