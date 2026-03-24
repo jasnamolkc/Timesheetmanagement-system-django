@@ -3,106 +3,83 @@
 {% block title %}Dashboard{% endblock %}
 
 {% block content %}
-<div class="flex justify-between items-center mb-8">
-    <h2 class="text-3xl font-bold">Dashboard</h2>
-    <a href="{% url 'timesheet_create' %}" onclick="openModal(this.href); return false;" class="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white px-6 py-2 rounded-lg font-semibold shadow-lg transition-all transform hover:scale-105 flex items-center">
-        <i class="fas fa-plus mr-2"></i> Add Timesheet
+
+<div class="dashboard-header">
+    <h2>Dashboard</h2>
+
+    <a href="{% url 'timesheet_create' %}" onclick="openModal(this.href); return false;" class="btn-primary">
+        <i class="fas fa-plus"></i> Add Timesheet
     </a>
 </div>
 
-<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-    <!-- Total Hours This Month -->
-    <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-xl">
-        <div class="flex items-center justify-between mb-4">
-            <div class="p-3 bg-blue-500/10 rounded-xl text-blue-500">
-                <i class="fas fa-clock fa-lg"></i>
-            </div>
-        </div>
-        <p class="text-slate-400 text-sm font-medium">Hours This Month</p>
-        <h3 class="text-3xl font-bold mt-1">{{ total_hours_month|floatformat:2 }}</h3>
+<!-- Stats -->
+<div class="stats-grid">
+
+    <div class="card stat-card">
+        <div class="icon blue"><i class="fas fa-clock"></i></div>
+        <p>Hours This Month</p>
+        <h3>{{ total_hours_month|floatformat:2 }}</h3>
     </div>
 
-    <!-- Active Projects -->
-    <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-xl">
-        <div class="flex items-center justify-between mb-4">
-            <div class="p-3 bg-emerald-500/10 rounded-xl text-emerald-500">
-                <i class="fas fa-briefcase fa-lg"></i>
-            </div>
-        </div>
-        <p class="text-slate-400 text-sm font-medium">Active Projects</p>
-        <h3 class="text-3xl font-bold mt-1">{{ total_active_projects_count }}</h3>
+    <div class="card stat-card">
+        <div class="icon green"><i class="fas fa-briefcase"></i></div>
+        <p>Active Projects</p>
+        <h3>{{ total_active_projects_count }}</h3>
     </div>
 
-    <!-- Total Employees (Managers only) -->
     {% if request.user.is_superuser or request.user.employee.role == 'ADMIN' or request.user.employee.role == 'MANAGER' %}
-    <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-xl">
-        <div class="flex items-center justify-between mb-4">
-            <div class="p-3 bg-amber-500/10 rounded-xl text-amber-500">
-                <i class="fas fa-users fa-lg"></i>
-            </div>
-        </div>
-        <p class="text-slate-400 text-sm font-medium">Allocated Employees</p>
-        <h3 class="text-3xl font-bold mt-1">{{ total_employees_allocated }}</h3>
+    <div class="card stat-card">
+        <div class="icon orange"><i class="fas fa-users"></i></div>
+        <p>Allocated Employees</p>
+        <h3>{{ total_employees_allocated }}</h3>
     </div>
     {% endif %}
+
 </div>
 
-<div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+<!-- Content Grid -->
+<div class="content-grid">
 
     <!-- Recent Timesheets -->
-    <div class="bg-slate-800 rounded-2xl border border-slate-700 shadow-xl p-6">
-        <h4 class="text-xl font-bold mb-6">Recent Timesheets</h4>
+    <div class="card">
+        <h4>Recent Timesheets</h4>
 
-        <div class="space-y-4">
-            {% for entry in recent_entries %}
-                <div class="flex justify-between items-center border-b border-slate-700 pb-3">
-                    <div>
-                        <p class="font-semibold text-white">
-                            {{ entry.project.name }}
-                        </p>
-                        <p class="text-sm text-slate-400">
-                            {{ entry.date }} • {{ entry.hours }} hrs
-                        </p>
-                        {% if request.user.employee.role != 'EMPLOYEE' %}
-                            <p class="text-xs text-slate-500">
-                                {{ entry.employee.user.get_full_name }}
-                            </p>
-                        {% endif %}
-                    </div>
-                </div>
-            {% empty %}
-                <p class="text-slate-500 italic">No recent entries found.</p>
-            {% endfor %}
+        {% for entry in recent_entries %}
+        <div class="list-item">
+            <div>
+                <strong>{{ entry.project.name }}</strong>
+                <p>{{ entry.date }} • {{ entry.hours }} hrs</p>
+
+                {% if request.user.employee.role != 'EMPLOYEE' %}
+                <small>{{ entry.employee.user.get_full_name }}</small>
+                {% endif %}
+            </div>
         </div>
+        {% empty %}
+        <p class="empty">No recent entries found.</p>
+        {% endfor %}
     </div>
 
     <!-- Project Allocation -->
-    <div class="bg-slate-800 rounded-2xl border border-slate-700 shadow-xl p-6">
-        <h4 class="text-xl font-bold mb-6">Project Allocation</h4>
+    <div class="card">
+        <h4>Project Allocation</h4>
 
-        <div class="space-y-4">
-            {% for allocation in allocations %}
-                <div class="flex justify-between items-center border-b border-slate-700 pb-3">
-                    <div>
-                        <p class="font-semibold text-white">
-                            {{ allocation.project.name }}
-                        </p>
-                        <p class="text-sm text-slate-400">
-                            Until {{ allocation.end_date }}
-                        </p>
+        {% for allocation in allocations %}
+        <div class="list-item">
+            <div>
+                <strong>{{ allocation.project.name }}</strong>
+                <p>Until {{ allocation.end_date }}</p>
 
-                        {% if request.user.employee.role != 'EMPLOYEE' %}
-                            <p class="text-xs text-slate-500">
-                                {{ allocation.employee.user.get_full_name }}
-                            </p>
-                        {% endif %}
-                    </div>
-                </div>
-            {% empty %}
-                <p class="text-slate-500 italic">No allocations found.</p>
-            {% endfor %}
+                {% if request.user.employee.role != 'EMPLOYEE' %}
+                <small>{{ allocation.employee.user.get_full_name }}</small>
+                {% endif %}
+            </div>
         </div>
+        {% empty %}
+        <p class="empty">No allocations found.</p>
+        {% endfor %}
     </div>
 
 </div>
+
 {% endblock %}

@@ -4,8 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Timesheet Pro - {% block title %}{% endblock %}</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
         body { font-family: 'Inter', sans-serif; background-color: #0f172a; }
@@ -15,39 +16,44 @@
     </style>
    
 </head>
-<body class="h-full text-slate-200 bg-dark-navy">
-    <div class="flex h-full">
+<body>
+    <div class="layout">
+        <!-- Mobile Topbar -->
+    <div class="mobile-header">
+        <button onclick="toggleSidebar()">
+            <i class="fas fa-bars"></i>
+        </button>
+        <h1>Timesheet Pro</h1>
+    </div>
         <!-- Sidebar -->
-        <aside class="w-64 bg-slate-800 border-r border-slate-700 flex-shrink-0 shadow-2xl">
-            <div class="p-6">
-                <h1 class="text-2xl font-bold bg-gradient-to-r from-blue-400 to-indigo-500 bg-clip-text text-transparent">
-                    Timesheet Pro
-                </h1>
-            </div>
-            <nav class="mt-6 px-4 space-y-2">
-                <a href="{% url 'dashboard' %}" class="flex items-center px-4 py-3 text-sm font-medium rounded-lg hover:bg-slate-700 transition-colors {% if request.resolver_match.url_name == 'dashboard' %}sidebar-active text-blue-400{% endif %}">
-                    <i class="fas fa-chart-line mr-3 w-5"></i> Dashboard
-                </a>
-                <a href="{% url 'project_list' %}" class="flex items-center px-4 py-3 text-sm font-medium rounded-lg hover:bg-slate-700 transition-colors {% if 'project' in request.path %}sidebar-active text-blue-400{% endif %}">
-                    <i class="fas fa-project-diagram mr-3 w-5"></i> Projects
-                </a>
-                <a href="{% url 'milestone_list' %}"
-                class="flex items-center px-4 py-3 text-sm font-medium rounded-lg hover:bg-slate-700 transition-colors {% if 'milestone' in request.path %}sidebar-active text-blue-400{% endif %}">
-                <i class="fas fa-flag-checkered mr-3 w-5"></i> Milestones
-                </a>
-                <a href="{% url 'task_page' %}" 
-                class="flex items-center px-4 py-3 text-sm font-medium rounded-lg hover:bg-slate-700 transition-colors {% if 'task' in request.path %}sidebar-active text-blue-400{% endif %}">
-                <i class="fas fa-tasks mr-3 w-5"></i> Tasks
-                </a>
-                {% if request.user.is_superuser or request.user.employee.role == 'ADMIN' or request.user.employee.role == 'MANAGER' %}
+    <aside id="sidebar" class="sidebar">
+        <div class="logo">Timesheet Pro</div>
+
+        <nav>
+            <a href="{% url 'dashboard' %}" class="{% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+                <i class="fas fa-chart-line"></i> Dashboard
+            </a>
+
+            <a href="{% url 'project_list' %}" class="{% if 'project' in request.path %}active{% endif %}">
+                <i class="fas fa-project-diagram"></i> Projects
+            </a>
+
+            <a href="{% url 'milestone_list' %}" class="{% if 'milestone' in request.path %}active{% endif %}">
+                <i class="fas fa-flag-checkered"></i> Milestones
+            </a>
+
+            <a href="{% url 'task_page' %}" class="{% if 'task' in request.path %}active{% endif %}">
+                <i class="fas fa-tasks"></i> Tasks
+            </a>
+            {% if request.user.is_superuser or request.user.employee.role == 'ADMIN' or request.user.employee.role == 'MANAGER' %}
                 <a href="{% url 'allocation_list' %}" class="flex items-center px-4 py-3 text-sm font-medium rounded-lg hover:bg-slate-700 transition-colors {% if 'allocation' in request.path %}sidebar-active text-blue-400{% endif %}">
                     <i class="fas fa-user-tag mr-3 w-5"></i> Allocations
                 </a>
                 {% endif %}
-                <a href="{% url 'timesheet_list' %}" class="flex items-center px-4 py-3 text-sm font-medium rounded-lg hover:bg-slate-700 transition-colors {% if 'timesheet' in request.path %}sidebar-active text-blue-400{% endif %}">
-                    <i class="fas fa-clock mr-3 w-5"></i> Timesheets
-                </a>
-                {% if request.user.is_superuser or request.user.employee.role == 'ADMIN' or request.user.employee.role == 'MANAGER' %}
+            <a href="{% url 'timesheet_list' %}" class="{% if 'timesheet' in request.path %}active{% endif %}">
+                <i class="fas fa-clock"></i> Timesheets
+            </a>
+            {% if request.user.is_superuser or request.user.employee.role == 'ADMIN' or request.user.employee.role == 'MANAGER' %}
 
                 <a href="{% url 'employee_list' %}"
                 class="flex items-center px-4 py-3 text-sm font-medium rounded-lg hover:bg-slate-700
@@ -55,38 +61,47 @@
                 <i class="fas fa-users mr-3 w-5"></i> Employees
                 </a>
                 {% endif %}
-
                 {% if request.user.is_superuser or request.user.employee.role == 'ADMIN' or request.user.employee.role == 'MANAGER' %}
                 <a href="{% url 'summary_report' %}" class="flex items-center px-4 py-3 text-sm font-medium rounded-lg hover:bg-slate-700 transition-colors {% if 'report' in request.path %}sidebar-active text-blue-400{% endif %}">
                     <i class="fas fa-file-alt mr-3 w-5"></i> Reports
                 </a>
                 {% endif %}
-            </nav>
-            <div class="absolute bottom-0 w-64 p-4 border-t border-slate-700">
-                <div class="flex items-center mb-4 px-2">
-                    <div class="w-8 h-8 rounded-full bg-indigo-500 flex items-center justify-center text-xs font-bold mr-3">
-                        {{ request.user.username|slice:":2"|upper }}
-                    </div>
-                    <div>
-                        <p class="text-sm font-medium truncate">{{ request.user.get_full_name|default:request.user.username }}</p>
-                        <p class="text-xs text-slate-400">{% if request.user.is_superuser %}Super Admin{% else %}{{ request.user.employee.role|default:"User" }}{% endif %}</p>
-                    </div>
-                </div>
-                <form action="{% url 'logout' %}" method="post">
-                    {% csrf_token %}
-                    <button type="submit" class="flex items-center w-full px-4 py-2 text-sm text-red-400 hover:bg-red-400/10 rounded-lg transition-colors">
-                        <i class="fas fa-sign-out-alt mr-3"></i> Logout
-                    </button>
-                </form>
-            </div>
-        </aside>
+        </nav>
 
-        <!-- Main Content -->
-        <main class="flex-1 overflow-y-auto p-8">
-            <div class="max-w-7xl mx-auto">
-                {% block content %}{% endblock %}
+        <div class="sidebar-footer">
+            <div class="user-box">
+                <div class="avatar">
+                    {{ request.user.username|slice:":2"|upper }}
+                </div>
+                <div>
+                   <p class="user-name">
+    {{ request.user.get_full_name|default:request.user.username }}
+</p>
+
+<p class="user-role">
+    {% if request.user.is_superuser %}
+        Super Admin
+    {% else %}
+        {{ request.user.employee.role|default:"User" }}
+    {% endif %}
+</p>
+ </div>
             </div>
-        </main>
+
+            <form action="{% url 'logout' %}" method="post">
+                {% csrf_token %}
+                <button class="logout-btn">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </button>
+            </form>
+        </div>
+    </aside>
+       <!-- Main -->
+    <div class="main">
+    <div class="main-container">
+        {% block content %}{% endblock %}
+    </div>
+</div>
     </div>
 
     <!-- Modal Container -->
@@ -179,6 +194,11 @@
 // }
 
  </script>
+ <script>
+function toggleSidebar(){
+    document.getElementById("sidebar").classList.toggle("show");
+}
+</script>
 <script>
     function openModal2(url) {
     const modalUrl = url.includes('?') ? `${url}&modal=1` : `${url}?modal=1`;
