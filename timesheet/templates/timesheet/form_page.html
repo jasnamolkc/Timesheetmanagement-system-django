@@ -1,14 +1,31 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="max-w-2xl mx-auto bg-slate-800 p-8 rounded-2xl border border-slate-700 shadow-2xl">
+<div class="max-w-2xl mx-auto bg-slate-800 p-10 rounded-3xl border border-slate-700/60 shadow-2xl mt-12 mb-12 relative overflow-hidden">
+    <!-- Blue Accent Top Bar -->
+    <div class="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-blue-500 to-indigo-600"></div>
+
     {% include "timesheet/modal_form.html" %}
 </div>
 
 <script>
-    // Override closeModal for full page view
+    // In full page view, closeModal should navigate back or to a list page
     function closeModal() {
-        window.history.back();
+        if (window.history.length > 1) {
+            window.history.back();
+        } else {
+            window.location.href = "{% url 'dashboard' %}";
+        }
     }
 </script>
+
+<style>
+/* Adjust form appearance for the main page container */
+form .form-group { margin-bottom: 24px; }
+form label { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; color: #64748b; margin-left: 4px; margin-bottom: 10px; }
+form input, form select, form textarea { font-size: 15px !important; padding: 14px 18px !important; }
+form .asteriskField { color: #f87171; }
+form .invalid-feedback { font-size: 11px; font-weight: 700; color: #f87171; margin-top: 6px; }
+form .help-block { font-size: 11px; color: #475569; margin-top: 6px; }
+</style>
 {% endblock %}

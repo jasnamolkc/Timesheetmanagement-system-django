@@ -1,53 +1,60 @@
 {% load crispy_forms_tags %}
+{% load static %}
 <!DOCTYPE html>
-<html lang="en" class="h-full" style="background-color: #0f172a;">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Register - Timesheet Pro</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Sign Up - Timesheet Pro</title>
+
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-        body { font-family: 'Inter', sans-serif; background-color: #0f172a; }
-        input, select, textarea {
-            background-color: #0f172a !important;
-            border-color: #334155 !important;
-            color: #f8fafc !important;
-            border-radius: 0.75rem !important;
-        }
-        label { color: #94a3b8 !important; font-size: 0.875rem !important; margin-bottom: 0.25rem !important; }
-        .text-danger { color: #f87171 !important; font-size: 0.75rem !important; margin-top: 0.25rem !important; }
-    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
-<body class="h-full flex items-center justify-center p-6 bg-[#0f172a]">
-    <div class="max-w-md w-full">
+
+<body class="login-body h-screen bg-slate-950 overflow-hidden relative">
+    <!-- Abstract Background Pattern -->
+    <div class="absolute inset-0 z-0 overflow-hidden pointer-events-none opacity-20">
+        <div class="absolute -top-[20%] -left-[10%] w-[600px] h-[600px] bg-blue-600/30 blur-[120px] rounded-full"></div>
+        <div class="absolute -bottom-[20%] -right-[10%] w-[600px] h-[600px] bg-indigo-600/30 blur-[120px] rounded-full"></div>
+    </div>
+
+    <div class="login-container relative z-10 w-full max-w-md px-6">
         <div class="text-center mb-10">
-            <h1 class="text-4xl font-black bg-gradient-to-r from-blue-400 to-indigo-500 bg-clip-text text-transparent mb-2">
+            <h1 class="text-4xl font-extrabold tracking-tighter bg-gradient-to-r from-blue-400 to-indigo-500 bg-clip-text text-transparent mb-3">
                 Timesheet Pro
             </h1>
-            <p class="text-slate-400">Add a new employee to the system</p>
+            <p class="text-slate-400 font-medium text-sm">Join our professional time management platform</p>
         </div>
 
-        <div class="bg-slate-800 p-8 rounded-3xl border border-slate-700 shadow-2xl">
-            <form method="post">
+        <div class="card p-8 border-slate-700/50 shadow-2xl shadow-blue-500/10 backdrop-blur-xl bg-slate-800/80 max-h-[70vh] overflow-y-auto">
+            <form method="post" class="space-y-6">
                 {% csrf_token %}
-                <div class="space-y-4">
-                    {{ form|crispy }}
+                {{ form|crispy }}
 
-                    <button type="submit" class="w-full py-4 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white rounded-xl font-bold shadow-lg shadow-blue-500/20 transition-all transform hover:-translate-y-1 mt-4">
-                        Register
-                    </button>
-                </div>
+                <button type="submit" class="w-full btn btn-primary !py-4 text-base font-extrabold uppercase tracking-widest shadow-xl shadow-blue-500/20 hover:scale-[1.02] active:scale-[0.98]">
+                    Join Now
+                </button>
             </form>
 
-            <div class="mt-6 text-center">
-                <p class="text-slate-400 text-sm">
-                    Already have an account?
-                    <a href="{% url 'login' %}" class="text-blue-400 hover:text-blue-300 font-semibold">Sign In</a>
+            <div class="mt-8 pt-8 border-t border-slate-700/50 text-center">
+                <p class="text-slate-400 text-sm font-medium">
+                    Already registered?
+                    <a href="{% url 'login' %}" class="text-blue-400 hover:text-blue-300 font-bold hover:underline underline-offset-4 decoration-2">Sign In</a>
                 </p>
             </div>
         </div>
+
+        <p class="text-center mt-10 text-slate-600 text-xs font-bold uppercase tracking-widest opacity-60">
+            &copy; 2025 Timesheet Pro. All rights reserved.
+        </p>
     </div>
+
+    <style>
+        /* Crispy labels adjustment for login/register */
+        .card label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: #64748b; margin-left: 4px; }
+        .card .help-block { font-size: 11px; color: #475569; }
+        .card .invalid-feedback { font-size: 11px; color: #f87171; font-weight: 700; }
+    </style>
 </body>
 </html>
