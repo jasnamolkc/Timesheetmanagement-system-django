@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Timesheet Pro - {% block title %}{% endblock %}</title>
+    <title>CodeClock - {% block title %}{% endblock %}</title>
     {% load static %}
+<link rel="icon" type="image/x-icon" sizes="16x16" href="{% static 'img/favicon.png' %}?v=2">
     <link rel="stylesheet" href="{% static 'css/output.css' %}">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
@@ -21,9 +22,16 @@
         <!-- Sidebar -->
         <aside class="w-64 bg-slate-800 border-r border-slate-700 flex-shrink-0 shadow-2xl">
             <div class="p-6">
-                <h1 class="text-2xl font-bold bg-gradient-to-r from-blue-400 to-indigo-500 bg-clip-text text-transparent">
-                    Timesheet Pro
-                </h1>
+                <div class="flex flex-col items-center justify-center py-4">
+    
+                <img src="{% static 'img/timesheet-icon.png' %}" 
+                    class="h-14 w-14 object-contain mb-0.5">
+
+                <span class="text-sm font-semibold text-slate-300 leading-none">
+                    CodeClock
+                </span>
+
+            </div>
             </div>
             <nav class="mt-6 px-4 space-y-2">
                 <a href="{% url 'dashboard' %}" class="flex items-center px-4 py-3 text-sm font-medium rounded-lg hover:bg-slate-700 transition-colors {% if request.resolver_match.url_name == 'dashboard' %}sidebar-active text-blue-400{% endif %}">
