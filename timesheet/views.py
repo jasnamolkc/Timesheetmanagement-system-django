@@ -679,11 +679,18 @@ def task_page(request):
 
     # 👤 EMPLOYEE → ONLY assigned tasks
     else:
-        tasks = Task.objects.select_related("project", "assigned_to")\
-                            .filter(assigned_to=employee)\
-                            .order_by('-id')
+        # tasks = Task.objects.select_related("project", "assigned_to")\
+        #                     .filter(assigned_to=employee)\
+        #                     .order_by('-id')
 
-        projects = Project.objects.filter(tasks__assigned_to=employee).distinct()
+        # projects = Project.objects.filter(tasks__assigned_to=employee).distinct()
+        tasks = Task.objects.select_related("project", "assigned_to").filter(
+            Q(assigned_to=employee) | Q(created_by=user)
+        ).order_by('-id')
+
+        projects = Project.objects.filter(
+            Q(tasks__assigned_to=employee) | Q(tasks__created_by=user)
+        ).distinct()
     return render(request, "tasks/task_list.html", {
         "tasks": tasks,
         "projects": projects
