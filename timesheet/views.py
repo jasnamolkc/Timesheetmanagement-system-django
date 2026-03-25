@@ -806,7 +806,9 @@ class TaskCreateView(LoginRequiredMixin, CreateView):
         context["milestones"] = Milestone.objects.select_related("project")
         return context
     def form_valid(self, form):
-        self.object = form.save()
+        self.object = form.save(commit=False)  # ✅ don't save yet
+        self.object.created_by = self.request.user  # ✅ assign logged-in user
+        self.object.save()  # now save
         # handle multiple images
         images = self.request.FILES.getlist("images")
 
