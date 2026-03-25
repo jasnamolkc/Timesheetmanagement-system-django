@@ -21,20 +21,22 @@
     <div class="flex h-full">
         <!-- Sidebar -->
         <aside class="w-64 bg-slate-800 border-r border-slate-700 flex-shrink-0 shadow-2xl">
-            <div class="p-6">
-    <div class="flex items-center justify-center gap-2 py-4">
+           <div class="p-6">
+    <div class="flex items-center gap-3 py-3">
         
+        <!-- Logo -->
         <img src="{% static 'img/timesheet-icon.png' %}" 
+             alt="CodeClock"
              class="h-10 w-10 object-contain">
 
-        <span class="text-base font-semibold leading-none 
-                     bg-gradient-to-r from-cyan-400 to-blue-500 
-                     bg-clip-text text-transparent">
+        <!-- Brand Text -->
+        <span class="text-base font-semibold tracking-tight text-slate-200">
             CodeClock
         </span>
 
     </div>
 </div>
+            
             <nav class="mt-6 px-4 space-y-2">
                 <a href="{% url 'dashboard' %}" class="flex items-center px-4 py-3 text-sm font-medium rounded-lg hover:bg-slate-700 transition-colors {% if request.resolver_match.url_name == 'dashboard' %}sidebar-active text-blue-400{% endif %}">
                     <i class="fas fa-chart-line mr-3 w-5"></i> Dashboard
