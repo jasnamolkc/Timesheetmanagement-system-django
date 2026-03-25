@@ -132,6 +132,11 @@ onclick="openModal('{% url 'task_delete' task.id %}')"
 class="text-red-400 hover:text-red-300 text-sm cursor-pointer">
 Delete
 </a>
+<a href="{% url 'task_detail' task.id %}"
+class="text-green-400 hover:text-green-300 text-sm cursor-pointer ml-3"
+title="View Details">
+    <i class="fas fa-eye"></i> 
+</a>
 
 </td>
 

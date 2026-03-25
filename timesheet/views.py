@@ -8,6 +8,7 @@ from django.utils import timezone
 from django.http import HttpResponse
 import csv
 from datetime import datetime, timedelta
+from django.views.generic import DetailView
 
 from .models import *
 from .forms import *
@@ -696,7 +697,23 @@ def task_page(request):
         "projects": projects
     })
 
+class TaskDetailView(LoginRequiredMixin, DetailView):
+    model = Task
+    template_name = "tasks/task_detail.html"
+    context_object_name = "task"
 
+    def get_queryset(self):
+        user = self.request.user
+        employee = getattr(user, "employee", None)
+
+        # 👑 ADMIN / MANAGER / SUPERUSER → can view all
+        if user.is_superuser or not employee or employee.role in ["ADMIN", "MANAGER"]:
+            return Task.objects.select_related("project", "assigned_to", "milestone")
+
+        # 👤 EMPLOYEE → only assigned or created tasks
+        return Task.objects.select_related("project", "assigned_to", "milestone").filter(
+            Q(assigned_to=employee) | Q(created_by=user)
+        )
 def task_list(request):
 
     search = request.GET.get("search")
