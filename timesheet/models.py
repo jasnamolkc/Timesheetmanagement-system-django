@@ -306,7 +306,13 @@ class Task(models.Model):
         decimal_places=2,
         default=0
     )
-
+    created_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="created_tasks_user"
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     def clean(self):
         if self.milestone and self.milestone.project != self.project:
