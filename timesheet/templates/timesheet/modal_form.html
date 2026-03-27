@@ -5,7 +5,11 @@
         {% if form.instance.pk %}Edit{% else %}Create{% endif %}
     </h3>
 </div>
-
+{% if form.errors %}
+<div class="bg-red-500/20 border border-red-500 text-red-300 p-3 rounded mb-4">
+    {{ form.errors }}
+</div>
+{% endif %}
 <form method="post" action="{{ request.path }}" enctype="multipart/form-data">
     {% csrf_token %}
 
