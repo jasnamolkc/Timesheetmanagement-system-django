@@ -12,8 +12,8 @@
 <div class="space-y-4">
 
 <!-- ================= TIMESHEET ================= -->
-{% if form.fields.project and form.fields.task %}
-
+{% if 'project' in form.fields and 'task' in form.fields %}
+AA
     {{ form.project|as_crispy_field }}
 
     <div class="flex items-end gap-2">
@@ -46,9 +46,8 @@
     {% endif %}
 
 <!-- ================= PROJECT ================= -->
-<!-- {% elif form.fields.project_code %} -->
- {% elif 'project_code' in form.fields %}
-
+{% elif 'project_code' in form.fields %}
+BB
     {{ form.name|as_crispy_field }}
     {{ form.project_code|as_crispy_field }}
     {{ form.status|as_crispy_field }}
@@ -133,7 +132,7 @@
 </div>
 <!-- ================= ALLOCATION ================= -->
 {% else %}
-
+CC
     {{ form.employee|as_crispy_field }}
     {{ form.project|as_crispy_field }}
     {{ form.role_in_project|as_crispy_field }}

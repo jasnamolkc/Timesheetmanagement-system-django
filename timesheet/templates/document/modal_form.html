@@ -1,0 +1,60 @@
+{% load crispy_forms_tags %}
+
+<div class="mb-4">
+    <h3 class="text-xl font-bold text-white">
+        {% if form.instance.pk %}Edit Document{% else %}Create Document{% endif %}
+    </h3>
+</div>
+
+<form method="POST" enctype="multipart/form-data" action="{{ request.path }}">
+    {% csrf_token %}
+
+    <div class="space-y-4">
+
+        <div class="form-group">
+            {{ form.name.label_tag }}
+            {{ form.name }}
+        </div>
+
+        <div class="form-group">
+            {{ form.file.label_tag }}
+            {{ form.file }}
+        </div>
+
+    </div>
+
+    <div class="mt-6 flex justify-end space-x-3">
+
+        <button type="button"
+                onclick="closeModal()"
+                class="px-5 py-2 bg-slate-700 text-white rounded-lg hover:bg-slate-600">
+            Cancel
+        </button>
+
+        <button type="submit"
+                class="px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+            Save
+        </button>
+
+    </div>
+
+</form>
+<style>
+input, select, textarea {
+    background-color: #0f172a !important;
+    border: 1px solid #334155 !important;
+    color: #f8fafc !important;
+    border-radius: 0.5rem !important;
+    padding: 0.5rem 0.75rem !important;
+}
+
+label {
+    color: #94a3b8 !important;
+    font-size: 0.875rem !important;
+}
+
+.text-danger {
+    color: #f87171 !important;
+    font-size: 0.75rem !important;
+}
+</style>

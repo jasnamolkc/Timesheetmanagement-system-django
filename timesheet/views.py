@@ -175,12 +175,12 @@ class ProjectCreateView(ManagerRequiredMixin, AjaxTemplateMixin, CreateView):
         context = super().get_context_data(**kwargs)
 
         if self.request.POST:
-            context["milestone_formset"] = MilestoneFormSet(self.request.POST)
-            context["document_formset"] = DocumentFormSet(self.request.POST, self.request.FILES)
+            context["milestone_formset"] = MilestoneFormSet(self.request.POST,prefix="milestones")
+            context["document_formset"] = DocumentFormSet(self.request.POST, self.request.FILES,prefix="documents")
 
         else:
-            context["milestone_formset"] = MilestoneFormSet()
-            context["document_formset"] = DocumentFormSet()
+            context["milestone_formset"] = MilestoneFormSet(prefix="milestones")
+            context["document_formset"] = DocumentFormSet(prefix="documents"    )
 
         return context
 
@@ -213,12 +213,12 @@ class ProjectUpdateView(ManagerRequiredMixin, AjaxTemplateMixin, UpdateView):
         context = super().get_context_data(**kwargs)
 
         if self.request.POST:
-            context["milestone_formset"] = MilestoneFormSet(self.request.POST, instance=self.object)
-            context["document_formset"] = DocumentFormSet(self.request.POST, self.request.FILES, instance=self.object)
+            context["milestone_formset"] = MilestoneFormSet(self.request.POST, instance=self.object,prefix="milestones")
+            context["document_formset"] = DocumentFormSet(self.request.POST, self.request.FILES, instance=self.object,prefix="documents")
 
         else:
-            context["milestone_formset"] = MilestoneFormSet(instance=self.object)
-            context["document_formset"] = DocumentFormSet(instance=self.object)
+            context["milestone_formset"] = MilestoneFormSet(instance=self.object,prefix="milestones")
+            context["document_formset"] = DocumentFormSet(instance=self.object,prefix="documents")
 
         return context
 
@@ -1143,4 +1143,22 @@ def project_documents(request, pk):
     return render(request, "timesheet/document_list.html", {
         "project": project,
         "documents": documents
+    })
+def document_create(request, project_id):
+
+    form = DocumentForm(request.POST or None, request.FILES or None)
+
+    if request.method == "POST":
+        if form.is_valid():
+            document = form.save(commit=False)
+            document.project_id = project_id   # ✅ FIX
+            document.save()
+
+            return redirect("project_documents", pk=project_id)
+
+        else:
+            print(form.errors)  # 🧪 DEBUG (see errors in terminal)
+
+    return render(request, "document/modal_form.html", {
+        "form": form
     })
