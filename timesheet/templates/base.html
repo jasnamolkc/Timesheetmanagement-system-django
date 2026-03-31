@@ -666,90 +666,49 @@ document.addEventListener("click", function (e) {
 });
 </script> -->
 <script>
-document.addEventListener("click", function (e) {
+document.addEventListener("DOMContentLoaded", function () {
 
-    // ================= DOCUMENT =================
-    if (e.target && e.target.id === "add-document") {
+    const modalContent = document.getElementById("modal-content");
 
-        const container = document.getElementById("document-container");
-        const template = document.getElementById("empty-document-form");
-        const totalForms = document.querySelector('input[name="documents-TOTAL_FORMS"]');
+    modalContent.addEventListener("click", function (e) {
 
-        if (!container || !template || !totalForms) return;
+        // ===== ADD MILESTONE =====
+        if (e.target.id === "add-milestone") {
 
-        let formIdx = parseInt(totalForms.value);
+            const totalForms = modalContent.querySelector('[name="milestones-TOTAL_FORMS"]');
+            const container = modalContent.querySelector("#milestone-container");
+            const emptyForm = modalContent.querySelector("#empty-milestone-form").innerHTML;
 
-        let newForm = template.innerHTML.replace(/__prefix__/g, formIdx);
+            let formIndex = parseInt(totalForms.value);
 
-        container.insertAdjacentHTML("beforeend", newForm);
+            let newForm = emptyForm.replace(/__prefix__/g, formIndex);
 
-        totalForms.value = formIdx + 1;
-    }
+            container.insertAdjacentHTML("beforeend", newForm);
 
-    // ================= MILESTONE =================
-    // ================= MILESTONE (FIXED) =================
-if (e.target && e.target.id === "add-milestone") {
+            totalForms.value = formIndex + 1;
+        }
 
-    const container = document.getElementById("milestone-container");
-    const template = document.getElementById("empty-milestone-form");
-    const totalForms = document.querySelector('input[name="milestones-TOTAL_FORMS"]');
+        // ===== ADD DOCUMENT =====
+        if (e.target.id === "add-document") {
 
-    if (!container || !template || !totalForms) {
-        console.log("Milestone formset not found ❌");
-        return;
-    }
+            const totalForms = modalContent.querySelector('[name="documents-TOTAL_FORMS"]');
+            const container = modalContent.querySelector("#document-container");
+            const emptyForm = modalContent.querySelector("#empty-document-form").innerHTML;
 
-    let formIdx = parseInt(totalForms.value);
+            let formIndex = parseInt(totalForms.value);
 
-    let newForm = template.innerHTML.replace(/__prefix__/g, formIdx);
+            let newForm = emptyForm.replace(/__prefix__/g, formIndex);
 
-    container.insertAdjacentHTML("beforeend", newForm);
+            container.insertAdjacentHTML("beforeend", newForm);
 
-    totalForms.value = formIdx + 1;
+            totalForms.value = formIndex + 1;
+        }
 
-    console.log("Milestone added ✅");
-}
-});
-</script>
-<script>
-document.addEventListener("submit", function(e) {
-
-    const form = e.target;
-
-    // Only handle main modal form
-    if (form.closest("#modal-container")) {
-
-        e.preventDefault();
-
-        const formData = new FormData(form);
-
-        fetch(form.action, {
-            method: form.method,
-            body: formData,
-            headers: {
-                "X-Requested-With": "XMLHttpRequest"
-            }
-        })
-        .then(res => res.json())
-        .then(data => {
-
-            if (data.success) {
-                closeModal();
-
-                // 🔥 reload page OR update table dynamically
-                location.reload();
-            } 
-            else if (data.html) {
-                // Reload modal with errors
-                document.getElementById("modal-content").innerHTML = data.html;
-            }
-
-        })
-        .catch(err => console.error("Submit error:", err));
-    }
+    });
 
 });
 </script>
+
 <style>
 /* ===== MATCH TASK FORM THEME ===== */
 
