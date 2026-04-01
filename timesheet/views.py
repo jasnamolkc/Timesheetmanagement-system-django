@@ -991,16 +991,55 @@ class TimesheetListView(ListView):
 
         return context
 
+# class TimesheetCreateView(LoginRequiredMixin, CreateView):
+#     model = TimesheetEntry
+#     form_class = TimesheetEntryForm
+#     template_name = "timesheet/modal_form.html"
+#     success_url = reverse_lazy('timesheet_list')  # redirect after non-AJAX submit
+
+#     def get_form_kwargs(self):
+#         kwargs = super().get_form_kwargs()
+#         user_employee = getattr(self.request.user, "employee", None)
+#         kwargs['employee'] = user_employee
+#         return kwargs
+
+#     def form_valid(self, form):
+#         user_employee = getattr(self.request.user, "employee", None)
+
+#         if not user_employee:
+#             return JsonResponse({"error": "Employee profile not found"}, status=400)
+
+#         obj = form.save(commit=False)
+#         obj.employee = user_employee
+#         obj.save()
+
+#         # Return JSON for AJAX
+#         if self.request.headers.get("x-requested-with") == "XMLHttpRequest":
+#             return JsonResponse({"success": True})
+#         return redirect(self.success_url)   # ✅ REQUIRED
+#         # Normal POST fallback
+#         # return super().form_valid(form)
+
+#     def form_invalid(self, form):
+#         if self.request.headers.get("x-requested-with") == "XMLHttpRequest":
+#             context = self.get_context_data(form=form)
+#             html = render_to_string("timesheet/modal_form.html", context, request=self.request)
+#             return JsonResponse({"success": False, "html": html}, status=400)
+#         return super().form_invalid(form)
+
+#     def get_template_names(self):
+#         if self.request.headers.get("X-Requested-With") == "XMLHttpRequest":
+#             return ["timesheet/modal_form.html"]
+#         return [self.template_name]
 class TimesheetCreateView(LoginRequiredMixin, CreateView):
     model = TimesheetEntry
     form_class = TimesheetEntryForm
     template_name = "timesheet/modal_form.html"
-    success_url = reverse_lazy('timesheet_list')  # redirect after non-AJAX submit
+    success_url = reverse_lazy('timesheet_list')
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
-        user_employee = getattr(self.request.user, "employee", None)
-        kwargs['employee'] = user_employee
+        kwargs['employee'] = getattr(self.request.user, "employee", None)
         return kwargs
 
     def form_valid(self, form):
@@ -1009,26 +1048,22 @@ class TimesheetCreateView(LoginRequiredMixin, CreateView):
         if not user_employee:
             return JsonResponse({"error": "Employee profile not found"}, status=400)
 
-        obj = form.save(commit=False)
-        obj.employee = user_employee
-        obj.save()
+        self.object = form.save(commit=False)
+        self.object.employee = user_employee
+        self.object.save()
 
-        # Return JSON for AJAX
         if self.request.headers.get("x-requested-with") == "XMLHttpRequest":
             return JsonResponse({"success": True})
-        # Normal POST fallback
-        return super().form_valid(form)
+
+        return redirect(self.success_url)
 
     def form_invalid(self, form):
         if self.request.headers.get("x-requested-with") == "XMLHttpRequest":
-            html = render_to_string("timesheet/modal_form.html", {"form": form}, request=self.request)
+            context = self.get_context_data(form=form)
+            html = render_to_string("timesheet/modal_form.html", context, request=self.request)
             return JsonResponse({"success": False, "html": html}, status=400)
-        return super().form_invalid(form)
 
-    def get_template_names(self):
-        if self.request.headers.get("X-Requested-With") == "XMLHttpRequest":
-            return ["timesheet/modal_form.html"]
-        return [self.template_name]
+        return super().form_invalid(form)
 # def tasks_by_project(request, project_id):
 #     tasks = Task.objects.filter(project_id=project_id)
 #     data = {
@@ -1162,3 +1197,4 @@ def document_create(request, project_id):
     return render(request, "document/modal_form.html", {
         "form": form
     })
+

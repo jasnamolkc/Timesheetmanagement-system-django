@@ -398,19 +398,21 @@ class TimesheetEntry(models.Model):
 
     def clean(self):
 
-        # Check allocation
-        is_allocated = ProjectAllocation.objects.filter(
-            employee=self.employee,
-            project=self.project,
-            start_date__lte=self.date
-        ).filter(
-            Q(end_date__gte=self.date) | Q(end_date__isnull=True)
-        ).exists()
-
-        if not is_allocated:
-            raise ValidationError(
-                f"Employee not allocated to project {self.project.project_code}"
-            )
+        # ✅ Skip allocation check for Admin / Manager
+        if self.employee.role not in ['ADMIN', 'MANAGER'] and not self.employee.user.is_superuser:
+        
+            is_allocated = ProjectAllocation.objects.filter(
+                employee=self.employee,
+                project=self.project,
+                start_date__lte=self.date
+            ).filter(
+                Q(end_date__gte=self.date) | Q(end_date__isnull=True)
+            ).exists()
+        
+            if not is_allocated:
+                raise ValidationError(
+                    f"Employee not allocated to project {self.project.project_code}"
+                )
 
         # Prevent logging for completed project
         if self.project.status == "COMPLETED":
