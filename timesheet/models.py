@@ -204,9 +204,9 @@ class ProjectAllocation(models.Model):
 
                 total_allocation += alloc.allocation_percentage or 0
 
-        if total_allocation > 100:
+        if total_allocation > 1000:
             raise ValidationError(
-                f"Total allocation exceeds 100% (currently {total_allocation}%)."
+                f"Total allocation exceeds 1000% (currently {total_allocation}%)."
             )
         if self.end_date < self.start_date:
             raise ValidationError("End date cannot be before start date.")
