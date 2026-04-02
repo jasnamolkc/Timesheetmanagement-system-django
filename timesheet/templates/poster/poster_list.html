@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% block title %}Posters{% endblock %}
+
+{% block content %}
+
+<div class="bg-slate-800 p-6 rounded-xl border border-slate-700">
+
+    <!-- Header -->
+    <div class="flex justify-between items-center mb-6">
+        <h2 class="text-xl font-semibold">Poster Generator</h2>
+
+        <a href="{% url 'create_poster' %}"
+           class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg text-white text-sm">
+            + Create Poster
+        </a>
+    </div>
+
+    <!-- Table -->
+    <div class="overflow-x-auto">
+        <table class="w-full text-sm text-left text-slate-300">
+
+            <!-- Head -->
+            <thead class="text-xs uppercase bg-slate-900 text-slate-400">
+                <tr>
+                    <th class="px-4 py-3">Preview</th>
+                    <th class="px-4 py-3">Title</th>
+                    <th class="px-4 py-3">Created</th>
+                    <th class="px-4 py-3 text-right">Actions</th>
+                </tr>
+            </thead>
+
+            <!-- Body -->
+            <tbody>
+
+                {% for poster in posters %}
+                <tr class="border-b border-slate-700 hover:bg-slate-900">
+
+                    <!-- Preview -->
+                    <td class="px-4 py-3">
+                        {% if poster.instagram_image %}
+                            <img src="{{ poster.instagram_image.url }}"
+                                 class="w-16 h-16 object-cover rounded">
+                        {% endif %}
+                    </td>
+
+                    <!-- Title -->
+                    <td class="px-4 py-3 font-medium text-white">
+                        {{ poster.title }}
+                    </td>
+
+                    <!-- Date -->
+                    <td class="px-4 py-3">
+                        {{ poster.created_at|date:"M d, Y" }}
+                    </td>
+
+                    <!-- Actions -->
+                    <td class="px-4 py-3 text-right space-x-2">
+
+                        <a href="{% url 'poster_detail' poster.id %}"
+                           class="text-blue-400 hover:underline text-xs">
+                            View
+                        </a>
+
+                        <a href="{% url 'download_all' poster.id %}"
+                           class="text-green-400 hover:underline text-xs">
+                            Download
+                        </a>
+
+                    </td>
+
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" class="px-4 py-6 text-center text-slate-400">
+                        No posters created yet.
+                    </td>
+                </tr>
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+    </div>
+
+</div>
+
+{% endblock %}

@@ -55,8 +55,9 @@ urlpatterns = [
 
     path("delete-task-image/<int:pk>/", views.delete_task_image, name="delete_task_image"),
 
-    # path('poster/create/', views.create_poster, name='create_poster'),
-    # path('poster/<int:pk>/', views.poster_detail, name='poster_detail'),
-    # path('poster/<int:pk>/download/', views.download_all, name='download_all'),
+    path('poster/', views.poster_list, name='poster_list'),
+    path('poster/create/', views.create_poster, name='create_poster'),
+    path('poster/<int:pk>/', views.poster_detail, name='poster_detail'),
+    path('poster/<int:pk>/download/', views.download_all, name='download_all'),
     
 ]
