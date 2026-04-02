@@ -19,9 +19,11 @@ def create_canvas(width, height, poster):
 
     draw = ImageDraw.Draw(img)
 
-    font_path = os.path.join(settings.BASE_DIR, 'arial.ttf')
-    font = ImageFont.truetype(font_path, int(width * 0.05))
-
+    try:
+        font_path = os.path.join(settings.BASE_DIR, 'fonts/Poppins-Regular.ttf')
+        font = ImageFont.truetype(font_path, int(width * 0.05))
+    except:
+        font = ImageFont.load_default()
     draw.text((50, int(height*0.85)), poster.title, fill="black", font=font)
 
     return img

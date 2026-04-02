@@ -299,3 +299,63 @@ class DocumentAdmin(admin.ModelAdmin):
         return "No File"
 
     file_preview.short_description = "Preview"
+@admin.register(Poster)
+class PosterAdmin(admin.ModelAdmin):
+
+    list_display = (
+        'title',
+        'preview_instagram',
+        'preview_whatsapp',
+        'preview_facebook',
+        'created_at'
+    )
+
+    search_fields = ('title',)
+
+    readonly_fields = (
+        'preview_instagram',
+        'preview_whatsapp',
+        'preview_facebook',
+    )
+
+    fields = (
+        'title',
+        'logo',
+        'content_image',
+        'preview_instagram',
+        'preview_whatsapp',
+        'preview_facebook',
+    )
+
+    # 🔥 Instagram Preview
+    def preview_instagram(self, obj):
+        if obj.instagram_image:
+            return format_html(
+                '<img src="{}" width="120" style="border-radius:8px"/>',
+                obj.instagram_image.url
+            )
+        return "No Image"
+
+    preview_instagram.short_description = "Instagram"
+
+    # 🔥 WhatsApp Preview
+    def preview_whatsapp(self, obj):
+        if obj.whatsapp_image:
+            return format_html(
+                '<img src="{}" width="120" style="border-radius:8px"/>',
+                obj.whatsapp_image.url
+            )
+        return "No Image"
+
+    preview_whatsapp.short_description = "WhatsApp"
+
+    # 🔥 Facebook Preview
+    def preview_facebook(self, obj):
+        if obj.facebook_image:
+            return format_html(
+                '<img src="{}" width="120" style="border-radius:8px"/>',
+                obj.facebook_image.url
+            )
+        return "No Image"
+
+    preview_facebook.short_description = "Facebook"

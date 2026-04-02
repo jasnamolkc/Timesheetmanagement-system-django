@@ -1199,38 +1199,45 @@ def document_create(request, project_id):
     })
 
 # views.py
-# from .utils import generate_all_posters
+from .utils import generate_all_posters
 
-# def create_poster(request):
-#     if request.method == 'POST':
-#         form = PosterForm(request.POST, request.FILES)
-#         if form.is_valid():
-#             poster = form.save()
+def create_poster(request):
+    if request.method == 'POST':
+        form = PosterForm(request.POST, request.FILES)
+        if form.is_valid():
+            poster = form.save()
+            generate_all_posters(poster)
+            return redirect('poster_detail', pk=poster.id)
+    else:
+        form = PosterForm()
 
-#             generate_all_posters(poster)  # no need to assign paths manually
+    # ✅ ALWAYS return response
+    return render(request, 'poster/create_poster.html', {'form': form})
+def poster_detail(request, pk):
+    poster = get_object_or_404(Poster, pk=pk)
+    return render(request, 'poster/poster_detail.html', {'poster': poster})
+import zipfile
 
-#             return redirect('poster_detail', pk=poster.id)  
-# def poster_detail(request, pk):
-#     poster = get_object_or_404(Poster, pk=pk)
-#     return render(request, 'poster_detail.html', {'poster': poster})
-# import zipfile
+def download_all(request, pk):
+    poster = get_object_or_404(Poster, pk=pk)
 
-# def download_all(request, pk):
-#     poster = get_object_or_404(Poster, pk=pk)
+    response = HttpResponse(content_type='application/zip')
+    response['Content-Disposition'] = 'attachment; filename=posters.zip'
 
-#     response = HttpResponse(content_type='application/zip')
-#     response['Content-Disposition'] = 'attachment; filename=posters.zip'
+    zip_file = zipfile.ZipFile(response, 'w')
 
-#     zip_file = zipfile.ZipFile(response, 'w')
+    if poster.instagram_image:
+        zip_file.write(poster.instagram_image.path, 'instagram.jpg')
 
-#     if poster.instagram_image:
-#         zip_file.write(poster.instagram_image.path, 'instagram.jpg')
+    if poster.whatsapp_image:
+        zip_file.write(poster.whatsapp_image.path, 'whatsapp.jpg')
 
-#     if poster.whatsapp_image:
-#         zip_file.write(poster.whatsapp_image.path, 'whatsapp.jpg')
+    if poster.facebook_image:
+        zip_file.write(poster.facebook_image.path, 'facebook.jpg')
 
-#     if poster.facebook_image:
-#         zip_file.write(poster.facebook_image.path, 'facebook.jpg')
-
-#     zip_file.close()
-#     return response
+    zip_file.close()
+    return response
+# views.py
+def poster_list(request):
+    posters = Poster.objects.all().order_by('-id')
+    return render(request, 'poster/poster_list.html', {'posters': posters})
