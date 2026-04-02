@@ -1198,3 +1198,39 @@ def document_create(request, project_id):
         "form": form
     })
 
+# views.py
+# from .utils import generate_all_posters
+
+# def create_poster(request):
+#     if request.method == 'POST':
+#         form = PosterForm(request.POST, request.FILES)
+#         if form.is_valid():
+#             poster = form.save()
+
+#             generate_all_posters(poster)  # no need to assign paths manually
+
+#             return redirect('poster_detail', pk=poster.id)  
+# def poster_detail(request, pk):
+#     poster = get_object_or_404(Poster, pk=pk)
+#     return render(request, 'poster_detail.html', {'poster': poster})
+# import zipfile
+
+# def download_all(request, pk):
+#     poster = get_object_or_404(Poster, pk=pk)
+
+#     response = HttpResponse(content_type='application/zip')
+#     response['Content-Disposition'] = 'attachment; filename=posters.zip'
+
+#     zip_file = zipfile.ZipFile(response, 'w')
+
+#     if poster.instagram_image:
+#         zip_file.write(poster.instagram_image.path, 'instagram.jpg')
+
+#     if poster.whatsapp_image:
+#         zip_file.write(poster.whatsapp_image.path, 'whatsapp.jpg')
+
+#     if poster.facebook_image:
+#         zip_file.write(poster.facebook_image.path, 'facebook.jpg')
+
+#     zip_file.close()
+#     return response
