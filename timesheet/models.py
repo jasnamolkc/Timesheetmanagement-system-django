@@ -492,3 +492,14 @@ class Document(models.Model):
     file = models.FileField(upload_to="project_docs/")
     name = models.CharField(max_length=255)
     uploaded_at = models.DateTimeField(auto_now_add=True)
+# models.py
+class Poster(models.Model):
+    title = models.CharField(max_length=255)
+    logo = models.ImageField(upload_to='logos/')
+    content_image = models.ImageField(upload_to='content/')
+
+    instagram_image = models.ImageField(upload_to='posters/insta/', null=True, blank=True)
+    whatsapp_image = models.ImageField(upload_to='posters/whatsapp/', null=True, blank=True)
+    facebook_image = models.ImageField(upload_to='posters/facebook/', null=True, blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)

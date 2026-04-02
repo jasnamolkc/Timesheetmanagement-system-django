@@ -329,3 +329,20 @@ DocumentFormSet = inlineformset_factory(
     extra=0,
     can_delete=True
 )
+
+
+# Add this at bottom of your forms.py
+
+# class PosterForm(forms.ModelForm):
+#     class Meta:
+#         model = Poster
+#         fields = ['title', 'logo', 'content_image']
+
+#     def __init__(self, *args, **kwargs):
+#         super().__init__(*args, **kwargs)
+
+#         # Apply your UI styling
+#         for field in self.fields.values():
+#             field.widget.attrs.update({
+#                 "class": "w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200"
+#             })
