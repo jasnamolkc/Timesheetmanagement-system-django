@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Create Video Poster{% endblock %}
+
+{% block content %}
+
+<div class="bg-slate-800 p-6 rounded-xl border border-slate-700 max-w-xl mx-auto">
+
+    <h2 class="text-xl font-semibold mb-6 text-white">Create Video Poster</h2>
+
+    <form method="POST" enctype="multipart/form-data" class="space-y-4">
+        {% csrf_token %}
+
+        {{ form.as_p }}
+
+        <button type="submit"
+            class="w-full bg-purple-600 hover:bg-purple-700 text-white py-2 rounded-lg">
+            Generate Video Poster
+        </button>
+    </form>
+
+</div>
+
+{% endblock %}

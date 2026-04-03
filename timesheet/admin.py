@@ -299,35 +299,113 @@ class DocumentAdmin(admin.ModelAdmin):
         return "No File"
 
     file_preview.short_description = "Preview"
+# @admin.register(Poster)
+# class PosterAdmin(admin.ModelAdmin):
+
+#     list_display = (
+#         'title',
+#         'preview_instagram',
+#         'preview_whatsapp',
+#         'preview_facebook',
+#         'created_at'
+#     )
+
+#     search_fields = ('title',)
+
+#     readonly_fields = (
+#         'preview_instagram',
+#         'preview_whatsapp',
+#         'preview_facebook',
+#     )
+
+#     fields = (
+#         'title',
+#         'logo',
+#         'content_image',
+#         'preview_instagram',
+#         'preview_whatsapp',
+#         'preview_facebook',
+#     )
+
+#     # 🔥 Instagram Preview
+#     def preview_instagram(self, obj):
+#         if obj.instagram_image:
+#             return format_html(
+#                 '<img src="{}" width="120" style="border-radius:8px"/>',
+#                 obj.instagram_image.url
+#             )
+#         return "No Image"
+
+#     preview_instagram.short_description = "Instagram"
+
+#     # 🔥 WhatsApp Preview
+#     def preview_whatsapp(self, obj):
+#         if obj.whatsapp_image:
+#             return format_html(
+#                 '<img src="{}" width="120" style="border-radius:8px"/>',
+#                 obj.whatsapp_image.url
+#             )
+#         return "No Image"
+
+#     preview_whatsapp.short_description = "WhatsApp"
+
+#     # 🔥 Facebook Preview
+#     def preview_facebook(self, obj):
+#         if obj.facebook_image:
+#             return format_html(
+#                 '<img src="{}" width="120" style="border-radius:8px"/>',
+#                 obj.facebook_image.url
+#             )
+#         return "No Image"
+
+#     preview_facebook.short_description = "Facebook"
+from django.contrib import admin
+from django.utils.html import format_html
+from .models import Poster
+
+
 @admin.register(Poster)
 class PosterAdmin(admin.ModelAdmin):
 
     list_display = (
         'title',
+        'type_display',
         'preview_instagram',
-        'preview_whatsapp',
-        'preview_facebook',
+        'preview_thumbnail',   # ✅ NEW
         'created_at'
     )
-
-    search_fields = ('title',)
 
     readonly_fields = (
         'preview_instagram',
         'preview_whatsapp',
         'preview_facebook',
+        'preview_thumbnail',   # ✅ NEW
     )
 
     fields = (
         'title',
         'logo',
         'content_image',
+        'content_video',
+
+        # Image previews
         'preview_instagram',
         'preview_whatsapp',
         'preview_facebook',
+
+        # ✅ Thumbnail preview
+        'preview_thumbnail',
     )
 
-    # 🔥 Instagram Preview
+    search_fields = ('title',)
+
+    # ---------------- TYPE ---------------- #
+    def type_display(self, obj):
+        return "🎬 Video" if obj.content_video else "🖼 Image"
+    type_display.short_description = "Type"
+
+    # ---------------- IMAGE PREVIEWS ---------------- #
+
     def preview_instagram(self, obj):
         if obj.instagram_image:
             return format_html(
@@ -335,10 +413,8 @@ class PosterAdmin(admin.ModelAdmin):
                 obj.instagram_image.url
             )
         return "No Image"
-
     preview_instagram.short_description = "Instagram"
 
-    # 🔥 WhatsApp Preview
     def preview_whatsapp(self, obj):
         if obj.whatsapp_image:
             return format_html(
@@ -346,10 +422,8 @@ class PosterAdmin(admin.ModelAdmin):
                 obj.whatsapp_image.url
             )
         return "No Image"
-
     preview_whatsapp.short_description = "WhatsApp"
 
-    # 🔥 Facebook Preview
     def preview_facebook(self, obj):
         if obj.facebook_image:
             return format_html(
@@ -357,5 +431,32 @@ class PosterAdmin(admin.ModelAdmin):
                 obj.facebook_image.url
             )
         return "No Image"
-
     preview_facebook.short_description = "Facebook"
+
+    # ---------------- 🔥 VIDEO THUMBNAIL ---------------- #
+
+    def preview_thumbnail(self, obj):
+        if obj.video_thumbnail:
+            return format_html(
+                '''
+                <div style="position:relative; display:inline-block;">
+                    <img src="{}" width="120" style="border-radius:8px"/>
+                    <span style="
+                        position:absolute;
+                        top:50%;
+                        left:50%;
+                        transform:translate(-50%, -50%);
+                        font-size:20px;
+                        color:white;
+                        background:rgba(0,0,0,0.5);
+                        border-radius:50%;
+                        padding:6px 10px;">
+                        ▶
+                    </span>
+                </div>
+                ''',
+                obj.video_thumbnail.url
+            )
+        return "No Thumbnail"
+
+    preview_thumbnail.short_description = "Video Thumbnail"

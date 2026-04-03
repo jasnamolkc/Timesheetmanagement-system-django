@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+{% block title %}Poster Preview{% endblock %}
+
+{% block content %}
+
+<div class="bg-slate-800 border border-slate-700 rounded-xl p-6 shadow-xl">
+
+    <!-- Header -->
+    <div class="flex justify-between items-center mb-6">
+        
+        <!-- Back -->
+        <a href="{% url 'poster_list' %}"
+           class="text-sm text-slate-400 hover:text-white flex items-center gap-1">
+            <i class="fas fa-arrow-left"></i> Back
+        </a>
+
+        <h2 class="text-xl font-semibold text-white">
+            Generated Posters
+        </h2>
+
+        <!-- Download All -->
+        <a href="{% url 'download_all' poster.id %}"
+           class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm">
+            <i class="fas fa-download mr-2"></i> Download All
+        </a>
+    </div>
+
+    <!-- ================= IMAGE POSTERS ================= -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+        {% if poster.instagram_image %}
+        <div class="bg-slate-900 p-4 rounded-lg border border-slate-700">
+            <h3 class="text-sm font-medium mb-3 text-blue-400">Instagram</h3>
+
+            <img src="{{ poster.instagram_image.url }}"
+                 class="w-full h-64 object-cover rounded-lg border border-slate-700">
+
+            <a href="{{ poster.instagram_image.url }}" download
+               class="mt-3 block text-center bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg text-sm">
+                Download
+            </a>
+        </div>
+        {% endif %}
+
+        {% if poster.whatsapp_image %}
+        <div class="bg-slate-900 p-4 rounded-lg border border-slate-700">
+            <h3 class="text-sm font-medium mb-3 text-green-400">WhatsApp</h3>
+
+            <img src="{{ poster.whatsapp_image.url }}"
+                 class="w-full h-64 object-cover rounded-lg border border-slate-700">
+
+            <a href="{{ poster.whatsapp_image.url }}" download
+               class="mt-3 block text-center bg-green-600 hover:bg-green-700 text-white py-2 rounded-lg text-sm">
+                Download
+            </a>
+        </div>
+        {% endif %}
+
+        {% if poster.facebook_image %}
+        <div class="bg-slate-900 p-4 rounded-lg border border-slate-700">
+            <h3 class="text-sm font-medium mb-3 text-indigo-400">Facebook</h3>
+
+            <img src="{{ poster.facebook_image.url }}"
+                 class="w-full h-64 object-cover rounded-lg border border-slate-700">
+
+            <a href="{{ poster.facebook_image.url }}" download
+               class="mt-3 block text-center bg-indigo-600 hover:bg-indigo-700 text-white py-2 rounded-lg text-sm">
+                Download
+            </a>
+
+            <a href="https://wa.me/?text={{ poster.whatsapp_image.url }}" target="_blank"
+               class="block text-center mt-2 text-xs text-green-400 hover:underline">
+                Share on WhatsApp
+            </a>
+        </div>
+        {% endif %}
+
+    </div>
+
+    <!-- ================= DIVIDER ================= -->
+    <hr class="my-8 border-slate-700">
+
+    <!-- ================= VIDEO POSTERS ================= -->
+    <h2 class="text-lg font-semibold text-white mb-4">
+        Video Posters
+    </h2>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+        {% if poster.video_instagram %}
+        <div class="bg-slate-900 p-4 rounded-lg border border-slate-700">
+            <h3 class="text-sm font-medium mb-3 text-blue-400">Instagram Video</h3>
+
+            <video controls class="w-full h-64 object-cover rounded-lg border border-slate-700">
+                <source src="{{ poster.video_instagram.url }}" type="video/mp4">
+            </video>
+
+            <a href="{{ poster.video_instagram.url }}" download
+               class="mt-3 block text-center bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg text-sm">
+                Download
+            </a>
+        </div>
+        {% endif %}
+
+        {% if poster.video_whatsapp %}
+        <div class="bg-slate-900 p-4 rounded-lg border border-slate-700">
+            <h3 class="text-sm font-medium mb-3 text-green-400">WhatsApp Video</h3>
+
+            <video controls class="w-full h-64 object-cover rounded-lg border border-slate-700">
+                <source src="{{ poster.video_whatsapp.url }}" type="video/mp4">
+            </video>
+
+            <a href="{{ poster.video_whatsapp.url }}" download
+               class="mt-3 block text-center bg-green-600 hover:bg-green-700 text-white py-2 rounded-lg text-sm">
+                Download
+            </a>
+        </div>
+        {% endif %}
+
+        {% if poster.video_facebook %}
+        <div class="bg-slate-900 p-4 rounded-lg border border-slate-700">
+            <h3 class="text-sm font-medium mb-3 text-indigo-400">Facebook Video</h3>
+
+            <video controls class="w-full h-64 object-cover rounded-lg border border-slate-700">
+                <source src="{{ poster.video_facebook.url }}" type="video/mp4">
+            </video>
+
+            <a href="{{ poster.video_facebook.url }}" download
+               class="mt-3 block text-center bg-indigo-600 hover:bg-indigo-700 text-white py-2 rounded-lg text-sm">
+                Download
+            </a>
+        </div>
+        {% endif %}
+
+    </div>
+
+</div>
+
+{% endblock %}

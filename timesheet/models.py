@@ -497,9 +497,18 @@ class Poster(models.Model):
     title = models.CharField(max_length=255)
     logo = models.ImageField(upload_to='logos/')
     content_image = models.ImageField(upload_to='content/')
+    content_video = models.FileField(upload_to='videos/content/', null=True, blank=True)
 
+    video_thumbnail = models.ImageField(
+        upload_to='videos/thumbnails/',
+        null=True,
+        blank=True
+    )
     instagram_image = models.ImageField(upload_to='posters/insta/', null=True, blank=True)
     whatsapp_image = models.ImageField(upload_to='posters/whatsapp/', null=True, blank=True)
     facebook_image = models.ImageField(upload_to='posters/facebook/', null=True, blank=True)
-
+     # 🔥 NEW OUTPUT VIDEOS
+    video_instagram = models.FileField(upload_to='videos/insta/', null=True, blank=True)
+    video_whatsapp = models.FileField(upload_to='videos/whatsapp/', null=True, blank=True)
+    video_facebook = models.FileField(upload_to='videos/facebook/', null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)

@@ -109,3 +109,137 @@ def generate_all_posters(poster):
     save_image(facebook, poster.facebook_image, f"facebook_{poster.id}.jpg")
 
     poster.save()
+# from moviepy.editor import VideoFileClip, ImageClip, CompositeVideoClip
+
+# def create_video_poster(poster, width, height, output_name):
+
+#     video = VideoFileClip(poster.content_video.path).resize((width, height))
+
+#     # Logo overlay
+#     logo = (ImageClip(poster.logo.path)
+#             .set_duration(video.duration)
+#             .resize(height=height * 0.15)
+#             .set_position(("right", "bottom")))
+
+#     final = CompositeVideoClip([video, logo])
+
+#     output_path = os.path.join(settings.MEDIA_ROOT, f"videos/{output_name}.mp4")
+#     final.write_videofile(output_path, fps=24)
+
+#     return output_path
+import cv2
+from django.core.files.base import ContentFile
+from io import BytesIO
+from PIL import Image
+
+def generate_video_thumbnail(poster):
+    if not poster.content_video:
+        return
+
+    video_path = poster.content_video.path
+
+    cap = cv2.VideoCapture(video_path)
+    success, frame = cap.read()
+    cap.release()
+
+    if success:
+        # Convert BGR → RGB
+        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+
+        img = Image.fromarray(frame)
+
+        buffer = BytesIO()
+        img.save(buffer, format='JPEG')
+
+        poster.video_thumbnail.save(
+            f"thumb_{poster.id}.jpg",
+            ContentFile(buffer.getvalue()),
+            save=False
+        )
+import cv2
+import numpy as np
+from PIL import Image
+import os
+from django.conf import settings
+
+
+def overlay_logo(frame, logo_np, x, y):
+    h, w = logo_np.shape[:2]
+
+    for c in range(0, 3):
+        frame[y:y+h, x:x+w, c] = (
+            logo_np[:, :, c] * (logo_np[:, :, 3] / 255.0) +
+            frame[y:y+h, x:x+w, c] * (1.0 - logo_np[:, :, 3] / 255.0)
+        )
+
+    return frame
+
+
+def generate_video_with_logo(poster, width, height, filename):
+    video_path = poster.content_video.path
+    logo_path = poster.logo.path
+
+    # Load logo
+    logo = Image.open(logo_path).convert("RGBA")
+
+    # Resize logo (bigger & visible)
+    logo_width = int(width * 0.25)
+    logo_height = int(logo.height * (logo_width / logo.width))
+    logo = logo.resize((logo_width, logo_height))
+
+    logo_np = np.array(logo)
+
+    cap = cv2.VideoCapture(video_path)
+
+    # Output path
+    output_path = os.path.join(settings.MEDIA_ROOT, f"videos/{filename}.mp4")
+
+    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+    out = cv2.VideoWriter(output_path, fourcc, 24, (width, height))
+
+    while True:
+        ret, frame = cap.read()
+        if not ret:
+            break
+
+        # Resize video frame
+        frame = cv2.resize(frame, (width, height))
+
+        # Position logo (bottom-right)
+        x = width - logo_width - 20
+        y = height - logo_height - 20
+
+        frame = overlay_logo(frame, logo_np, x, y)
+
+        # Add title
+        cv2.putText(
+            frame,
+            poster.title,
+            (50, height - 40),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            1,
+            (0, 0, 0),
+            2
+        )
+
+        out.write(frame)
+
+    cap.release()
+    out.release()
+
+    return output_path
+def generate_video_posters(poster):
+    from django.conf import settings
+
+    if not poster.content_video:
+        return
+
+    insta = generate_video_with_logo(poster, 1080, 1080, f"insta_{poster.id}")
+    whatsapp = generate_video_with_logo(poster, 800, 800, f"whatsapp_{poster.id}")
+    facebook = generate_video_with_logo(poster, 1200, 630, f"facebook_{poster.id}")
+
+    poster.video_instagram = insta.replace(settings.MEDIA_ROOT + "/", "")
+    poster.video_whatsapp = whatsapp.replace(settings.MEDIA_ROOT + "/", "")
+    poster.video_facebook = facebook.replace(settings.MEDIA_ROOT + "/", "")
+
+    poster.save()
