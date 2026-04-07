@@ -59,5 +59,8 @@ urlpatterns = [
     path('poster/create/', views.create_poster, name='create_poster'),
     path('poster/<int:pk>/', views.poster_detail, name='poster_detail'),
     path('poster/<int:pk>/download/', views.download_all, name='download_all'),
+
+    path('poster/video/create/', views.create_video_poster, name='create_video_poster'),
+    path('poster/video/<int:pk>/', views.poster_video_detail, name='poster_video_detail'),
     
 ]

@@ -9,9 +9,39 @@
     <div class="flex justify-between items-center mb-6">
         <h2 class="text-xl font-semibold">Poster Generator</h2>
 
-        <a href="{% url 'create_poster' %}"
-           class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg text-white text-sm">
-            + Create Poster
+        <div class="flex gap-2">
+            <a href="{% url 'create_poster' %}"
+               class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg text-white text-sm">
+                + Image Poster
+            </a>
+
+            <a href="{% url 'create_video_poster' %}"
+               class="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-lg text-white text-sm">
+                + Video Poster
+            </a>
+        </div>
+    </div>
+
+    <!-- Toggle -->
+    <div class="mb-4 flex gap-4">
+        <a href="?type=image"
+           class="px-4 py-2 rounded-lg text-sm 
+           {% if request.GET.type != 'video' %}
+               bg-blue-600 text-white
+           {% else %}
+               bg-slate-700 text-slate-300
+           {% endif %}">
+            Image Posters
+        </a>
+
+        <a href="?type=video"
+           class="px-4 py-2 rounded-lg text-sm 
+           {% if request.GET.type == 'video' %}
+               bg-purple-600 text-white
+           {% else %}
+               bg-slate-700 text-slate-300
+           {% endif %}">
+            Video Posters
         </a>
     </div>
 
@@ -19,7 +49,6 @@
     <div class="overflow-x-auto">
         <table class="w-full text-sm text-left text-slate-300">
 
-            <!-- Head -->
             <thead class="text-xs uppercase bg-slate-900 text-slate-400">
                 <tr>
                     <th class="px-4 py-3">Preview</th>
@@ -29,50 +58,85 @@
                 </tr>
             </thead>
 
-            <!-- Body -->
             <tbody>
 
                 {% for poster in posters %}
-                <tr class="border-b border-slate-700 hover:bg-slate-900">
 
-                    <!-- Preview -->
-                    <td class="px-4 py-3">
-                        {% if poster.instagram_image %}
-                            <img src="{{ poster.instagram_image.url }}"
-                                 class="w-16 h-16 object-cover rounded">
+                    {% if request.GET.type == "video" %}
+                        {% if poster.content_video %}
+
+                        <tr class="border-b border-slate-700 hover:bg-slate-900">
+
+                           <td class="px-4 py-3">
+                                {% if poster.video_thumbnail %}
+                                    <div class="relative w-20 h-16">
+                                        <img src="{{ poster.video_thumbnail.url }}"
+                                            class="w-20 h-16 object-cover rounded">
+
+                                        <!-- ▶ Play Icon -->
+                                        <div class="absolute inset-0 flex items-center justify-center">
+                                            <i class="fas fa-play text-white text-xs bg-black/50 px-2 py-1 rounded-full"></i>
+                                        </div>
+                                    </div>
+                                {% else %}
+                                    <span class="text-slate-500 text-xs">No Preview</span>
+                                {% endif %}
+                            </td>
+
+                            <td class="px-4 py-3 text-white">{{ poster.title }}</td>
+
+                            <td class="px-4 py-3">
+                                {{ poster.created_at|date:"M d, Y" }}
+                            </td>
+
+                            <td class="px-4 py-3 text-right space-x-2">
+                                <a href="{% url 'poster_video_detail' poster.id %}"
+                                   class="text-purple-400 text-xs hover:underline">
+                                    View
+                                </a>
+                            </td>
+
+                        </tr>
+
                         {% endif %}
-                    </td>
 
-                    <!-- Title -->
-                    <td class="px-4 py-3 font-medium text-white">
-                        {{ poster.title }}
-                    </td>
+                    {% else %}
+                        {% if poster.instagram_image %}
 
-                    <!-- Date -->
-                    <td class="px-4 py-3">
-                        {{ poster.created_at|date:"M d, Y" }}
-                    </td>
+                        <tr class="border-b border-slate-700 hover:bg-slate-900">
 
-                    <!-- Actions -->
-                    <td class="px-4 py-3 text-right space-x-2">
+                            <td class="px-4 py-3">
+                                <img src="{{ poster.instagram_image.url }}"
+                                     class="w-16 h-16 object-cover rounded">
+                            </td>
 
-                        <a href="{% url 'poster_detail' poster.id %}"
-                           class="text-blue-400 hover:underline text-xs">
-                            View
-                        </a>
+                            <td class="px-4 py-3 text-white">{{ poster.title }}</td>
 
-                        <a href="{% url 'download_all' poster.id %}"
-                           class="text-green-400 hover:underline text-xs">
-                            Download
-                        </a>
+                            <td class="px-4 py-3">
+                                {{ poster.created_at|date:"M d, Y" }}
+                            </td>
 
-                    </td>
+                            <td class="px-4 py-3 text-right space-x-2">
+                                <a href="{% url 'poster_detail' poster.id %}"
+                                   class="text-blue-400 text-xs hover:underline">
+                                    View
+                                </a>
 
-                </tr>
+                                <a href="{% url 'download_all' poster.id %}"
+                                   class="text-green-400 text-xs hover:underline">
+                                    Download
+                                </a>
+                            </td>
+
+                        </tr>
+
+                        {% endif %}
+                    {% endif %}
+
                 {% empty %}
                 <tr>
-                    <td colspan="4" class="px-4 py-6 text-center text-slate-400">
-                        No posters created yet.
+                    <td colspan="4" class="text-center py-6 text-slate-400">
+                        No posters found
                     </td>
                 </tr>
                 {% endfor %}

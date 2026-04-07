@@ -1241,3 +1241,31 @@ def download_all(request, pk):
 def poster_list(request):
     posters = Poster.objects.all().order_by('-id')
     return render(request, 'poster/poster_list.html', {'posters': posters})
+from django.shortcuts import render, redirect
+from .forms import VideoPosterForm
+from .utils import generate_video_posters,generate_video_thumbnail
+
+
+def create_video_poster(request):
+    if request.method == 'POST':
+        form = VideoPosterForm(request.POST, request.FILES)
+
+        if form.is_valid():
+            poster = form.save()
+            # ✅ Generate thumbnail (preview)
+            if poster.content_video:
+                generate_video_thumbnail(poster)
+            # 🔥 Generate video posters
+            generate_video_posters(poster)
+
+            return redirect('poster_video_detail', pk=poster.id)
+        else:
+            print(form.errors)  # DEBUG (remove later)
+
+    else:
+        form = VideoPosterForm()
+
+    return render(request, 'poster/create_video.html', {'form': form})
+def poster_video_detail(request, pk):
+    poster = Poster.objects.get(pk=pk)
+    return render(request, 'poster/poster_video_detail.html', {'poster': poster})
