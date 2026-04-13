@@ -1269,3 +1269,31 @@ def create_video_poster(request):
 def poster_video_detail(request, pk):
     poster = Poster.objects.get(pk=pk)
     return render(request, 'poster/poster_video_detail.html', {'poster': poster})
+def timesheet_day_details(request):
+    employee_id = request.GET.get("employee_id")
+    date = request.GET.get("date")
+
+    qs = TimesheetEntry.objects.select_related("task")
+
+    if employee_id:
+        qs = qs.filter(employee_id=employee_id)
+
+    if date:
+        qs = qs.filter(date=date)
+
+    entries = qs
+
+    data = []
+    total_hours = 0
+
+    for e in entries:
+        data.append({
+            "task": e.task.title,
+            "hours": float(e.hours),
+        })
+        total_hours += float(e.hours)
+
+    return JsonResponse({
+        "tasks": data,
+        "total_hours": total_hours
+    })
