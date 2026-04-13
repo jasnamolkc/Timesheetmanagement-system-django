@@ -253,6 +253,7 @@ function closeSummaryModal() {
     document.getElementById("summaryModal").classList.add("hidden");
 }
 
+
 function loadSummary() {
 
     const empEl = document.getElementById("summaryEmployee");
@@ -264,9 +265,11 @@ function loadSummary() {
         return;
     }
 
-    let url = '/timesheet/day-details/?date=${date}';
+    // ✅ FIXED (use backticks)
+    let url = `/timesheet/day-details/?date=${date}`;
+
     if (employeeId) {
-        url += '&employee_id=${employeeId}';
+        url += `&employee_id=${employeeId}`;
     }
 
     fetch(url)
@@ -277,7 +280,9 @@ function loadSummary() {
         body.innerHTML = "";
 
         if (data.tasks.length === 0) {
-            body.innerHTML = '<tr><td colspan="2" class="text-center text-slate-500 py-3">No data</td></tr>';
+            body.innerHTML = `<tr>
+                <td colspan="2" class="text-center text-slate-500 py-3">No data</td>
+            </tr>`;
         }
 
         data.tasks.forEach(t => {
