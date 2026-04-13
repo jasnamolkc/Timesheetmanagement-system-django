@@ -8,8 +8,12 @@
 
     <button onclick="openModal('{% url 'timesheet_create' %}')"
             class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded flex items-center">
-        <i class="fas fa-plus mr-2"></i> Create 1
+        <i class="fas fa-plus mr-2"></i> Create 
     </button>
+    <button onclick="openSummaryModal()"
+        class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded flex items-center">
+    <i class="fas fa-chart-bar mr-2"></i> Summary
+</button>
 </div>
 
 <div class="flex gap-3 mb-4 flex-wrap">
@@ -93,6 +97,61 @@
         </tbody>
     </table>
 </div>
+<!-- ------------------modal------------ -->
+<!-- ------------------------------ -->
+
+<div id="summaryModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+    <div class="bg-slate-800 rounded-xl p-6 w-full max-w-xl border border-slate-700">
+
+        <!-- Header -->
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-semibold text-white">Timesheet Summary</h3>
+            <button onclick="closeSummaryModal()" class="text-slate-400 hover:text-white">✕</button>
+        </div>
+
+        <!-- Filters -->
+        <div class="flex gap-3 mb-4">
+
+            {% if can_manage %}
+            <select id="summaryEmployee"
+                    class="bg-slate-900 border border-slate-700 text-white px-3 py-2 rounded w-1/2">
+                <option value="">Select Employee</option>
+                {% for emp in all_employees %}
+                    <option value="{{ emp.id }}">{{ emp.user.username }}</option>
+                {% endfor %}
+            </select>
+            {% endif %}
+
+            <input type="date" id="summaryDate"
+                   class="bg-slate-900 border border-slate-700 text-white px-3 py-2 rounded w-1/2">
+        </div>
+
+        <!-- Load Button -->
+        <button onclick="loadSummary()"
+                class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded mb-4">
+            Load Summary
+        </button>
+
+        <!-- Result Table -->
+        <table class="w-full text-sm text-slate-300 mb-4">
+            <thead>
+                <tr class="text-slate-400">
+                    <th class="text-left py-2">Task</th>
+                    <th class="text-right py-2">Hours</th>
+                </tr>
+            </thead>
+            <tbody id="summaryBody"></tbody>
+        </table>
+
+        <!-- Total -->
+        <div class="text-right text-white font-bold">
+            Total: <span id="summaryTotal">0</span> hrs
+        </div>
+
+    </div>
+</div>
+<!-- ------------------modal------------ -->
+<!-- ------------------------------ -->
 
 <!-- Pagination -->
 {% if is_paginated %}
@@ -183,6 +242,55 @@ filter.addEventListener("change", filterTimesheets);
    
 if (employeeFilter) {
     employeeFilter.addEventListener("change", filterTimesheets);
+}
+</script>
+<script>
+function openSummaryModal() {
+    document.getElementById("summaryModal").classList.remove("hidden");
+}
+
+function closeSummaryModal() {
+    document.getElementById("summaryModal").classList.add("hidden");
+}
+
+function loadSummary() {
+
+    const empEl = document.getElementById("summaryEmployee");
+    const employeeId = empEl ? empEl.value : null;
+    const date = document.getElementById("summaryDate").value;
+
+    if (!date) {
+        alert("Select date");
+        return;
+    }
+
+    let url = '/timesheet/day-details/?date=${date}';
+    if (employeeId) {
+        url += '&employee_id=${employeeId}';
+    }
+
+    fetch(url)
+    .then(res => res.json())
+    .then(data => {
+
+        const body = document.getElementById("summaryBody");
+        body.innerHTML = "";
+
+        if (data.tasks.length === 0) {
+            body.innerHTML = '<tr><td colspan="2" class="text-center text-slate-500 py-3">No data</td></tr>';
+        }
+
+        data.tasks.forEach(t => {
+            body.innerHTML += `
+                <tr>
+                    <td class="py-2">${t.task}</td>
+                    <td class="text-right">${t.hours}</td>
+                </tr>
+            `;
+        });
+
+        document.getElementById("summaryTotal").innerText = data.total_hours;
+    });
 }
 </script>
 
