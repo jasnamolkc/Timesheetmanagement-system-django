@@ -102,7 +102,9 @@
 
 <div id="summaryModal"
      class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-    <div class="bg-slate-800 rounded-xl p-6 w-full max-w-xl border border-slate-700">
+    <!-- <div class="bg-slate-800 rounded-xl p-6 w-full max-w-xl border border-slate-700"> -->
+        <div class="bg-slate-800 rounded-xl p-6 w-full max-w-xl border border-slate-700 transform transition-all scale-95 opacity-0"
+     id="summaryContent">
 
         <!-- Header -->
         <div class="flex justify-between items-center mb-4">
@@ -246,14 +248,35 @@ if (employeeFilter) {
 }
 </script>
 <script>
+// function openSummaryModal() {
+//     document.getElementById("summaryModal").classList.remove("hidden");
+// }
+
+// function closeSummaryModal() {
+//     document.getElementById("summaryModal").classList.add("hidden");
+// }
 function openSummaryModal() {
-    document.getElementById("summaryModal").classList.remove("hidden");
+    const modal = document.getElementById("summaryModal");
+    const content = document.getElementById("summaryContent");
+
+    modal.classList.remove("hidden");
+
+    setTimeout(() => {
+        content.classList.remove("scale-95", "opacity-0");
+        content.classList.add("scale-100", "opacity-100");
+    }, 10);
 }
 
 function closeSummaryModal() {
-    document.getElementById("summaryModal").classList.add("hidden");
-}
+    const modal = document.getElementById("summaryModal");
+    const content = document.getElementById("summaryContent");
 
+    content.classList.add("scale-95", "opacity-0");
+
+    setTimeout(() => {
+        modal.classList.add("hidden");
+    }, 200);
+}
 
 function loadSummary() {
 
