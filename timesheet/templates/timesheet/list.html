@@ -118,6 +118,11 @@ const search = document.getElementById("search");
 const filter = document.getElementById("filter");
 const employeeFilter = document.getElementById("employeeFilter");
 const container = document.querySelector("tbody");
+    // Create "No Data" row once
+let noDataRow = document.createElement("tr");
+noDataRow.innerHTML = `<td colspan="9" class="text-center text-slate-500 py-6">No data found</td>`;
+noDataRow.style.display = "none";
+container.appendChild(noDataRow);
 
 function filterTimesheets() {
     const s = search.value.toLowerCase();
@@ -133,8 +138,10 @@ function filterTimesheets() {
         const project = cells[1].innerText.toLowerCase();
         const employee = cells[2].innerText.toLowerCase();
         const task = cells[3].innerText.toLowerCase();
-        const desc = row.querySelector("td:nth-child(8)").innerText.toLowerCase();
-        const billable = row.querySelector("td:nth-child(7)").innerText;
+        // const desc = row.querySelector("td:nth-child(8)").innerText.toLowerCase();
+        // const billable = row.querySelector("td:nth-child(7)").innerText;
+       const billable = cells[7].innerText.trim();
+
         // ✅ Search match
         const matchSearch =
             project.includes(s) ||
@@ -163,11 +170,12 @@ function filterTimesheets() {
         //     row.style.display = "none";
         // }
     });
-
+// ✅ Show/hide "No data"
+    noDataRow.style.display = (visible === 0) ? "" : "none";
     // Show a message if no data
-    if (visible === 0) {
-        container.innerHTML = `<tr><td colspan="9" class='text-center text-slate-500 py-6'>No data found</td></tr>`;
-    }
+    // if (visible === 0) {
+    //     container.innerHTML = `<tr><td colspan="9" class='text-center text-slate-500 py-6'>No data found</td></tr>`;
+    // }
 }
 
 search.addEventListener("keyup", filterTimesheets);
