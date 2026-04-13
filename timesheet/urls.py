@@ -62,5 +62,7 @@ urlpatterns = [
 
     path('poster/video/create/', views.create_video_poster, name='create_video_poster'),
     path('poster/video/<int:pk>/', views.poster_video_detail, name='poster_video_detail'),
+
+    path("timesheet/day-details/",views.timesheet_day_details,name="timesheet_day_details"),
     
 ]
