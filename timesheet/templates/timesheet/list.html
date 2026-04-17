@@ -4,6 +4,10 @@
 {% block content %}
 
 <div class="flex justify-between items-center mb-6">
+    <a href="{% url 'timesheet_filter_list' %}"
+           class="text-sm text-slate-400 hover:text-white flex items-center gap-1">
+            <i class="fas fa-arrow-left"></i> Back
+        </a>
     <h2 class="text-2xl font-bold text-white">Timesheets</h2>
 
     <button onclick="openModal('{% url 'timesheet_create' %}')"
