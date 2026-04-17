@@ -1,15 +1,14 @@
 {% extends "base.html" %}
-{% block title %}Timesheet Summary List{% endblock %}
+{% block title %}Timesheet Report{% endblock %}
 
 {% block content %}
 
 <div class="mb-6">
-    <h2 class="text-2xl font-bold text-white">Timesheet Filter List</h2>
+    <h2 class="text-2xl font-bold text-white">Timesheet Report</h2>
 </div>
 
 <!-- Filters -->
 <div class="flex gap-3 mb-6 flex-wrap">
-
     <input type="date" id="dateFilter"
            class="bg-slate-800 border border-slate-700 text-white px-3 py-2 rounded">
 
@@ -17,7 +16,9 @@
             class="bg-slate-800 border border-slate-700 text-white px-3 py-2 rounded">
         <option value="">All Employees</option>
         {% for emp in all_employees %}
-            <option value="{{ emp.id }}">{{ emp.user.username }}</option>
+            <option value="{{ emp.employee__id }}">
+                {{ emp.employee__user__username }}
+            </option>
         {% endfor %}
     </select>
 
@@ -27,51 +28,67 @@
     </button>
 </div>
 
-<!-- Summary List -->
-<div class="space-y-4">
+<!-- TABLE -->
+<div class="bg-slate-800 border border-slate-700 rounded-xl overflow-x-auto">
 
-    {% for item in grouped_entries %}
-    <div class="bg-slate-800 border border-slate-700 rounded-xl p-4">
+    <table class="w-full text-sm text-slate-300">
 
-        <!-- Header -->
-        <div class="flex justify-between items-center mb-3">
-            <div class="text-white font-semibold">
-                {{ item.date|date:"d M Y" }}
-            </div>
-            <div class="text-slate-300 text-sm">
-                Total Hours:
-                <span class="text-white font-bold">{{ item.total_hours }}</span>
-            </div>
-        </div>
+        <thead class="bg-slate-700 text-slate-400 uppercase text-xs">
+            <tr>
+                <th class="px-4 py-3">Date</th>
+                <th class="px-4 py-3">Employee</th>
+                <th class="px-4 py-3">Projects</th>
+                <th class="px-4 py-3">Tasks</th>
+                <th class="px-4 py-3 text-right">Total Hours</th>
+            </tr>
+        </thead>
 
-        <!-- Employees + Projects -->
-        <div class="text-slate-300 mb-2">
-            <span class="font-semibold text-slate-200">Employees:</span>
-            {{ item.employees|join:", " }}
-        </div>
+        <tbody>
 
-        <div class="text-slate-300 mb-3">
-            <span class="font-semibold text-slate-200">Projects:</span>
-            {{ item.projects|join:", " }}
-        </div>
+            {% for item in grouped_entries %}
+            <tr class="border-b border-slate-700 hover:bg-slate-700/40">
 
-        <!-- Tasks -->
-        <div>
-            <div class="text-slate-200 font-semibold mb-1">Tasks:</div>
-            <ul class="list-disc list-inside text-slate-300 space-y-1">
-                {% for t in item.tasks %}
-                    <li>{{ t }}</li>
-                {% endfor %}
-            </ul>
-        </div>
+                <!-- Date -->
+                <td class="px-4 py-3">
+                    {{ item.date|date:"d M Y" }}
+                </td>
 
-    </div>
-    {% empty %}
-        <div class="text-center text-slate-500 py-10">
-            No records found
-        </div>
-    {% endfor %}
+                <!-- Employee -->
+                <td class="px-4 py-3 font-medium text-white">
+                    {{ item.employee }}
+                </td>
 
+                <!-- Projects -->
+                <td class="px-4 py-3">
+                    {{ item.projects|join:", " }}
+                </td>
+
+                <!-- Tasks -->
+                <td class="px-4 py-3">
+                    <ul class="list-disc list-inside space-y-1">
+                        {% for t in item.tasks %}
+                            <li>{{ t }}</li>
+                        {% endfor %}
+                    </ul>
+                </td>
+
+                <!-- Hours -->
+                <td class="px-4 py-3 text-right font-bold text-blue-400">
+                    {{ item.total_hours }}
+                </td>
+
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="5" class="text-center text-slate-500 py-10">
+                    No records found
+                </td>
+            </tr>
+            {% endfor %}
+
+        </tbody>
+
+    </table>
 </div>
 
 <script>
