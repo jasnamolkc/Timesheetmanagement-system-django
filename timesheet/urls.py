@@ -28,6 +28,7 @@ urlpatterns = [
     path('timesheets/create/', views.TimesheetCreateView.as_view(), name='timesheet_create'),
     path('timesheets/<int:pk>/edit/', views.TimesheetUpdateView.as_view(), name='timesheet_edit'),
     path('timesheets/<int:pk>/delete/', views.TimesheetDeleteView.as_view(), name='timesheet_delete'),
+    path("timesheet/filter-list/",views.timesheet_filter_list,name="timesheet_filter_list"),
 
     # Reports
     path('reports/', views.SummaryReportView.as_view(), name='summary_report'),
