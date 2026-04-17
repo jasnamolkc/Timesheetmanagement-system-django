@@ -1317,28 +1317,28 @@ def timesheet_filter_list(request):
     if employee_id:
         entries = entries.filter(employee_id=employee_id)
 
-    # 📊 Grouping
+    # 📊 Grouping: (date + employee)
     grouped = defaultdict(lambda: {
         "date": None,
-        "employees": set(),
+        "employee": "",
         "projects": set(),
         "tasks": [],
         "total_hours": 0
     })
 
     for e in entries:
-        key = e.date
+        key = (e.date, e.employee.id)
 
         grouped[key]["date"] = e.date
-        grouped[key]["employees"].add(e.employee.user.username)
+        grouped[key]["employee"] = e.employee.user.username
         grouped[key]["projects"].add(e.project.name)
         grouped[key]["tasks"].append(e.task.title)
         grouped[key]["total_hours"] += float(e.hours)
 
     grouped_entries = [
         {
-            "date": k,
-            "employees": list(v["employees"]),
+            "date": k[0],
+            "employee": v["employee"],
             "projects": list(v["projects"]),
             "tasks": v["tasks"],
             "total_hours": v["total_hours"],
@@ -1346,11 +1346,15 @@ def timesheet_filter_list(request):
         for k, v in sorted(grouped.items(), reverse=True)
     ]
 
-    context = {
-        "grouped_entries": grouped_entries,
-        "all_employees": TimesheetEntry.objects.select_related("employee__user")
-                            .values("employee__id", "employee__user__username")
-                            .distinct(),
-    }
+    # 👇 employee dropdown data
+    all_employees = (
+        TimesheetEntry.objects
+        .select_related("employee__user")
+        .values("employee__id", "employee__user__username")
+        .distinct()
+    )
 
-    return render(request, "timesheet/timesheet_filter_list.html", context)
+    return render(request, "timesheet/timesheet_filter_list.html", {
+        "grouped_entries": grouped_entries,
+        "all_employees": all_employees,
+    })
