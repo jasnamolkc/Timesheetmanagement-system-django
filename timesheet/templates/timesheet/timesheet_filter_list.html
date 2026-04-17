@@ -10,6 +10,10 @@
         <i class="fas fa-tasks mr-2"></i>
         View All Tasks
     </a>
+    <button onclick="openModal('{% url 'timesheet_create' %}')"
+            class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded flex items-center">
+        <i class="fas fa-plus mr-2"></i> Create 
+    </button>
 </div>
 
 <!-- Filters -->
@@ -32,10 +36,7 @@
         Filter
     </button>
 </div>
-<button onclick="openModal('{% url 'timesheet_create' %}')"
-            class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded flex items-center">
-        <i class="fas fa-plus mr-2"></i> Create 
-    </button>
+
 <!-- TABLE -->
 <div class="bg-slate-800 border border-slate-700 rounded-xl overflow-x-auto">
 
