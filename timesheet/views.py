@@ -1347,12 +1347,14 @@ def timesheet_filter_list(request):
     ]
 
     # 👇 employee dropdown data
-    all_employees = (
-        TimesheetEntry.objects
-        .select_related("employee__user")
-        .values("employee__id", "employee__user__username")
-        .distinct()
-    )
+    # all_employees = (
+    #     TimesheetEntry.objects
+    #     .select_related("employee__user")
+    #     .values("employee__id", "employee__user__username")
+    #     .distinct()
+    # )
+    all_employees = Employee.objects.select_related("user").filter(
+    is_active=True).order_by("user__username")
 
     return render(request, "timesheet/timesheet_filter_list.html", {
         "grouped_entries": grouped_entries,
