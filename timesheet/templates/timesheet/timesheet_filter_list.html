@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% block title %}Timesheet Summary List{% endblock %}
+
+{% block content %}
+
+<div class="mb-6">
+    <h2 class="text-2xl font-bold text-white">Timesheet Filter List</h2>
+</div>
+
+<!-- Filters -->
+<div class="flex gap-3 mb-6 flex-wrap">
+
+    <input type="date" id="dateFilter"
+           class="bg-slate-800 border border-slate-700 text-white px-3 py-2 rounded">
+
+    <select id="employeeFilter"
+            class="bg-slate-800 border border-slate-700 text-white px-3 py-2 rounded">
+        <option value="">All Employees</option>
+        {% for emp in all_employees %}
+            <option value="{{ emp.id }}">{{ emp.user.username }}</option>
+        {% endfor %}
+    </select>
+
+    <button onclick="applyFilter()"
+            class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
+        Filter
+    </button>
+</div>
+
+<!-- Summary List -->
+<div class="space-y-4">
+
+    {% for item in grouped_entries %}
+    <div class="bg-slate-800 border border-slate-700 rounded-xl p-4">
+
+        <!-- Header -->
+        <div class="flex justify-between items-center mb-3">
+            <div class="text-white font-semibold">
+                {{ item.date|date:"d M Y" }}
+            </div>
+            <div class="text-slate-300 text-sm">
+                Total Hours:
+                <span class="text-white font-bold">{{ item.total_hours }}</span>
+            </div>
+        </div>
+
+        <!-- Employees + Projects -->
+        <div class="text-slate-300 mb-2">
+            <span class="font-semibold text-slate-200">Employees:</span>
+            {{ item.employees|join:", " }}
+        </div>
+
+        <div class="text-slate-300 mb-3">
+            <span class="font-semibold text-slate-200">Projects:</span>
+            {{ item.projects|join:", " }}
+        </div>
+
+        <!-- Tasks -->
+        <div>
+            <div class="text-slate-200 font-semibold mb-1">Tasks:</div>
+            <ul class="list-disc list-inside text-slate-300 space-y-1">
+                {% for t in item.tasks %}
+                    <li>{{ t }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+
+    </div>
+    {% empty %}
+        <div class="text-center text-slate-500 py-10">
+            No records found
+        </div>
+    {% endfor %}
+
+</div>
+
+<script>
+function applyFilter() {
+    const date = document.getElementById("dateFilter").value;
+    const emp = document.getElementById("employeeFilter").value;
+
+    let url = window.location.pathname + "?";
+
+    if (date) url += `date=${date}&`;
+    if (emp) url += `employee=${emp}`;
+
+    window.location.href = url;
+}
+</script>
+
+{% endblock %}
