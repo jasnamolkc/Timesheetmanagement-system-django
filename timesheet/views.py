@@ -1302,22 +1302,37 @@ from collections import defaultdict
 from .models import TimesheetEntry
 
 
+from collections import defaultdict
+from django.shortcuts import render
+from .models import TimesheetEntry, Employee
+
+
 def timesheet_filter_list(request):
     date = request.GET.get("date")
     employee_id = request.GET.get("employee")
+
+    user = request.user
 
     entries = TimesheetEntry.objects.select_related(
         "employee__user", "project", "task"
     ).all()
 
-    # 🔍 Filters
+    # 🔐 ROLE-BASED FILTER
+    if hasattr(user, "employee"):
+        emp = user.employee
+
+        if emp.role == "EMPLOYEE":
+            # 👉 Only their own data
+            entries = entries.filter(employee=emp)
+
+    # 🔍 Filters (only for admin/manager or if dropdown used)
     if date:
         entries = entries.filter(date=date)
 
     if employee_id:
         entries = entries.filter(employee_id=employee_id)
 
-    # 📊 Grouping: (date + employee)
+    # 📊 Grouping
     grouped = defaultdict(lambda: {
         "date": None,
         "employee": "",
@@ -1346,15 +1361,15 @@ def timesheet_filter_list(request):
         for k, v in sorted(grouped.items(), reverse=True)
     ]
 
-    # 👇 employee dropdown data
-    # all_employees = (
-    #     TimesheetEntry.objects
-    #     .select_related("employee__user")
-    #     .values("employee__id", "employee__user__username")
-    #     .distinct()
-    # )
-    all_employees = Employee.objects.select_related("user").filter(
-    is_active=True).order_by("user__username")
+    # 👇 Employee dropdown logic
+    if hasattr(user, "employee") and user.employee.role == "EMPLOYEE":
+        # 👉 Only show themselves
+        all_employees = Employee.objects.filter(id=user.employee.id)
+    else:
+        # 👉 Admin / Manager → all employees
+        all_employees = Employee.objects.select_related("user").filter(
+            is_active=True
+        ).order_by("user__username")
 
     return render(request, "timesheet/timesheet_filter_list.html", {
         "grouped_entries": grouped_entries,
