@@ -221,6 +221,7 @@ class TaskForm(forms.ModelForm):
             "assigned_to",
             "status",
             "estimated_hours",
+            "due_date"
         ]
 
     def __init__(self, *args, **kwargs):
