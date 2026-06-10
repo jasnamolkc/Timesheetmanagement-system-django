@@ -223,6 +223,9 @@ class TaskForm(forms.ModelForm):
             "estimated_hours",
             "due_date"
         ]
+        widgets = {
+            "due_date": forms.DateInput(attrs={"type": "date"}),
+        }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
