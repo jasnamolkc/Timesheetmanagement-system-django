@@ -306,6 +306,10 @@ class Task(models.Model):
         decimal_places=2,
         default=0
     )
+    due_date = models.DateField(
+        null=True,
+        blank=True
+    )
     created_by = models.ForeignKey(
         User,
         on_delete=models.SET_NULL,
