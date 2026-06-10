@@ -323,6 +323,12 @@ class Task(models.Model):
             raise ValidationError(
                 "Milestone must belong to the same project."
             )
+        # Optional: Task due date should not exceed milestone due date
+        if self.milestone and self.due_date:
+            if self.due_date > self.milestone.due_date:
+                raise ValidationError(
+                    "Task due date cannot be later than milestone due date."
+                )
     def save(self, *args, **kwargs):
         self.full_clean()
         super().save(*args, **kwargs)
