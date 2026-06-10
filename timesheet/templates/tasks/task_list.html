@@ -56,7 +56,7 @@
 <th class="p-3 text-left">Title</th>
 <th class="p-3 text-left">Project</th>
 <th class="p-3 text-left">Assigned To</th>
-<!-- <th class="p-3 text-left">Milestone</th> -->
+<th class="p-3 text-left">Due Date</th>
 <th class="p-3 text-left">Status</th>
 <th class="p-3 text-left">Action</th>
 </tr>
@@ -95,6 +95,34 @@ data-status="{{ task.status }}"
 <span class="text-slate-400">No milestone</span>
 {% endif %}
 </td> -->
+    <td class="p-3">
+    {% if task.due_date %}
+        {% now "Y-m-d" as today %}
+
+        {% if task.status != "COMPLETED" and task.due_date|date:"Y-m-d" < today %}
+            <span class="text-red-400 font-medium">
+                {{ task.due_date|date:"d M Y" }}
+                <br>
+                <small class="text-red-500">Overdue</small>
+            </span>
+
+        {% elif task.status != "COMPLETED" and task.due_date|date:"Y-m-d" == today %}
+            <span class="text-yellow-400 font-medium">
+                {{ task.due_date|date:"d M Y" }}
+                <br>
+                <small>Due Today</small>
+            </span>
+
+        {% else %}
+            <span class="text-slate-300">
+                {{ task.due_date|date:"d M Y" }}
+            </span>
+        {% endif %}
+
+    {% else %}
+        <span class="text-slate-500">Not Set</span>
+    {% endif %}
+</td>
 <td class="p-3">
 
 {% if task.status == "COMPLETED" %}
