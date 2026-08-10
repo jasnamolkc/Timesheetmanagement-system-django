@@ -23,11 +23,21 @@ class AjaxTemplateMixin:
 # Permission Mixins
 class AdminRequiredMixin(UserPassesTestMixin):
     def test_func(self):
-        return self.request.user.is_authenticated and hasattr(self.request.user, 'employee') and self.request.user.employee.role == 'ADMIN'
+        user = self.request.user
+        if not user.is_authenticated:
+            return False
+        if user.is_superuser:
+            return True
+        return hasattr(user, 'employee') and user.employee.role == 'ADMIN'
 
 class ManagerRequiredMixin(UserPassesTestMixin):
     def test_func(self):
-        return self.request.user.is_authenticated and hasattr(self.request.user, 'employee') and self.request.user.employee.role in ['ADMIN', 'MANAGER']
+        user = self.request.user
+        if not user.is_authenticated:
+            return False
+        if user.is_superuser:
+            return True
+        return hasattr(user, 'employee') and user.employee.role in ['ADMIN', 'MANAGER']
 
 # Auth Views
 class RegisterView(CreateView):
@@ -65,7 +75,7 @@ class DashboardView(LoginRequiredMixin, TemplateView):
                 end_date__gte=today
             ).select_related('project')
 
-        if self.request.user.employee.role in ['ADMIN', 'MANAGER']:
+        if self.request.user.is_superuser or (employee and employee.role in ['ADMIN', 'MANAGER']):
             context['total_employees_allocated'] = Employee.objects.filter(
                 allocations__end_date__gte=today
             ).distinct().count()
@@ -590,7 +600,11 @@ class SummaryReportView(ManagerRequiredMixin, TemplateView):
             non_billable_hours=Sum('hours', filter=models.Q(billable=False))
         )
 
-        context['employee_summary'] = entries.values('employee__user__first_name', 'employee__user__last_name').annotate(
+        context['employee_summary'] = entries.values(
+            'employee__user__username',
+            'employee__user__first_name',
+            'employee__user__last_name'
+        ).annotate(
             total_hours=Sum('hours')
         )
 
@@ -939,27 +953,18 @@ class TimesheetListView(ListView):
     def get_queryset(self):
         user = self.request.user
         employee = getattr(user, 'employee', None)
-        today = timezone.now().date()
 
         # Base queryset with related objects
         qs = TimesheetEntry.objects.select_related("employee__user", "project", "task")
 
         # Admin / Manager / Superuser → see all entries
-        if not (employee and employee.role == 'EMPLOYEE'):
+        if user.is_superuser or (employee and employee.role in ['ADMIN', 'MANAGER']):
             pass  # leave qs as all entries
-
-        # Employee → filter by their allocated projects
+        elif employee:
+            # Employee → see all their own logged entries
+            qs = qs.filter(employee=employee)
         else:
-            allocated_projects = ProjectAllocation.objects.filter(
-                employee=employee
-            ).filter(
-                Q(end_date__gte=today) | Q(end_date__isnull=True)
-            ).values_list('project_id', flat=True)
-
-            qs = qs.filter(
-                employee=employee,
-                project_id__in=allocated_projects
-            )
+            qs = TimesheetEntry.objects.none()
 
         # Optional project filter from GET
         project_id = self.request.GET.get("project")
@@ -972,20 +977,21 @@ class TimesheetListView(ListView):
         context = super().get_context_data(**kwargs)
         user = self.request.user
         employee = getattr(user, 'employee', None)
-        today = timezone.now().date()
 
         # Projects for filter dropdown
-        if not (employee and employee.role == 'EMPLOYEE'):
+        if user.is_superuser or (employee and employee.role in ['ADMIN', 'MANAGER']):
             context['all_projects'] = Project.objects.filter(is_archived=False)
             context['all_employees'] = Employee.objects.filter(status='APPROVED')
             context['can_manage'] = True
-        else:
+        elif employee:
             allocated_projects = ProjectAllocation.objects.filter(
                 employee=employee
-            ).filter(
-                Q(end_date__gte=today) | Q(end_date__isnull=True)
             ).values_list('project_id', flat=True)
             context['all_projects'] = Project.objects.filter(id__in=allocated_projects, is_archived=False)
+            context['all_employees'] = None
+            context['can_manage'] = False
+        else:
+            context['all_projects'] = Project.objects.none()
             context['all_employees'] = None
             context['can_manage'] = False
 
@@ -1039,11 +1045,44 @@ class TimesheetCreateView(LoginRequiredMixin, CreateView):
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
-        kwargs['employee'] = getattr(self.request.user, "employee", None)
+        employee = getattr(self.request.user, "employee", None)
+        if not employee and self.request.user.is_authenticated:
+            employee, _ = Employee.objects.get_or_create(
+                user=self.request.user,
+                defaults={'role': 'ADMIN', 'status': 'APPROVED'}
+            )
+        kwargs['employee'] = employee
+
+        initial = kwargs.get('initial', {}).copy()
+        if 'task' in self.request.GET:
+            try:
+                task_id = int(self.request.GET.get('task'))
+                initial['task'] = task_id
+                task_obj = Task.objects.select_related('project').filter(id=task_id).first()
+                if task_obj:
+                    initial['project'] = task_obj.project_id
+            except (ValueError, TypeError):
+                pass
+
+        if 'project' in self.request.GET and 'project' not in initial:
+            try:
+                initial['project'] = int(self.request.GET.get('project'))
+            except (ValueError, TypeError):
+                pass
+
+        if 'date' in self.request.GET:
+            initial['date'] = self.request.GET.get('date')
+
+        kwargs['initial'] = initial
         return kwargs
 
     def form_valid(self, form):
         user_employee = getattr(self.request.user, "employee", None)
+        if not user_employee and self.request.user.is_authenticated:
+            user_employee, _ = Employee.objects.get_or_create(
+                user=self.request.user,
+                defaults={'role': 'ADMIN', 'status': 'APPROVED'}
+            )
 
         if not user_employee:
             return JsonResponse({"error": "Employee profile not found"}, status=400)
@@ -1342,12 +1381,17 @@ def timesheet_filter_list(request):
     })
 
     for e in entries:
-        key = (e.date, e.employee.id)
+        emp_id = e.employee.id if e.employee else 0
+        key = (e.date, emp_id)
 
         grouped[key]["date"] = e.date
-        grouped[key]["employee"] = e.employee.user.username
-        grouped[key]["projects"].add(e.project.name)
-        grouped[key]["tasks"].append(e.task.title)
+        grouped[key]["employee"] = e.employee.user.username if (e.employee and hasattr(e.employee, 'user')) else "User"
+        if e.project:
+            grouped[key]["projects"].add(e.project.name)
+        if e.task and e.task.title:
+            grouped[key]["tasks"].append(e.task.title)
+        else:
+            grouped[key]["tasks"].append("General Work")
         grouped[key]["total_hours"] += float(e.hours)
 
     grouped_entries = [
@@ -1374,4 +1418,160 @@ def timesheet_filter_list(request):
     return render(request, "timesheet/timesheet_filter_list.html", {
         "grouped_entries": grouped_entries,
         "all_employees": all_employees,
+    })
+
+
+import calendar
+from datetime import date, datetime
+
+def timesheet_calendar_view(request):
+    user = request.user
+    today = timezone.now().date()
+
+    try:
+        year = int(request.GET.get('year', today.year))
+        month = int(request.GET.get('month', today.month))
+    except (ValueError, TypeError):
+        year = today.year
+        month = today.month
+
+    if month < 1:
+        month = 12
+        year -= 1
+    elif month > 12:
+        month = 1
+        year += 1
+
+    current_employee = getattr(user, 'employee', None)
+    employee_id = request.GET.get('employee')
+
+    entries = TimesheetEntry.objects.select_related('project', 'task', 'employee__user').filter(
+        date__year=year,
+        date__month=month
+    )
+
+    if current_employee and current_employee.role == 'EMPLOYEE':
+        entries = entries.filter(employee=current_employee)
+        selected_employee_id = current_employee.id
+    else:
+        if employee_id and employee_id.isdigit():
+            entries = entries.filter(employee_id=int(employee_id))
+            selected_employee_id = int(employee_id)
+        else:
+            selected_employee_id = current_employee.id if current_employee else None
+
+    # Aggregate daily hours
+    daily_hours = {}
+    for entry in entries:
+        d_str = entry.date.strftime('%Y-%m-%d')
+        daily_hours[d_str] = daily_hours.get(d_str, 0.0) + float(entry.hours or 0)
+
+    # Calendar matrix (weeks starting on Sunday)
+    cal = calendar.Calendar(firstweekday=6) # 6 = Sunday
+    month_days = cal.monthdayscalendar(year, month)
+
+    month_name = calendar.month_name[month]
+    
+    prev_month = 12 if month == 1 else month - 1
+    prev_year = year - 1 if month == 1 else year
+    next_month = 1 if month == 12 else month + 1
+    next_year = year + 1 if month == 12 else year
+
+    total_month_hours = sum(daily_hours.values())
+    logged_days_count = len([h for h in daily_hours.values() if h > 0])
+
+    tot_h_int = int(total_month_hours)
+    tot_m_int = int(round((total_month_hours - tot_h_int) * 60))
+    total_month_hours_formatted = f"{tot_h_int:02d}:{tot_m_int:02d}"
+
+    calendar_weeks = []
+    for week in month_days:
+        week_days = []
+        for day in week:
+            if day == 0:
+                week_days.append(None)
+            else:
+                day_date = date(year, month, day)
+                d_str = day_date.strftime('%Y-%m-%d')
+                hours = daily_hours.get(d_str, 0.0)
+
+                h_int = int(hours)
+                m_int = int(round((hours - h_int) * 60))
+                time_formatted = f"{h_int:02d}:{m_int:02d}"
+
+                weekday_idx = day_date.weekday() # 0=Mon ... 5=Sat, 6=Sun
+                is_weekend = (weekday_idx in [5, 6])
+                is_today = (day_date == today)
+                is_past = (day_date < today)
+
+                week_days.append({
+                    'day': f"{day:02d}",
+                    'day_num': day,
+                    'date_str': d_str,
+                    'hours': hours,
+                    'time_formatted': time_formatted,
+                    'is_weekend': is_weekend,
+                    'is_today': is_today,
+                    'is_past': is_past,
+                    'has_hours': hours > 0,
+                })
+        calendar_weeks.append(week_days)
+
+    all_employees = None
+    if not (current_employee and current_employee.role == 'EMPLOYEE'):
+        all_employees = Employee.objects.select_related('user').filter(is_active=True).order_by('user__username')
+
+    context = {
+        'year': year,
+        'month': month,
+        'month_name': month_name,
+        'prev_month': prev_month,
+        'prev_year': prev_year,
+        'next_month': next_month,
+        'next_year': next_year,
+        'calendar_weeks': calendar_weeks,
+        'total_month_hours': total_month_hours_formatted,
+        'total_month_hours_raw': total_month_hours,
+        'logged_days_count': logged_days_count,
+        'all_employees': all_employees,
+        'selected_employee_id': selected_employee_id,
+        'months_list': [
+            {'num': 1, 'name': 'January'}, {'num': 2, 'name': 'February'},
+            {'num': 3, 'name': 'March'}, {'num': 4, 'name': 'April'},
+            {'num': 5, 'name': 'May'}, {'num': 6, 'name': 'June'},
+            {'num': 7, 'name': 'July'}, {'num': 8, 'name': 'August'},
+            {'num': 9, 'name': 'September'}, {'num': 10, 'name': 'October'},
+            {'num': 11, 'name': 'November'}, {'num': 12, 'name': 'December'}
+        ],
+        'years_list': range(today.year - 2, today.year + 3),
+    }
+
+    return render(request, 'timesheet/calendar.html', context)
+
+
+def timesheet_day_modal_view(request):
+    date_str = request.GET.get('date')
+    employee_id = request.GET.get('employee_id')
+    user = request.user
+
+    entries = TimesheetEntry.objects.select_related('project', 'task', 'employee__user')
+
+    if date_str:
+        entries = entries.filter(date=date_str)
+
+    if hasattr(user, 'employee') and user.employee.role == 'EMPLOYEE':
+        entries = entries.filter(employee=user.employee)
+    elif employee_id and employee_id.isdigit():
+        entries = entries.filter(employee_id=int(employee_id))
+
+    total_hours = sum(float(e.hours or 0) for e in entries)
+    tot_h_int = int(total_hours)
+    tot_m_int = int(round((total_hours - tot_h_int) * 60))
+    total_hours_formatted = f"{tot_h_int:02d}:{tot_m_int:02d}"
+
+    return render(request, 'timesheet/day_modal.html', {
+        'date_str': date_str,
+        'entries': entries,
+        'total_hours': total_hours,
+        'total_hours_formatted': total_hours_formatted,
     })

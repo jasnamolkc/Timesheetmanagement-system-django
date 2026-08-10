@@ -1,0 +1,24 @@
+{
+  "name": "timesheet",
+  "version": "1.0.0",
+  "description": "A production-ready Timesheet Management System built with Django and Tailwind CSS.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jasnamolkc/Timesheetmanagement-system-django.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/jasnamolkc/Timesheetmanagement-system-django/issues"
+  },
+  "homepage": "https://github.com/jasnamolkc/Timesheetmanagement-system-django#readme",
+  "dependencies": {
+    "@tailwindcss/cli": "^4.3.3",
+    "tailwindcss": "^4.3.3"
+  }
+}

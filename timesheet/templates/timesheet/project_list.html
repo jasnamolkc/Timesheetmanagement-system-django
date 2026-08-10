@@ -3,16 +3,20 @@
 {% block title %}Projects{% endblock %}
 
 {% block content %}
-<div class="flex justify-between items-center mb-8">
+<div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
     <div>
-        <h2 class="text-3xl font-bold">Projects</h2>
-        <div class="mt-2 flex space-x-4">
-            <a href="{% url 'project_list' %}" class="text-sm {% if not show_archived %}text-blue-400 font-bold{% else %}text-slate-400 hover:text-slate-300{% endif %}">Active</a>
-            <a href="{% url 'project_list' %}?archived=1" class="text-sm {% if show_archived %}text-blue-400 font-bold{% else %}text-slate-400 hover:text-slate-300{% endif %}">Archived</a>
+        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">Projects</h2>
+        <div class="mt-2 flex space-x-2 bg-slate-200/60 p-1 rounded-xl w-fit">
+            <a href="{% url 'project_list' %}" class="px-3 py-1.5 text-xs font-semibold rounded-lg transition-all {% if not show_archived %}bg-white text-blue-600 shadow-xs{% else %}text-slate-600 hover:text-slate-900{% endif %}">
+                Active Projects
+            </a>
+            <a href="{% url 'project_list' %}?archived=1" class="px-3 py-1.5 text-xs font-semibold rounded-lg transition-all {% if show_archived %}bg-white text-blue-600 shadow-xs{% else %}text-slate-600 hover:text-slate-900{% endif %}">
+                Archived Projects
+            </a>
         </div>
     </div>
     {% if request.user.is_superuser or request.user.employee.role == 'ADMIN' or request.user.employee.role == 'MANAGER' %}
-    <a href="{% url 'project_create' %}" onclick="openModal(this.href); return false;" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-semibold transition-colors flex items-center">
+    <a href="{% url 'project_create' %}" onclick="openModal(this.href); return false;" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl font-semibold shadow-sm transition-all hover:shadow-md flex items-center text-sm">
         <i class="fas fa-plus mr-2"></i> New Project
     </a>
     {% endif %}
@@ -20,112 +24,97 @@
 
 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
     {% for project in projects %}
-    <div class="bg-slate-800 rounded-2xl border border-slate-700 p-6 shadow-xl hover:border-blue-500/50 transition-all group">
-        <div class="flex justify-between items-start mb-4">
-            <span class="px-3 py-1 text-xs font-bold rounded-full
-                {% if project.status == 'ACTIVE' %}bg-emerald-500/10 text-emerald-500
-                {% elif project.status == 'PLANNING' %}bg-blue-500/10 text-blue-500
-                {% else %}bg-slate-500/10 text-slate-500{% endif %}">
-                {{ project.status }}
-            </span>
-            <span class="text-xs text-slate-500 font-mono">{{ project.project_code }}</span>
+    <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-xs hover:shadow-md hover:border-blue-300 transition-all flex flex-col justify-between group">
+        <div>
+            <div class="flex justify-between items-center mb-4">
+                <span class="px-2.5 py-1 text-xs font-semibold rounded-lg border
+                    {% if project.status == 'ACTIVE' %}bg-emerald-50 text-emerald-700 border-emerald-200
+                    {% elif project.status == 'PLANNING' %}bg-blue-50 text-blue-700 border-blue-200
+                    {% else %}bg-slate-100 text-slate-700 border-slate-200{% endif %}">
+                    {{ project.status }}
+                </span>
+                <span class="text-xs text-slate-400 font-mono bg-slate-50 px-2 py-0.5 rounded border border-slate-100">{{ project.project_code }}</span>
+            </div>
+
+            <h3 class="text-lg font-bold text-slate-900 mb-2 group-hover:text-blue-600 transition-colors line-clamp-1">{{ project.name }}</h3>
+            <p class="text-slate-500 text-sm mb-6 line-clamp-2 min-h-[2.5rem]">{{ project.description|default:"No description provided." }}</p>
         </div>
 
-        <h3 class="text-xl font-bold mb-2 group-hover:text-blue-400 transition-colors">{{ project.name }}</h3>
-        <p class="text-slate-400 text-sm mb-6 line-clamp-2">{{ project.description }}</p>
-
-        <div class="flex items-center justify-between pt-4 border-t border-slate-700/50">
-            <!-- <div class="flex items-center text-slate-400 text-xs">
-                <i class="fas fa-users mr-2"></i> {{ project.allocated_employees_count }} Assigned
-            </div> -->
-           <div class="relative group flex items-center text-slate-400 text-xs">
-                <i class="fas fa-users mr-2"></i>
-                {{ project.allocated_employees_count }} Assigned{{today}}
-                <div class="absolute bottom-full left-0 mb-2 hidden group-hover:block
-                    bg-slate-900 text-white text-xs px-3 py-2 rounded shadow-lg whitespace-pre-line z-10">
-                    
-                   {% if project.active_allocs %}
-                    {% for alloc in project.active_allocs %}
-                        <span class="block">{{ alloc.employee.user.username }}</span>
-                    {% endfor %}
+        <div class="flex items-center justify-between pt-4 border-t border-slate-100">
+            <div class="relative group/tooltip flex items-center text-slate-500 text-xs">
+                <i class="fas fa-users mr-1.5 text-slate-400"></i>
+                <span class="font-medium text-slate-700">{{ project.allocated_employees_count }}</span> Assigned
+                <div class="absolute bottom-full left-0 mb-2 hidden group-hover/tooltip:block
+                    bg-slate-900 text-white text-xs px-3 py-2 rounded-lg shadow-xl whitespace-pre-line z-20">
+                    {% if project.active_allocs %}
+                        {% for alloc in project.active_allocs %}
+                            <span class="block">{{ alloc.employee.user.username }}</span>
+                        {% endfor %}
                     {% else %}
                         <span>No employees assigned</span>
                     {% endif %}
                 </div>
             </div>
+
             {% if request.user.is_superuser or request.user.employee.role == 'ADMIN' or request.user.employee.role == 'MANAGER' %}
-            <div class="flex space-x-2">
-                <a href="{% url 'project_documents' project.pk %}"
-                class="flex items-center text-slate-400 text-xs hover:text-purple-400 transition">
-
-                    <i class="fas fa-file-alt mr-2"></i>
-
-                    
+            <div class="flex items-center space-x-1">
+                <a href="{% url 'project_documents' project.pk %}" title="Documents"
+                   class="p-2 text-slate-400 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-colors">
+                    <i class="fas fa-file-alt"></i>
                 </a>
-                <a href="{% url 'project_milestones' project.pk %}"
-                class="flex items-center text-slate-400 text-xs hover:text-blue-400 transition">
-
-                    <i class="fas fa-flag-checkered mr-2"></i>
-
-                    {{ project.milestone_count }} 
+                <a href="{% url 'project_milestones' project.pk %}" title="Milestones"
+                   class="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors flex items-center text-xs">
+                    <i class="fas fa-flag-checkered mr-1"></i>
+                    <span>{{ project.milestone_count }}</span>
                 </a>
                 <a href="{% url 'allocate_employee' project.pk %}" 
-                    onclick="openModal(this.href); return false;"
-                    class="p-2 text-slate-400 hover:text-green-400">
-                        <i class="fas fa-user-plus"></i>
-                    </a>
-                <a href="{% url 'project_edit' project.pk %}" onclick="openModal(this.href); return false;" title="Edit Project" class="p-2 text-slate-400 hover:text-blue-400 transition-colors">
+                   onclick="openModal(this.href); return false;" title="Allocate Employee"
+                   class="p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors">
+                    <i class="fas fa-user-plus"></i>
+                </a>
+                <a href="{% url 'project_edit' project.pk %}" onclick="openModal(this.href); return false;" title="Edit Project" 
+                   class="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
                     <i class="fas fa-edit"></i>
                 </a>
-                <!-- <form action="{% url 'project_archive' project.pk %}" method="post" class="inline">
+                <form id="archive-form-{{ project.pk }}" action="{% url 'project_archive' project.pk %}" method="post" class="inline">
                     {% csrf_token %}
-                    <button type="submit" title="{% if project.is_archived %}Unarchive{% else %}Archive{% endif %} Project" class="p-2 text-slate-400 hover:text-amber-400 transition-colors">
+                    <button type="button" title="{% if project.is_archived %}Unarchive{% else %}Archive{% endif %} Project"
+                        onclick="openArchiveModal('{{ project.pk }}', '{{ project.name }}', '{{ project.is_archived }}')"
+                        class="p-2 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors">
                         <i class="fas {% if project.is_archived %}fa-box-open{% else %}fa-archive{% endif %}"></i>
                     </button>
-                </form> -->
-                <!-- <form action="{% url 'project_archive' project.pk %}" method="post" class="inline"
-      onsubmit="return confirm('Are you sure you want to {% if project.is_archived %}unarchive{% else %}archive{% endif %} this project?');">
-    {% csrf_token %}
-    <button type="submit"
-        class="p-2 text-slate-400 hover:text-amber-400 transition-colors">
-        <i class="fas {% if project.is_archived %}fa-box-open{% else %}fa-archive{% endif %}"></i>
-    </button>
-</form> -->
-<form id="archive-form-{{ project.pk }}" action="{% url 'project_archive' project.pk %}" method="post" class="inline">
-    {% csrf_token %}
-    <button type="button"
-        onclick="openArchiveModal('{{ project.pk }}', '{{ project.name }}', '{{ project.is_archived }}')"
-        class="p-2 text-slate-400 hover:text-amber-400 transition-colors">
-        <i class="fas {% if project.is_archived %}fa-box-open{% else %}fa-archive{% endif %}"></i>
-    </button>
-</form><div id="archiveModal" class="fixed inset-0 hidden items-center justify-center bg-black bg-opacity-50 z-50">
-    <div class="bg-slate-800 p-6 rounded-xl w-full max-w-md shadow-xl">
-        <h3 class="text-lg font-bold text-white mb-4">Confirm Action</h3>
-        
-        <p id="archiveMessage" class="text-slate-300 mb-6"></p>
-
-        <div class="flex justify-end gap-3">
-            <button onclick="closeArchiveModal()"
-                class="px-4 py-2 bg-slate-600 rounded-lg text-white hover:bg-slate-500">
-                Cancel
-            </button>
-            <button id="confirmArchiveBtn"
-                class="px-4 py-2 bg-amber-600 rounded-lg text-white hover:bg-amber-700">
-                Confirm
-            </button>
-        </div>
-    </div>
-</div>
+                </form>
             </div>
             {% endif %}
         </div>
     </div>
     {% empty %}
-    <div class="col-span-full py-20 text-center bg-slate-800 rounded-2xl border border-dashed border-slate-700">
-        <i class="fas fa-folder-open text-4xl text-slate-600 mb-4"></i>
-        <p class="text-slate-500">No projects found.</p>
+    <div class="col-span-full py-16 text-center bg-white rounded-2xl border border-dashed border-slate-300">
+        <div class="w-12 h-12 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center mx-auto mb-3">
+            <i class="fas fa-folder-open text-xl"></i>
+        </div>
+        <h3 class="text-base font-semibold text-slate-800">No projects found</h3>
+        <p class="text-slate-400 text-sm mt-1">Get started by creating a new project above.</p>
     </div>
     {% endfor %}
+</div>
+
+<!-- Modal dialog for archive confirmation -->
+<div id="archiveModal" class="fixed inset-0 hidden items-center justify-center bg-slate-900/40 backdrop-blur-xs z-50 p-4">
+    <div class="bg-white p-6 rounded-2xl w-full max-w-md shadow-2xl border border-slate-200">
+        <h3 class="text-lg font-bold text-slate-900 mb-2">Confirm Action</h3>
+        <p id="archiveMessage" class="text-slate-600 text-sm mb-6"></p>
+        <div class="flex justify-end gap-3">
+            <button onclick="closeArchiveModal()"
+                class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-semibold rounded-xl transition-colors">
+                Cancel
+            </button>
+            <button id="confirmArchiveBtn"
+                class="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white text-sm font-semibold rounded-xl shadow-xs transition-colors">
+                Confirm
+            </button>
+        </div>
+    </div>
 </div>
 
 <!-- Pagination -->
@@ -133,11 +122,11 @@
 <div class="mt-8 flex justify-center">
     <nav class="flex space-x-2">
         {% if page_obj.has_previous %}
-        <a href="?page={{ page_obj.previous_page_number }}" class="px-4 py-2 bg-slate-800 border border-slate-700 rounded-lg hover:bg-slate-700 transition-colors">Previous</a>
+        <a href="?page={{ page_obj.previous_page_number }}" class="px-4 py-2 bg-white border border-slate-200 text-slate-700 text-sm font-medium rounded-xl hover:bg-slate-50 transition-colors">Previous</a>
         {% endif %}
-        <span class="px-4 py-2 bg-blue-600 rounded-lg">{{ page_obj.number }}</span>
+        <span class="px-4 py-2 bg-blue-600 text-white text-sm font-bold rounded-xl shadow-xs">{{ page_obj.number }}</span>
         {% if page_obj.has_next %}
-        <a href="?page={{ page_obj.next_page_number }}" class="px-4 py-2 bg-slate-800 border border-slate-700 rounded-lg hover:bg-slate-700 transition-colors">Next</a>
+        <a href="?page={{ page_obj.next_page_number }}" class="px-4 py-2 bg-white border border-slate-200 text-slate-700 text-sm font-medium rounded-xl hover:bg-slate-50 transition-colors">Next</a>
         {% endif %}
     </nav>
 </div>

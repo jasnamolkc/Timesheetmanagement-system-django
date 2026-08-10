@@ -407,59 +407,74 @@ class TimesheetEntry(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def clean(self):
+        try:
+            emp = self.employee
+        except Exception:
+            emp = None
 
-        # ✅ Skip allocation check for Admin / Manager
-        if self.employee.role not in ['ADMIN', 'MANAGER'] and not self.employee.user.is_superuser:
-        
-            is_allocated = ProjectAllocation.objects.filter(
-                employee=self.employee,
-                project=self.project,
-                start_date__lte=self.date
-            ).filter(
-                Q(end_date__gte=self.date) | Q(end_date__isnull=True)
-            ).exists()
-        
-            if not is_allocated:
-                raise ValidationError(
-                    f"Employee not allocated to project {self.project.project_code}"
-                )
+        try:
+            proj = self.project
+        except Exception:
+            proj = None
+
+        try:
+            tsk = self.task
+        except Exception:
+            tsk = None
+
+        if emp and proj:
+            is_super = getattr(getattr(emp, 'user', None), 'is_superuser', False)
+            emp_role = getattr(emp, 'role', '')
+
+            # ✅ Skip allocation check for Admin / Manager / Superuser
+            if emp_role not in ['ADMIN', 'MANAGER'] and not is_super:
+                if self.date:
+                    is_allocated = ProjectAllocation.objects.filter(
+                        employee=emp,
+                        project=proj,
+                        start_date__lte=self.date
+                    ).filter(
+                        Q(end_date__gte=self.date) | Q(end_date__isnull=True)
+                    ).exists()
+
+                    if not is_allocated:
+                        code = proj.project_code if proj else ''
+                        raise ValidationError(
+                            f"Employee not allocated to project {code}"
+                        )
 
         # Prevent logging for completed project
-        if self.project.status == "COMPLETED":
-            raise ValidationError(
-                "Cannot log time for completed project."
-            )
+        if proj and proj.status == "COMPLETED":
+            raise ValidationError("Cannot log time for completed project.")
 
         # Prevent logging for archived project
-        if self.project.is_archived:
-            raise ValidationError(
-                "Cannot log time for archived project."
-            )
+        if proj and proj.is_archived:
+            raise ValidationError("Cannot log time for archived project.")
 
         # Check task belongs to project
-        if self.task and self.task.project != self.project:
-            raise ValidationError(
-                "Selected task does not belong to this project."
-            )
+        if tsk and proj and tsk.project_id != proj.id:
+            raise ValidationError("Selected task does not belong to this project.")
 
         # Check daily hours limit
-        existing_hours = TimesheetEntry.objects.filter(
-            employee=self.employee,
-            date=self.date
-        ).exclude(pk=self.pk).aggregate(
-            total_hours=Sum('hours')
-        )['total_hours'] or 0
+        if emp and self.date:
+            existing_hours = TimesheetEntry.objects.filter(
+                employee=emp,
+                date=self.date
+            ).exclude(pk=self.pk).aggregate(
+                total_hours=Sum('hours')
+            )['total_hours'] or 0
 
-        # Ensure self.hours is not None
-        hours_to_add = self.hours or 0
+            hours_to_add = self.hours or 0
 
-        if existing_hours + hours_to_add > 12:
-            raise ValidationError(
-                "Total hours for this day cannot exceed 12."
-        )
-        if self.date > timezone.now().date():
-            raise ValidationError("Cannot log timesheet for future date.")
-        if self.task and self.task.status == "COMPLETED":
+            if existing_hours + hours_to_add > 12:
+                raise ValidationError("Total hours for this day cannot exceed 12.")
+
+        if self.date:
+            d_val = self.date.date() if hasattr(self.date, 'date') else self.date
+            if d_val > timezone.now().date():
+                raise ValidationError("Cannot log timesheet for future date.")
+
+        if tsk and tsk.status == "COMPLETED":
             raise ValidationError("Cannot log hours for completed task.")
 
     def save(self, *args, **kwargs):

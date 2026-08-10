@@ -26,9 +26,12 @@ urlpatterns = [
     # Timesheets
     path('timesheets/', views.TimesheetListView.as_view(), name='timesheet_list'),
     path('timesheets/create/', views.TimesheetCreateView.as_view(), name='timesheet_create'),
+    path('timesheet/create/', views.TimesheetCreateView.as_view()),
     path('timesheets/<int:pk>/edit/', views.TimesheetUpdateView.as_view(), name='timesheet_edit'),
     path('timesheets/<int:pk>/delete/', views.TimesheetDeleteView.as_view(), name='timesheet_delete'),
-    path("timesheet/filter-list/",views.timesheet_filter_list,name="timesheet_filter_list"),
+    path("timesheet/filter-list/", views.timesheet_filter_list, name="timesheet_filter_list"),
+    path("timesheet/calendar/", views.timesheet_calendar_view, name="timesheet_calendar"),
+    path("timesheet/day-modal/", views.timesheet_day_modal_view, name="timesheet_day_modal"),
 
     # Reports
     path('reports/', views.SummaryReportView.as_view(), name='summary_report'),

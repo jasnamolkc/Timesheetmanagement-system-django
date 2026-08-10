@@ -1,97 +1,172 @@
 <!DOCTYPE html>
-<html lang="en" class="h-full" style="background-color: #0f172a;">
+<html lang="en" class="h-full bg-slate-50">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CodeClock - {% block title %}{% endblock %}</title>
     {% load static %}
-<link rel="icon" type="image/x-icon" sizes="16x16" href="{% static 'img/favicon.png' %}?v=2">
+    <link rel="icon" type="image/x-icon" sizes="16x16" href="{% static 'img/favicon.png' %}?v=2">
     <link rel="stylesheet" href="{% static 'css/output.css' %}">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-        body { font-family: 'Inter', sans-serif; background-color: #0f172a; }
-        .sidebar-active { background: linear-gradient(90deg, rgba(59, 130, 246, 0.2) 0%, rgba(59, 130, 246, 0) 100%); border-left: 4px solid #3b82f6; }
-        .bg-dark-navy { background-color: #0f172a; }
-        .bg-slate-800 { background-color: #1e293b; }
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; color: #0f172a; }
+        .sidebar-active { background-color: #3F5247 !important; color: #ffffff !important; border-left: 4px solid #8FA89B !important; font-weight: 600; }
+        .sidebar-active i { color: #A7C1B3 !important; }
+        .bg-light-canvas { background-color: #f8fafc; }
     </style>
-   
 </head>
-<body class="h-full text-slate-200 bg-dark-navy">
-    <div class="flex h-full">
-        <!-- Sidebar -->
-        <aside class="w-64 bg-slate-800 border-r border-slate-700 flex-shrink-0 shadow-2xl">
-           <div class="p-6">
-    <div class="flex items-center gap-3 py-3">
-        
-        <!-- Logo -->
-        <img src="{% static 'img/timesheet-icon.png' %}" 
-             alt="CodeClock"
-             class="h-10 w-10 object-contain">
+<body class="h-full text-slate-800 bg-slate-50 antialiased flex flex-col min-h-screen">
 
-        <!-- Brand Text -->
-        <span class="text-base font-semibold tracking-tight text-slate-200">
-            CodeClock
-        </span>
+    <!-- Mobile Top Navigation Bar -->
+    <header class="lg:hidden bg-[#2A3830] border-b border-[#38493F] px-4 py-3 flex items-center justify-between sticky top-0 z-40 shadow-xs">
+        <div class="flex items-center space-x-3">
+            <button id="mobile-menu-btn" type="button" onclick="toggleMobileMenu()" class="p-2 text-[#BAC7C0] hover:text-white hover:bg-[#35463C] rounded-lg focus:outline-none transition-colors">
+                <i class="fas fa-bars text-xl"></i>
+            </button>
+            <div class="flex items-center space-x-2">
+                <img src="{% static 'img/timesheet-icon.png' %}" alt="CodeClock" class="h-8 w-8 object-contain">
+                <span class="font-bold text-[#F0F5F2] text-lg tracking-tight">CodeClock</span>
+            </div>
+        </div>
+        <div class="flex items-center space-x-2">
+            <div class="w-8 h-8 rounded-full bg-[#3F5247] flex items-center justify-center text-xs font-bold text-[#F0F5F2] shadow-xs border border-[#4F6759]">
+                {{ request.user.username|slice:":2"|upper }}
+            </div>
+        </div>
+    </header>
 
-    </div>
-</div>
-            
-            <nav class="mt-6 px-4 space-y-2">
-                <a href="{% url 'dashboard' %}" class="flex items-center px-4 py-3 text-sm font-medium rounded-lg hover:bg-slate-700 transition-colors {% if request.resolver_match.url_name == 'dashboard' %}sidebar-active text-blue-400{% endif %}">
-                    <i class="fas fa-chart-line mr-3 w-5"></i> Dashboard
+    <!-- Mobile Sidebar Drawer Overlay -->
+    <div id="mobile-sidebar-backdrop" onclick="toggleMobileMenu()" class="hidden fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50 transition-opacity lg:hidden"></div>
+
+    <!-- Mobile Sidebar Off-Canvas Drawer -->
+    <aside id="mobile-sidebar-drawer" class="hidden fixed inset-y-0 left-0 w-64 bg-[#2A3830] border-r border-[#38493F] z-50 flex flex-col justify-between shadow-2xl transition-transform duration-300 lg:hidden">
+        <div>
+            <div class="p-6 border-b border-[#38493F] flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <img src="{% static 'img/timesheet-icon.png' %}" alt="CodeClock" class="h-9 w-9 object-contain">
+                    <span class="text-lg font-bold text-[#F0F5F2] tracking-tight">CodeClock</span>
+                </div>
+                <button type="button" onclick="toggleMobileMenu()" class="p-2 text-[#BAC7C0] hover:text-white hover:bg-[#35463C] rounded-lg">
+                    <i class="fas fa-times text-lg"></i>
+                </button>
+            </div>
+            <nav class="mt-4 px-4 space-y-1.5">
+                <a href="{% url 'dashboard' %}" class="flex items-center px-4 py-3 text-sm font-medium rounded-xl text-[#BAC7C0] hover:bg-[#35463C] hover:text-white transition-colors {% if request.resolver_match.url_name == 'dashboard' %}sidebar-active{% endif %}">
+                    <i class="fas fa-chart-line mr-3 w-5 text-center text-[#8FA89B]"></i> Dashboard
                 </a>
-                <a href="{% url 'project_list' %}" class="flex items-center px-4 py-3 text-sm font-medium rounded-lg hover:bg-slate-700 transition-colors {% if 'project' in request.path %}sidebar-active text-blue-400{% endif %}">
-                    <i class="fas fa-project-diagram mr-3 w-5"></i> Projects
+                <a href="{% url 'project_list' %}" class="flex items-center px-4 py-3 text-sm font-medium rounded-xl text-[#BAC7C0] hover:bg-[#35463C] hover:text-white transition-colors {% if 'project' in request.path %}sidebar-active{% endif %}">
+                    <i class="fas fa-project-diagram mr-3 w-5 text-center text-[#8FA89B]"></i> Projects
                 </a>
-                <a href="{% url 'milestone_list' %}"
-                class="flex items-center px-4 py-3 text-sm font-medium rounded-lg hover:bg-slate-700 transition-colors {% if 'milestone' in request.path %}sidebar-active text-blue-400{% endif %}">
-                <i class="fas fa-flag-checkered mr-3 w-5"></i> Milestones
+                <a href="{% url 'milestone_list' %}" class="flex items-center px-4 py-3 text-sm font-medium rounded-xl text-[#BAC7C0] hover:bg-[#35463C] hover:text-white transition-colors {% if 'milestone' in request.path %}sidebar-active{% endif %}">
+                    <i class="fas fa-flag-checkered mr-3 w-5 text-center text-[#8FA89B]"></i> Milestones
                 </a>
-                <a href="{% url 'task_page' %}" 
-                class="flex items-center px-4 py-3 text-sm font-medium rounded-lg hover:bg-slate-700 transition-colors {% if 'task' in request.path %}sidebar-active text-blue-400{% endif %}">
-                <i class="fas fa-tasks mr-3 w-5"></i> Tasks
+                <a href="{% url 'task_page' %}" class="flex items-center px-4 py-3 text-sm font-medium rounded-xl text-[#BAC7C0] hover:bg-[#35463C] hover:text-white transition-colors {% if 'task' in request.path %}sidebar-active{% endif %}">
+                    <i class="fas fa-tasks mr-3 w-5 text-center text-[#8FA89B]"></i> Tasks
                 </a>
                 {% if request.user.is_superuser or request.user.employee.role == 'ADMIN' or request.user.employee.role == 'MANAGER' %}
-                <a href="{% url 'allocation_list' %}" class="flex items-center px-4 py-3 text-sm font-medium rounded-lg hover:bg-slate-700 transition-colors {% if 'allocation' in request.path %}sidebar-active text-blue-400{% endif %}">
-                    <i class="fas fa-user-tag mr-3 w-5"></i> Allocations
+                <a href="{% url 'allocation_list' %}" class="flex items-center px-4 py-3 text-sm font-medium rounded-xl text-[#BAC7C0] hover:bg-[#35463C] hover:text-white transition-colors {% if 'allocation' in request.path %}sidebar-active{% endif %}">
+                    <i class="fas fa-user-tag mr-3 w-5 text-center text-[#8FA89B]"></i> Allocations
                 </a>
                 {% endif %}
-                <a href="{% url 'timesheet_filter_list' %}" class="flex items-center px-4 py-3 text-sm font-medium rounded-lg hover:bg-slate-700 transition-colors {% if 'timesheet' in request.path %}sidebar-active text-blue-400{% endif %}">
-                    <i class="fas fa-clock mr-3 w-5"></i> Timesheets
+                <a href="{% url 'timesheet_filter_list' %}" class="flex items-center px-4 py-3 text-sm font-medium rounded-xl text-[#BAC7C0] hover:bg-[#35463C] hover:text-white transition-colors {% if 'timesheet' in request.path and 'calendar' not in request.path %}sidebar-active{% endif %}">
+                    <i class="fas fa-clock mr-3 w-5 text-center text-[#8FA89B]"></i> Timesheets
+                </a>
+                <a href="{% url 'timesheet_calendar' %}" class="flex items-center px-4 py-3 text-sm font-medium rounded-xl text-[#BAC7C0] hover:bg-[#35463C] hover:text-white transition-colors {% if 'calendar' in request.path %}sidebar-active{% endif %}">
+                    <i class="fas fa-calendar-alt mr-3 w-5 text-center text-[#8FA89B]"></i> Calendar Summary
                 </a>
                 {% if request.user.is_superuser or request.user.employee.role == 'ADMIN' or request.user.employee.role == 'MANAGER' %}
-
-                <a href="{% url 'employee_list' %}"
-                class="flex items-center px-4 py-3 text-sm font-medium rounded-lg hover:bg-slate-700
-                {% if 'employees' in request.path %}sidebar-active text-blue-400{% endif %}">
-                <i class="fas fa-users mr-3 w-5"></i> Employees
+                <a href="{% url 'employee_list' %}" class="flex items-center px-4 py-3 text-sm font-medium rounded-xl text-[#BAC7C0] hover:bg-[#35463C] hover:text-white transition-colors {% if 'employees' in request.path %}sidebar-active{% endif %}">
+                    <i class="fas fa-users mr-3 w-5 text-center text-[#8FA89B]"></i> Employees
                 </a>
-                {% endif %}
-
-                {% if request.user.is_superuser or request.user.employee.role == 'ADMIN' or request.user.employee.role == 'MANAGER' %}
-                <a href="{% url 'summary_report' %}" class="flex items-center px-4 py-3 text-sm font-medium rounded-lg hover:bg-slate-700 transition-colors {% if 'report' in request.path %}sidebar-active text-blue-400{% endif %}">
-                    <i class="fas fa-file-alt mr-3 w-5"></i> Reports
+                <a href="{% url 'summary_report' %}" class="flex items-center px-4 py-3 text-sm font-medium rounded-xl text-[#BAC7C0] hover:bg-[#35463C] hover:text-white transition-colors {% if 'report' in request.path %}sidebar-active{% endif %}">
+                    <i class="fas fa-file-alt mr-3 w-5 text-center text-[#8FA89B]"></i> Reports
                 </a>
-                <a href="{% url 'poster_list' %}" 
-                    class="flex items-center px-4 py-3 text-sm font-medium rounded-lg hover:bg-slate-700 transition-colors {% if 'poster' in request.path %}sidebar-active text-blue-400{% endif %}">
-                        <i class="fas fa-image mr-3 w-5"></i> Poster Generator
-                    </a>
+                <a href="{% url 'poster_list' %}" class="flex items-center px-4 py-3 text-sm font-medium rounded-xl text-[#BAC7C0] hover:bg-[#35463C] hover:text-white transition-colors {% if 'poster' in request.path %}sidebar-active{% endif %}">
+                    <i class="fas fa-image mr-3 w-5 text-center text-[#8FA89B]"></i> Poster Generator
+                </a>
                 {% endif %}
             </nav>
-            <div class="absolute bottom-0 w-64 p-4 border-t border-slate-700">
-                <div class="flex items-center mb-4 px-2">
-                    <div class="w-8 h-8 rounded-full bg-indigo-500 flex items-center justify-center text-xs font-bold mr-3">
+        </div>
+        <div class="p-4 border-t border-[#38493F] bg-[#232F28]">
+            <div class="flex items-center mb-3 px-2">
+                <div class="w-9 h-9 rounded-full bg-[#3F5247] flex items-center justify-center text-xs font-bold text-[#F0F5F2] mr-3 shadow-xs border border-[#4F6759]">
+                    {{ request.user.username|slice:":2"|upper }}
+                </div>
+                <div class="min-w-0 flex-1">
+                    <p class="text-sm font-semibold text-[#F0F5F2] truncate">{{ request.user.get_full_name|default:request.user.username }}</p>
+                    <p class="text-xs text-[#8FA89B] truncate">{% if request.user.is_superuser %}Super Admin{% else %}{{ request.user.employee.role|default:"User" }}{% endif %}</p>
+                </div>
+            </div>
+            <form action="{% url 'logout' %}" method="post">
+                {% csrf_token %}
+                <button type="submit" class="flex items-center w-full px-4 py-2.5 text-sm text-[#FCA5A5] hover:bg-[#3D282A] hover:text-red-300 font-medium rounded-xl transition-colors">
+                    <i class="fas fa-sign-out-alt mr-3"></i> Logout
+                </button>
+            </form>
+        </div>
+    </aside>
+
+    <div class="flex flex-1 min-h-screen">
+        <!-- Desktop Sidebar -->
+        <aside class="hidden lg:flex w-64 bg-[#2A3830] border-r border-[#38493F] flex-shrink-0 flex-col justify-between shadow-xs sticky top-0 h-screen z-30">
+            <div>
+                <div class="p-6 border-b border-[#38493F]">
+                    <div class="flex items-center space-x-3">
+                        <img src="{% static 'img/timesheet-icon.png' %}" alt="CodeClock" class="h-9 w-9 object-contain">
+                        <span class="text-lg font-bold tracking-tight text-[#F0F5F2]">CodeClock</span>
+                    </div>
+                </div>
+                <nav class="mt-6 px-4 space-y-1.5">
+                    <a href="{% url 'dashboard' %}" class="flex items-center px-4 py-3 text-sm font-medium rounded-xl text-[#BAC7C0] hover:bg-[#35463C] hover:text-white transition-colors {% if request.resolver_match.url_name == 'dashboard' %}sidebar-active{% endif %}">
+                        <i class="fas fa-chart-line mr-3 w-5 text-center text-[#8FA89B]"></i> Dashboard
+                    </a>
+                    <a href="{% url 'project_list' %}" class="flex items-center px-4 py-3 text-sm font-medium rounded-xl text-[#BAC7C0] hover:bg-[#35463C] hover:text-white transition-colors {% if 'project' in request.path %}sidebar-active{% endif %}">
+                        <i class="fas fa-project-diagram mr-3 w-5 text-center text-[#8FA89B]"></i> Projects
+                    </a>
+                    <a href="{% url 'milestone_list' %}" class="flex items-center px-4 py-3 text-sm font-medium rounded-xl text-[#BAC7C0] hover:bg-[#35463C] hover:text-white transition-colors {% if 'milestone' in request.path %}sidebar-active{% endif %}">
+                        <i class="fas fa-flag-checkered mr-3 w-5 text-center text-[#8FA89B]"></i> Milestones
+                    </a>
+                    <a href="{% url 'task_page' %}" class="flex items-center px-4 py-3 text-sm font-medium rounded-xl text-[#BAC7C0] hover:bg-[#35463C] hover:text-white transition-colors {% if 'task' in request.path %}sidebar-active{% endif %}">
+                        <i class="fas fa-tasks mr-3 w-5 text-center text-[#8FA89B]"></i> Tasks
+                    </a>
+                    {% if request.user.is_superuser or request.user.employee.role == 'ADMIN' or request.user.employee.role == 'MANAGER' %}
+                    <a href="{% url 'allocation_list' %}" class="flex items-center px-4 py-3 text-sm font-medium rounded-xl text-[#BAC7C0] hover:bg-[#35463C] hover:text-white transition-colors {% if 'allocation' in request.path %}sidebar-active{% endif %}">
+                        <i class="fas fa-user-tag mr-3 w-5 text-center text-[#8FA89B]"></i> Allocations
+                    </a>
+                    {% endif %}
+                <a href="{% url 'timesheet_filter_list' %}" class="flex items-center px-4 py-3 text-sm font-medium rounded-xl text-[#BAC7C0] hover:bg-[#35463C] hover:text-white transition-colors {% if 'timesheet' in request.path and 'calendar' not in request.path %}sidebar-active{% endif %}">
+                    <i class="fas fa-clock mr-3 w-5 text-center text-[#8FA89B]"></i> Timesheets
+                </a>
+                <a href="{% url 'timesheet_calendar' %}" class="flex items-center px-4 py-3 text-sm font-medium rounded-xl text-[#BAC7C0] hover:bg-[#35463C] hover:text-white transition-colors {% if 'calendar' in request.path %}sidebar-active{% endif %}">
+                    <i class="fas fa-calendar-alt mr-3 w-5 text-center text-[#8FA89B]"></i> Calendar Summary
+                </a>
+                    {% if request.user.is_superuser or request.user.employee.role == 'ADMIN' or request.user.employee.role == 'MANAGER' %}
+                    <a href="{% url 'employee_list' %}" class="flex items-center px-4 py-3 text-sm font-medium rounded-xl text-[#BAC7C0] hover:bg-[#35463C] hover:text-white transition-colors {% if 'employees' in request.path %}sidebar-active{% endif %}">
+                        <i class="fas fa-users mr-3 w-5 text-center text-[#8FA89B]"></i> Employees
+                    </a>
+                    <a href="{% url 'summary_report' %}" class="flex items-center px-4 py-3 text-sm font-medium rounded-xl text-[#BAC7C0] hover:bg-[#35463C] hover:text-white transition-colors {% if 'report' in request.path %}sidebar-active{% endif %}">
+                        <i class="fas fa-file-alt mr-3 w-5 text-center text-[#8FA89B]"></i> Reports
+                    </a>
+                    <a href="{% url 'poster_list' %}" class="flex items-center px-4 py-3 text-sm font-medium rounded-xl text-[#BAC7C0] hover:bg-[#35463C] hover:text-white transition-colors {% if 'poster' in request.path %}sidebar-active{% endif %}">
+                        <i class="fas fa-image mr-3 w-5 text-center text-[#8FA89B]"></i> Poster Generator
+                    </a>
+                    {% endif %}
+                </nav>
+            </div>
+            <div class="p-4 border-t border-[#38493F] bg-[#232F28]">
+                <div class="flex items-center mb-3 px-2">
+                    <div class="w-9 h-9 rounded-full bg-[#3F5247] flex items-center justify-center text-xs font-bold text-[#F0F5F2] mr-3 shadow-xs border border-[#4F6759]">
                         {{ request.user.username|slice:":2"|upper }}
                     </div>
-                    <div>
-                        <p class="text-sm font-medium truncate">{{ request.user.get_full_name|default:request.user.username }}</p>
-                        <p class="text-xs text-slate-400">{% if request.user.is_superuser %}Super Admin{% else %}{{ request.user.employee.role|default:"User" }}{% endif %}</p>
+                    <div class="min-w-0 flex-1">
+                        <p class="text-sm font-semibold text-[#F0F5F2] truncate">{{ request.user.get_full_name|default:request.user.username }}</p>
+                        <p class="text-xs text-[#8FA89B] truncate">{% if request.user.is_superuser %}Super Admin{% else %}{{ request.user.employee.role|default:"User" }}{% endif %}</p>
                     </div>
                 </div>
                 <form action="{% url 'logout' %}" method="post">
                     {% csrf_token %}
-                    <button type="submit" class="flex items-center w-full px-4 py-2 text-sm text-red-400 hover:bg-red-400/10 rounded-lg transition-colors">
+                    <button type="submit" class="flex items-center w-full px-4 py-2 text-sm text-[#FCA5A5] hover:bg-[#3D282A] hover:text-red-300 font-medium rounded-xl transition-colors">
                         <i class="fas fa-sign-out-alt mr-3"></i> Logout
                     </button>
                 </form>
@@ -99,7 +174,7 @@
         </aside>
 
         <!-- Main Content -->
-        <main class="flex-1 overflow-y-auto p-8">
+        <main class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 min-w-0 bg-slate-50">
             <div class="max-w-7xl mx-auto">
                 {% block content %}{% endblock %}
             </div>
@@ -108,13 +183,10 @@
 
     <!-- Modal Container -->
     <div id="modal-container" class="hidden fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-        <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-            <!-- <div class="fixed inset-0 bg-slate-950/75 transition-opacity" aria-hidden="true" onclick="closeModal()"></div> -->
+        <div class="flex items-center justify-center min-h-screen p-4 text-center sm:p-0">
+            <div class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs transition-opacity" aria-hidden="true" onclick="closeModal()"></div>
             <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-            <!-- Modal Box -->
-        <div class="inline-block align-bottom bg-slate-800 rounded-xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full border border-slate-700"
-             onclick="event.stopPropagation()">
-            <div class="inline-block align-bottom bg-slate-800 rounded-xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full border border-slate-700">
+            <div class="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full border border-slate-200 z-10" onclick="event.stopPropagation()">
                 <div id="modal-content" class="p-6">
                     <!-- Loaded via AJAX or direct include -->
                 </div>
@@ -122,18 +194,27 @@
         </div>
     </div>
 
-<!-- Nested Modal Container -->
-<div id="modal-container-2" class="hidden fixed inset-0 z-60 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-    <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-        <div class="fixed inset-0 bg-slate-950/75 transition-opacity" aria-hidden="true" onclick="closeModal2()"></div>
-        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-        <div class="inline-block align-bottom bg-slate-800 rounded-xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full border border-slate-700">
-            <div id="modal-content-2" class="p-6">
-                <!-- Loaded via AJAX -->
+    <!-- Nested Modal Container -->
+    <div id="modal-container-2" class="hidden fixed inset-0 z-60 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <div class="flex items-center justify-center min-h-screen p-4 text-center sm:p-0">
+            <div class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs transition-opacity" aria-hidden="true" onclick="closeModal2()"></div>
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+            <div class="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full border border-slate-200 z-10">
+                <div id="modal-content-2" class="p-6">
+                    <!-- Loaded via AJAX -->
+                </div>
             </div>
         </div>
     </div>
-</div>
+
+    <script>
+    function toggleMobileMenu() {
+        const drawer = document.getElementById('mobile-sidebar-drawer');
+        const backdrop = document.getElementById('mobile-sidebar-backdrop');
+        drawer.classList.toggle('hidden');
+        backdrop.classList.toggle('hidden');
+    }
+    </script>
 <script>
 // function openModal2(url) {
 //     const modalUrl = url.includes('?') ? `${url}&modal=1` : `${url}?modal=1`;
@@ -364,35 +445,7 @@ function closeModal2() {
                    ////////////
 
 
-// --- Attach Timesheet-specific behavior ---
-        const modalForm = modalContent.querySelector("form");
 
-        if (modalForm && modalForm.action.includes("timesheet")) {
-            const projectSelect = modalForm.querySelector("#id_project");
-            const taskSelect = modalForm.querySelector("#id_task");
-    if (projectSelect && taskSelect) {
-        projectSelect.addEventListener("change", function() {
-            const projectId = this.value;
-
-            if (!projectId) {
-                taskSelect.innerHTML = '<option value="">Select task</option>';
-                return;
-            }
-
-            fetch(`/tasks/by-project/${projectId}/`, {
-                headers: { "X-Requested-With": "XMLHttpRequest" }
-            })
-            .then(res => res.json())
-            .then(data => {
-                taskSelect.innerHTML = '<option value="">Select task</option>';
-                data.tasks.forEach(task => {
-                    const option = new Option(task.title, task.id);
-                    taskSelect.add(option);
-                });
-            });
-        });
-    }
-}
                    /////////////
                    // --- Attach Task milestone filtering ---
 if (modalForm && modalForm.action.includes("task")) {
@@ -714,28 +767,31 @@ document.addEventListener("DOMContentLoaded", function () {
 </script>
 
 <style>
-/* ===== MATCH TASK FORM THEME ===== */
+/* ===== LIGHT THEME FORM STYLES ===== */
 
 input, select, textarea {
-    background-color: #020617 !important;   /* darker than before */
-    border: 1px solid #1e293b !important;
-    color: #e2e8f0 !important;
+    background-color: #ffffff !important;
+    border: 1px solid #cbd5e1 !important;
+    color: #0f172a !important;
     border-radius: 0.5rem !important;
     padding: 0.5rem 0.75rem !important;
+    transition: all 0.15s ease-in-out;
 }
 
 /* Focus effect */
 input:focus, select:focus, textarea:focus {
     outline: none !important;
-    border-color: #3b82f6 !important;
-    box-shadow: 0 0 0 1px #3b82f6 !important;
+    border-color: #2563eb !important;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15) !important;
 }
 
 /* Labels */
 label {
-    color: #94a3b8 !important;
-    font-size: 0.85rem !important;
+    color: #334155 !important;
+    font-size: 0.875rem !important;
+    font-weight: 500 !important;
     margin-bottom: 4px !important;
+    display: inline-block;
 }
 
 /* Help text */
@@ -746,24 +802,32 @@ label {
 
 /* Errors */
 .text-danger, .invalid-feedback {
-    color: #f87171 !important;
+    color: #dc2626 !important;
     font-size: 0.75rem !important;
+    margin-top: 4px;
 }
 
 /* File input fix */
 input[type="file"] {
-    background-color: #020617 !important;
+    background-color: #f8fafc !important;
     padding: 6px !important;
 }
 
 /* Checkbox */
 input[type="checkbox"] {
-    accent-color: #3b82f6;
+    accent-color: #2563eb;
+    width: 1rem;
+    height: 1rem;
 }
 
 /* Select dropdown arrow fix */
 select {
     appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%4064748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    background-size: 1rem;
+    padding-right: 2.5rem !important;
 }
 
 /* Crispy wrapper spacing */

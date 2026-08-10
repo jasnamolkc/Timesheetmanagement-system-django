@@ -3,24 +3,33 @@
 
 {% block content %}
 
-<div class="mb-6 flex justify-between items-center">
+<div class="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
 
     <!-- Title -->
-    <h2 class="text-2xl font-bold text-white">
-        Timesheet Report
-    </h2>
+    <div>
+        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+            Timesheet Report
+        </h2>
+        <p class="text-slate-500 text-sm mt-1">Filter and view grouped employee time logs</p>
+    </div>
 
     <!-- Buttons -->
-    <div class="flex gap-3 items-center">
+    <div class="flex gap-3 items-center w-full sm:w-auto">
+
+        <a href="{% url 'timesheet_calendar' %}"
+           class="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-4 py-2.5 rounded-xl flex items-center text-sm shadow-sm transition-colors">
+            <i class="fas fa-calendar-alt mr-2"></i>
+            Calendar View
+        </a>
 
         <a href="{% url 'timesheet_list' %}"
-           class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded flex items-center">
-            <i class="fas fa-tasks mr-2"></i>
+           class="bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 font-semibold px-4 py-2.5 rounded-xl flex items-center text-sm shadow-xs transition-colors">
+            <i class="fas fa-tasks mr-2 text-slate-500"></i>
             View All Timesheets
         </a>
 
         <button onclick="openModal('{% url 'timesheet_create' %}')"
-                class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded flex items-center">
+                class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2.5 rounded-xl flex items-center text-sm shadow-sm transition-colors">
             <i class="fas fa-plus mr-2"></i>
             Create
         </button>
@@ -30,91 +39,93 @@
 </div>
 
 <!-- Filters -->
-<div class="flex gap-3 mb-6 flex-wrap">
-    <input type="date" id="dateFilter"
-           class="bg-slate-800 border border-slate-700 text-white px-3 py-2 rounded">
+<div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs mb-6 flex flex-wrap gap-3 items-center">
+    <div class="flex flex-col sm:flex-row gap-3 w-full sm:w-auto flex-1">
+        <input type="date" id="dateFilter"
+               class="bg-white border border-slate-300 text-slate-900 px-3 py-2 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
 
-    <select id="employeeFilter"
-            class="bg-slate-800 border border-slate-700 text-white px-3 py-2 rounded">
-        <option value="">All Employees</option>
-        {% for emp in all_employees %}
-            <option value="{{ emp.id }}">
-                {{ emp.user.username }}
-            </option>
-        {% endfor %}
-    </select>
+        <select id="employeeFilter"
+                class="bg-white border border-slate-300 text-slate-900 px-3 py-2 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+            <option value="">All Employees</option>
+            {% for emp in all_employees %}
+                <option value="{{ emp.id }}">
+                    {{ emp.user.get_full_name|default:emp.user.username }}
+                </option>
+            {% endfor %}
+        </select>
+    </div>
 
     <button onclick="applyFilter()"
-            class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
-        Filter
+            class="bg-slate-900 hover:bg-slate-800 text-white font-semibold px-5 py-2 rounded-xl text-sm transition-colors w-full sm:w-auto">
+        <i class="fas fa-filter mr-1.5 text-slate-300"></i> Filter
     </button>
 </div>
 
 <!-- TABLE -->
-<div class="bg-slate-800 border border-slate-700 rounded-xl overflow-x-auto">
+<div class="bg-white border border-slate-200 rounded-2xl shadow-xs overflow-hidden">
+    <div class="overflow-x-auto">
+        <table class="w-full text-sm text-slate-700">
 
-    <table class="w-full text-sm text-slate-300">
+            <thead class="bg-slate-50 text-slate-600 uppercase text-xs font-bold border-b border-slate-200">
+                <tr>
+                    <th class="px-5 py-3.5 text-left">Date</th>
+                    <th class="px-5 py-3.5 text-left">Employee</th>
+                    <th class="px-5 py-3.5 text-left">Projects</th>
+                    <th class="px-5 py-3.5 text-left">Tasks</th>
+                    <th class="px-5 py-3.5 text-right">Total Hours</th>
+                </tr>
+            </thead>
 
-        <thead class="bg-slate-700 text-slate-400 uppercase text-xs">
-            <tr>
-                <th class="px-4 py-3">Date</th>
-                <th class="px-4 py-3">Employee</th>
-                <th class="px-4 py-3">Projects</th>
-                <th class="px-4 py-3">Tasks</th>
-                <th class="px-4 py-3 text-right">Total Hours</th>
-            </tr>
-        </thead>
+            <tbody class="divide-y divide-slate-100">
 
-        <tbody>
+                {% for item in grouped_entries %}
+                <tr class="hover:bg-slate-50/70 transition-colors">
 
-            {% for item in grouped_entries %}
-            <tr class="border-b border-slate-700 hover:bg-slate-700/40">
+                    <!-- Date -->
+                    <td class="px-5 py-4 whitespace-nowrap text-slate-600">
+                        {{ item.date|date:"d M Y" }}
+                    </td>
 
-                <!-- Date -->
-                <td class="px-4 py-3">
-                    {{ item.date|date:"d M Y" }}
-                </td>
+                    <!-- Employee -->
+                    <td class="px-5 py-4 font-semibold text-slate-900 whitespace-nowrap">
+                        {{ item.employee }}
+                    </td>
 
-                <!-- Employee -->
-                <td class="px-4 py-3 font-medium text-white">
-                    {{ item.employee }}
-                </td>
+                    <!-- Projects -->
+                    <td class="px-5 py-4 text-slate-600">
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-100">
+                            {{ item.projects|join:", " }}
+                        </span>
+                    </td>
 
-                <!-- Projects -->
-                <td class="px-4 py-3">
-                    {{ item.projects|join:", " }}
-                </td>
+                    <!-- Tasks -->
+                    <td class="px-5 py-4">
+                        <ul class="list-disc list-inside text-slate-600 space-y-1">
+                            {% for t in item.tasks %}
+                                <li>{{ t }}</li>
+                            {% endfor %}
+                        </ul>
+                    </td>
 
-                <!-- Tasks (FIXED BULLETS) -->
-                <td class="px-4 py-3">
+                    <!-- Hours -->
+                    <td class="px-5 py-4 text-right font-bold text-blue-600 whitespace-nowrap text-base">
+                        {{ item.total_hours }} hrs
+                    </td>
 
-                    <ul class="ml-5 text-slate-300 space-y-1" style="list-style-type: disc;">
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" class="text-center text-slate-400 py-12">
+                        <i class="fas fa-clock text-3xl text-slate-300 mb-2 block"></i>
+                        No timesheet records found for the selected filters.
+                    </td>
+                </tr>
+                {% endfor %}
 
-                        {% for t in item.tasks %}
-                            <li>{{ t }}</li>
-                        {% endfor %}
+            </tbody>
 
-                    </ul>
-
-                </td>
-
-                <!-- Hours -->
-                <td class="px-4 py-3 text-right font-bold text-blue-400">
-                    {{ item.total_hours }}
-                </td>
-
-            </tr>
-            {% empty %}
-            <tr>
-                <td colspan="5" class="text-center text-slate-500 py-10">
-                    No records found
-                </td>
-            </tr>
-            {% endfor %}
-
-        </tbody>
-
-    </table>
+        </table>
+    </div>
 </div>
 
 <script>

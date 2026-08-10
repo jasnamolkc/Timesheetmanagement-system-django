@@ -3,31 +3,40 @@
 
 {% block content %}
 
-<div class="flex justify-between items-center mb-6">
+<div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
 
-    <!-- LEFT: Back -->
-    <a href="{% url 'timesheet_filter_list' %}"
-       class="text-sm text-slate-400 hover:text-white flex items-center gap-1">
-        <i class="fas fa-arrow-left"></i> Back
-    </a>
-
-    <!-- CENTER: Title -->
-    <h2 class="text-2xl font-bold text-white text-center flex-1">
-        Timesheets
-    </h2>
+    <!-- LEFT: Title & Back -->
+    <div class="flex items-center space-x-3">
+        <a href="{% url 'timesheet_filter_list' %}"
+           class="p-2 text-slate-500 hover:text-slate-900 bg-white border border-slate-200 hover:bg-slate-50 rounded-xl transition-colors text-sm shadow-xs flex items-center">
+            <i class="fas fa-arrow-left"></i>
+        </a>
+        <div>
+            <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+                Timesheets
+            </h2>
+            <p class="text-slate-500 text-sm mt-0.5">Manage and review all timesheet logs</p>
+        </div>
+    </div>
 
     <!-- RIGHT: Actions -->
-    <div class="flex gap-3 items-center">
+    <div class="flex gap-3 items-center w-full sm:w-auto">
+
+        <a href="{% url 'timesheet_calendar' %}"
+           class="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-4 py-2.5 rounded-xl flex items-center text-sm shadow-sm transition-colors flex-1 sm:flex-none justify-center">
+            <i class="fas fa-calendar-alt mr-2"></i>
+            Calendar Summary
+        </a>
 
         <button onclick="openModal('{% url 'timesheet_create' %}')"
-                class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded flex items-center">
+                class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2.5 rounded-xl flex items-center text-sm shadow-sm transition-colors flex-1 sm:flex-none justify-center">
             <i class="fas fa-plus mr-2"></i>
             Create
         </button>
 
         <button onclick="openSummaryModal()"
-                class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded flex items-center">
-            <i class="fas fa-chart-bar mr-2"></i>
+                class="bg-slate-900 hover:bg-slate-800 text-white font-semibold px-4 py-2.5 rounded-xl flex items-center text-sm shadow-sm transition-colors flex-1 sm:flex-none justify-center">
+            <i class="fas fa-chart-bar mr-2 text-slate-300"></i>
             Summary
         </button>
 
@@ -35,28 +44,32 @@
 
 </div>
 
-<div class="flex gap-3 mb-4 flex-wrap">
+<!-- Filter Bar -->
+<div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs mb-6 flex flex-wrap gap-3 items-center">
 
     <!-- Search -->
-    <input id="search"
-           placeholder="Search project, task, employee..."
-           class="bg-slate-800 border border-slate-700 text-white px-3 py-2 rounded w-full md:w-1/3">
+    <div class="relative flex-1 min-w-[220px]">
+        <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+        <input id="search"
+               placeholder="Search project, task, employee..."
+               class="bg-white border border-slate-300 text-slate-900 pl-10 pr-4 py-2 rounded-xl text-sm w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+    </div>
 
     <!-- Billable Filter -->
     <select id="filter"
-            class="bg-slate-800 border border-slate-700 text-white px-3 py-2 rounded">
-        <option value="">All</option>
-        <option value="Yes">Billable</option>
-        <option value="No">Non-Billable</option>
+            class="bg-white border border-slate-300 text-slate-900 px-3 py-2 rounded-xl text-sm focus:ring-2 focus:ring-blue-500">
+        <option value="">All Billable Status</option>
+        <option value="Yes">Billable Only</option>
+        <option value="No">Non-Billable Only</option>
     </select>
 
     <!-- Employee Filter -->
     <select id="employeeFilter"
-            class="bg-slate-800 border border-slate-700 text-white px-3 py-2 rounded">
+            class="bg-white border border-slate-300 text-slate-900 px-3 py-2 rounded-xl text-sm focus:ring-2 focus:ring-blue-500">
         <option value="">All Employees</option>
         {% for emp in all_employees %}
             <option value="{{ emp.user.username }}">
-                {{ emp.user.username }}
+                {{ emp.user.get_full_name|default:emp.user.username }}
             </option>
         {% endfor %}
     </select>
@@ -64,129 +77,129 @@
 </div>
 
 <!-- Timesheet Table -->
-<div class="bg-slate-800 rounded-2xl border border-slate-700 overflow-x-auto">
-    <table class="w-full text-left text-sm divide-y divide-slate-700">
-        <thead class="bg-slate-700 text-slate-400 uppercase text-xs">
-            <tr>
-                <th class="px-6 py-3">Date</th>
-                <th class="px-6 py-3">Project</th>
-                 <th class="px-6 py-3">Employee</th>
-                <th class="px-6 py-3">Task</th>
-                <th class="px-6 py-3 text-center">Allocated (hrs)</th>
-                <th class="px-6 py-3 text-center">Used (hrs)</th>
-                <th class="px-6 py-3 text-center">Pending (hrs)</th>
-                <th class="px-6 py-3 text-center">Billable</th>
-                <th class="px-6 py-3 text-right">Actions</th>
-            </tr>
-        </thead>
+<div class="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
+    <div class="overflow-x-auto">
+        <table class="w-full text-left text-sm divide-y divide-slate-100">
+            <thead class="bg-slate-50 text-slate-600 uppercase text-xs font-bold border-b border-slate-200">
+                <tr>
+                    <th class="px-6 py-3.5">Date</th>
+                    <th class="px-6 py-3.5">Project</th>
+                    <th class="px-6 py-3.5">Employee</th>
+                    <th class="px-6 py-3.5">Task</th>
+                    <th class="px-6 py-3.5 text-center">Allocated (hrs)</th>
+                    <th class="px-6 py-3.5 text-center">Used (hrs)</th>
+                    <th class="px-6 py-3.5 text-center">Pending (hrs)</th>
+                    <th class="px-6 py-3.5 text-center">Billable</th>
+                    <th class="px-6 py-3.5 text-right">Actions</th>
+                </tr>
+            </thead>
 
-        <tbody class="text-slate-300">
-            {% for entry in entries %}
-            <tr class="hover:bg-slate-700/40 transition-colors">
-                <td class="px-6 py-3">{{ entry.date|date:"d M Y" }}</td>
-                <td class="px-6 py-3 text-blue-400 font-semibold">{{ entry.project.name }}</td>
-                <td class="px-6 py-3 font-medium">{{ entry.employee.user.username}}</td>
-                <td class="px-6 py-3 font-medium">{{ entry.task.title}}</td>
-                <td class="px-6 py-3 text-center">{{ entry.task.estimated_hours }}</td>
-                <td class="px-6 py-3 text-center font-bold">{{ entry.hours }}</td>
-                <td class="px-6 py-3 text-center">{{ entry.pending_hours }}</td>
-                <td class="px-6 py-3 text-center">
-                    {% if entry.billable %}
-                        <span class="px-2 py-1 text-xs bg-emerald-500/10 text-emerald-400 rounded-full">Yes</span>
-                    {% else %}
-                        <span class="px-2 py-1 text-xs bg-slate-500/10 text-slate-400 rounded-full">No</span>
-                    {% endif %}
-                </td>
-                <td class="px-6 py-3 text-right flex justify-end gap-3">
-                    <a href="{% url 'timesheet_edit' entry.pk %}" class="text-blue-400 hover:text-blue-300">
-                        <i class="fas fa-edit"></i>
-                    </a>
-                    <a href="{% url 'timesheet_delete' entry.pk %}" class="text-red-400 hover:text-red-300">
-                        <i class="fas fa-trash"></i>
-                    </a>
-                </td>
-            </tr>
-            {% empty %}
-            <tr>
-                <td colspan="9" class="px-6 py-12 text-center text-slate-500">
-                    No timesheet entries found.
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+            <tbody class="text-slate-700 divide-y divide-slate-100">
+                {% for entry in entries %}
+                <tr class="hover:bg-slate-50/70 transition-colors">
+                    <td class="px-6 py-4 text-slate-600 whitespace-nowrap">{{ entry.date|date:"d M Y" }}</td>
+                    <td class="px-6 py-4 text-blue-600 font-bold whitespace-nowrap">{{ entry.project.name }}</td>
+                    <td class="px-6 py-4 font-medium text-slate-900 whitespace-nowrap">{{ entry.employee.user.username}}</td>
+                    <td class="px-6 py-4 font-medium text-slate-800">{{ entry.task.title}}</td>
+                    <td class="px-6 py-4 text-center text-slate-500 font-medium">{{ entry.task.estimated_hours }}</td>
+                    <td class="px-6 py-4 text-center font-bold text-slate-900">{{ entry.hours }}</td>
+                    <td class="px-6 py-4 text-center text-slate-500 font-medium">{{ entry.pending_hours }}</td>
+                    <td class="px-6 py-4 text-center whitespace-nowrap">
+                        {% if entry.billable %}
+                            <span class="px-2.5 py-1 text-xs font-semibold bg-emerald-50 text-emerald-700 rounded-full border border-emerald-200">Yes</span>
+                        {% else %}
+                            <span class="px-2.5 py-1 text-xs font-semibold bg-slate-100 text-slate-600 rounded-full border border-slate-200">No</span>
+                        {% endif %}
+                    </td>
+                    <td class="px-6 py-4 text-right whitespace-nowrap space-x-2">
+                        <a href="{% url 'timesheet_edit' entry.pk %}" title="Edit" class="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                        <a href="{% url 'timesheet_delete' entry.pk %}" title="Delete" class="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors">
+                            <i class="fas fa-trash"></i>
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="9" class="px-6 py-12 text-center text-slate-400">
+                        <i class="fas fa-clock text-3xl text-slate-300 mb-2 block"></i>
+                        No timesheet entries found.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 </div>
-<!-- ------------------modal------------ -->
-<!-- ------------------------------ -->
 
+<!-- Summary Modal -->
 <div id="summaryModal"
-     class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-md backdrop-filter">
-    <!-- <div class="bg-slate-800 rounded-xl p-6 w-full max-w-xl border border-slate-700"> -->
-        <div class="bg-slate-800 rounded-xl p-6 w-full max-w-xl border border-slate-700 transform transition-all scale-95 opacity-0"
-     id="summaryContent">
+     class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-xs p-4">
+    <div class="bg-white rounded-2xl p-6 w-full max-w-xl border border-slate-200 shadow-2xl transform transition-all scale-95 opacity-0"
+         id="summaryContent">
 
         <!-- Header -->
-        <div class="flex justify-between items-center mb-4">
-            <h3 class="text-lg font-semibold text-white">Timesheet Summary</h3>
-            <button onclick="closeSummaryModal()" class="text-slate-400 hover:text-white">✕</button>
+        <div class="flex justify-between items-center mb-4 pb-3 border-b border-slate-100">
+            <h3 class="text-lg font-bold text-slate-900">Timesheet Summary</h3>
+            <button onclick="closeSummaryModal()" class="text-slate-400 hover:text-slate-600 p-1">✕</button>
         </div>
 
         <!-- Filters -->
-        <div class="flex gap-3 mb-4">
-
+        <div class="flex flex-col sm:flex-row gap-3 mb-4">
             {% if can_manage %}
             <select id="summaryEmployee"
-                    class="bg-slate-900 border border-slate-700 text-white px-3 py-2 rounded w-1/2">
+                    class="bg-white border border-slate-300 text-slate-900 px-3 py-2 rounded-xl text-sm w-full sm:w-1/2 focus:ring-2 focus:ring-blue-500">
                 <option value="">Select Employee</option>
                 {% for emp in all_employees %}
-                    <option value="{{ emp.id }}">{{ emp.user.username }}</option>
+                    <option value="{{ emp.id }}">{{ emp.user.get_full_name|default:emp.user.username }}</option>
                 {% endfor %}
             </select>
             {% endif %}
 
             <input type="date" id="summaryDate"
-                   class="bg-slate-900 border border-slate-700 text-white px-3 py-2 rounded w-1/2">
+                   class="bg-white border border-slate-300 text-slate-900 px-3 py-2 rounded-xl text-sm w-full sm:w-1/2 focus:ring-2 focus:ring-blue-500">
         </div>
 
         <!-- Load Button -->
         <button onclick="loadSummary()"
-                class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded mb-4">
+                class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 rounded-xl text-sm mb-4 shadow-xs transition-colors">
             Load Summary
         </button>
 
         <!-- Result Table -->
-        <table class="w-full text-sm text-slate-300 mb-4">
-            <thead>
-                <tr class="text-slate-400">
-                    <th class="text-left py-2">Task</th>
-                    <th class="text-right py-2">Hours</th>
-                </tr>
-            </thead>
-            <tbody id="summaryBody"></tbody>
-        </table>
+        <div class="border border-slate-200 rounded-xl overflow-hidden mb-4">
+            <table class="w-full text-sm text-slate-700">
+                <thead class="bg-slate-50 border-b border-slate-200">
+                    <tr class="text-slate-600 text-xs font-bold uppercase">
+                        <th class="text-left px-4 py-2.5">Task</th>
+                        <th class="text-right px-4 py-2.5">Hours</th>
+                    </tr>
+                </thead>
+                <tbody id="summaryBody" class="divide-y divide-slate-100"></tbody>
+            </table>
+        </div>
 
         <!-- Total -->
-        <div class="text-right text-white font-bold">
-            Total: <span id="summaryTotal">0</span> hrs
+        <div class="text-right text-slate-900 font-extrabold text-base">
+            Total: <span id="summaryTotal" class="text-blue-600">0</span> hrs
         </div>
 
     </div>
 </div>
-<!-- ------------------modal------------ -->
-<!-- ------------------------------ -->
 
 <!-- Pagination -->
 {% if is_paginated %}
 <div class="mt-6 flex justify-center">
     <nav class="flex space-x-2">
         {% if page_obj.has_previous %}
-        <a href="?page={{ page_obj.previous_page_number }}" class="px-4 py-2 bg-slate-800 border border-slate-700 rounded-lg hover:bg-slate-700">
+        <a href="?page={{ page_obj.previous_page_number }}" class="px-4 py-2 bg-white border border-slate-200 text-slate-700 text-sm font-medium rounded-xl hover:bg-slate-50 transition-colors">
             Previous
         </a>
         {% endif %}
-        <span class="px-4 py-2 bg-blue-600 rounded-lg text-white">{{ page_obj.number }}</span>
+        <span class="px-4 py-2 bg-blue-600 text-white font-bold rounded-xl text-sm shadow-xs">{{ page_obj.number }}</span>
         {% if page_obj.has_next %}
-        <a href="?page={{ page_obj.next_page_number }}" class="px-4 py-2 bg-slate-800 border border-slate-700 rounded-lg hover:bg-slate-700">
+        <a href="?page={{ page_obj.next_page_number }}" class="px-4 py-2 bg-white border border-slate-200 text-slate-700 text-sm font-medium rounded-xl hover:bg-slate-50 transition-colors">
             Next
         </a>
         {% endif %}
@@ -199,9 +212,9 @@ const search = document.getElementById("search");
 const filter = document.getElementById("filter");
 const employeeFilter = document.getElementById("employeeFilter");
 const container = document.querySelector("tbody");
-    // Create "No Data" row once
+
 let noDataRow = document.createElement("tr");
-noDataRow.innerHTML = `<td colspan="9" class="text-center text-slate-500 py-6">No data found</td>`;
+noDataRow.innerHTML = `<td colspan="9" class="text-center text-slate-400 py-8">No data found matching your search.</td>`;
 noDataRow.style.display = "none";
 container.appendChild(noDataRow);
 
@@ -210,30 +223,22 @@ function filterTimesheets() {
     const f = filter.value;
     const emp = employeeFilter ? employeeFilter.value.toLowerCase() : "";
 
-
     let visible = 0;
 
     container.querySelectorAll("tr").forEach(row => {
         const cells = row.querySelectorAll("td");
-        if (cells.length === 0) return; // skip empty row
-        const project = cells[1].innerText.toLowerCase();
-        const employee = cells[2].innerText.toLowerCase();
-        const task = cells[3].innerText.toLowerCase();
-        // const desc = row.querySelector("td:nth-child(8)").innerText.toLowerCase();
-        // const billable = row.querySelector("td:nth-child(7)").innerText;
-       const billable = cells[7].innerText.trim();
+        if (cells.length === 0) return;
+        const project = cells[1] ? cells[1].innerText.toLowerCase() : "";
+        const employee = cells[2] ? cells[2].innerText.toLowerCase() : "";
+        const task = cells[3] ? cells[3].innerText.toLowerCase() : "";
+        const billable = cells[7] ? cells[7].innerText.trim() : "";
 
-        // ✅ Search match
         const matchSearch =
             project.includes(s) ||
             employee.includes(s) ||
             task.includes(s);
-        // ✅ Billable filter
         const matchBillable = f === "" || billable === f;
-
-        // ✅ Employee filter
-        const matchEmployee =
-            emp === "" || employee === emp;
+        const matchEmployee = emp === "" || employee === emp;
 
         if (matchSearch && matchBillable && matchEmployee) {
             row.style.display = "";
@@ -241,39 +246,17 @@ function filterTimesheets() {
         } else {
             row.style.display = "none";
         }
-        // const matchSearch = desc.includes(s);
-        // const matchFilter = f === "" || billable === f;
-
-        // if (matchSearch && matchFilter) {
-        //     row.style.display = "";
-        //     visible++;
-        // } else {
-        //     row.style.display = "none";
-        // }
     });
-// ✅ Show/hide "No data"
+
     noDataRow.style.display = (visible === 0) ? "" : "none";
-    // Show a message if no data
-    // if (visible === 0) {
-    //     container.innerHTML = `<tr><td colspan="9" class='text-center text-slate-500 py-6'>No data found</td></tr>`;
-    // }
 }
 
 search.addEventListener("keyup", filterTimesheets);
 filter.addEventListener("change", filterTimesheets);
-   
 if (employeeFilter) {
     employeeFilter.addEventListener("change", filterTimesheets);
 }
-</script>
-<script>
-// function openSummaryModal() {
-//     document.getElementById("summaryModal").classList.remove("hidden");
-// }
 
-// function closeSummaryModal() {
-//     document.getElementById("summaryModal").classList.add("hidden");
-// }
 function openSummaryModal() {
     const modal = document.getElementById("summaryModal");
     const content = document.getElementById("summaryContent");
@@ -298,7 +281,6 @@ function closeSummaryModal() {
 }
 
 function loadSummary() {
-
     const empEl = document.getElementById("summaryEmployee");
     const employeeId = empEl ? empEl.value : null;
     const date = document.getElementById("summaryDate").value;
@@ -308,9 +290,7 @@ function loadSummary() {
         return;
     }
 
-    // ✅ FIXED (use backticks)
     let url = `/timesheet/day-details/?date=${date}`;
-
     if (employeeId) {
         url += `&employee_id=${employeeId}`;
     }
@@ -318,21 +298,20 @@ function loadSummary() {
     fetch(url)
     .then(res => res.json())
     .then(data => {
-
         const body = document.getElementById("summaryBody");
         body.innerHTML = "";
 
         if (data.tasks.length === 0) {
             body.innerHTML = `<tr>
-                <td colspan="2" class="text-center text-slate-500 py-3">No data</td>
+                <td colspan="2" class="text-center text-slate-400 py-4">No summary data found for this date</td>
             </tr>`;
         }
 
         data.tasks.forEach(t => {
             body.innerHTML += `
-                <tr>
-                    <td class="py-2">${t.task}</td>
-                    <td class="text-right">${t.hours}</td>
+                <tr class="hover:bg-slate-50">
+                    <td class="px-4 py-2 text-slate-800">${t.task}</td>
+                    <td class="px-4 py-2 text-right font-bold text-blue-600">${t.hours} hrs</td>
                 </tr>
             `;
         });

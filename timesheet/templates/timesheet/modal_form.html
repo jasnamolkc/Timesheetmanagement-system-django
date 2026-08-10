@@ -1,165 +1,267 @@
 {% load crispy_forms_tags %}
 
-<div class="mb-6">
-    <h3 class="text-xl font-bold text-white">
-        {% if form.instance.pk %}Edit{% else %}Create{% endif %}
+<div class="mb-6 flex items-center justify-between pb-3 border-b border-slate-100">
+    <h3 class="text-lg font-bold text-slate-900">
+        {% if form.instance.pk %}Edit Form{% else %}Create Form{% endif %}
     </h3>
+    <button type="button" onclick="closeModal()" class="text-slate-400 hover:text-slate-600 p-1">✕</button>
 </div>
-{% if form.errors %}
-<div class="bg-red-500/20 border border-red-500 text-red-300 p-3 rounded mb-4">
-    {{ form.errors }}
+
+{% if form.non_field_errors %}
+<div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl mb-4 text-sm flex items-start gap-2.5 shadow-2xs">
+    <i class="fas fa-exclamation-circle text-red-500 mt-0.5 text-base shrink-0"></i>
+    <div class="space-y-1">
+        {% for error in form.non_field_errors %}
+            <p class="font-medium leading-snug">{{ error }}</p>
+        {% endfor %}
+    </div>
+</div>
+{% elif form.errors %}
+<div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl mb-4 text-sm flex items-start gap-2.5 shadow-2xs">
+    <i class="fas fa-exclamation-circle text-red-500 mt-0.5 text-base shrink-0"></i>
+    <div>
+        <p class="font-medium">Please correct the highlighted errors below before saving.</p>
+    </div>
 </div>
 {% endif %}
+
 <form method="post" action="{{ request.path }}" enctype="multipart/form-data">
     {% csrf_token %}
 
-<div class="space-y-4">
+    <div class="space-y-4">
 
-<!-- ================= TIMESHEET ================= -->
-{% if 'project' in form.fields and 'task' in form.fields %}
-AA
-    {{ form.project|as_crispy_field }}
+        <!-- ================= TIMESHEET ================= -->
+        {% if 'project' in form.fields and 'task' in form.fields %}
 
-    <div class="flex items-end gap-2">
-        <div class="flex-1">
-            {{ form.task|as_crispy_field }}
-        </div>
-
-        <button type="button"
-                id="addTaskBtn"
-                class="bg-blue-600 text-white px-3 py-2 rounded-lg"
-                disabled>
-            +
-        </button>
-    </div>
-
-    {% if form.fields.date %}
-        {{ form.date|as_crispy_field }}
-    {% endif %}
-
-    {% if form.fields.hours %}
-        {{ form.hours|as_crispy_field }}
-    {% endif %}
-
-    {% if form.fields.description %}
-        {{ form.description|as_crispy_field }}
-    {% endif %}
-
-    {% if form.fields.billable %}
-        {{ form.billable|as_crispy_field }}
-    {% endif %}
-
-<!-- ================= PROJECT ================= -->
-{% elif 'project_code' in form.fields %}
-BB
-    {{ form.name|as_crispy_field }}
-    {{ form.project_code|as_crispy_field }}
-    {{ form.status|as_crispy_field }}
-    {{ form.description|as_crispy_field }}
-
-    <div class="grid grid-cols-2 gap-4">
-        {{ form.start_date|as_crispy_field }}
-        {{ form.end_date|as_crispy_field }}
-    </div>
-
-    <!-- ===== Milestones ===== -->
-    <h4 class="text-lg font-semibold mt-6 mb-3">Milestones</h4>
-
-    {{ milestone_formset.management_form }}
-
-    <div id="milestone-container">
-        {% for milestone in milestone_formset %}
-        <div class="bg-slate-900 p-4 rounded-lg mb-3">
-            {{ milestone.id }}
-            {{ milestone.name|as_crispy_field }}
-
-            <div class="grid grid-cols-2 gap-4">
-                {{ milestone.start_date|as_crispy_field }}
-                {{ milestone.due_date|as_crispy_field }}
-            </div>
-        </div>
-        {% endfor %}
-    </div>
-
-    <button type="button" id="add-milestone"
-        class="mt-4 bg-blue-600 px-4 py-2 rounded-lg text-sm">
-        + Add Milestone
-    </button>
-
-    <!-- ===== Documents ===== -->
-    <h4 class="text-lg font-semibold mt-6 mb-3">Documents</h4>
-
-    {{ document_formset.management_form }}
-
-    <div id="document-container">
-        {% for doc in document_formset %}
-        <div class="bg-slate-900 p-4 rounded-lg mb-3 document-form">
-            {{ doc.id }}
-            {{ doc.name|as_crispy_field }}
-
-            {% if doc.instance.pk and doc.instance.file %}
-                <p class="text-xs text-green-400 mb-2">
-                    Existing:
-                    <a href="{{ doc.instance.file.url }}" target="_blank">
-                        {{ doc.instance.file.name }}
-                    </a>
-                </p>
+            {% if form.project.field.disabled and form.project.value %}
+                <input type="hidden" name="project" value="{{ form.project.value }}">
+            {% endif %}
+            {% if form.task.field.disabled and form.task.value %}
+                <input type="hidden" name="task" value="{{ form.task.value }}">
             {% endif %}
 
-            {{ doc.file|as_crispy_field }}
-        </div>
-        {% endfor %}
+            {{ form.project|as_crispy_field }}
+
+            <div class="flex items-end gap-2">
+                <div class="flex-1">
+                    {{ form.task|as_crispy_field }}
+                </div>
+
+                {% if not form.project.field.disabled %}
+                <button type="button"
+                        id="addTaskBtn"
+                        onclick="openModal('/tasks/create/?project=' + (document.getElementById('id_project') ? document.getElementById('id_project').value : ''))"
+                        class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-3 py-2.5 rounded-xl text-sm transition-colors mb-4 flex items-center gap-1 cursor-pointer"
+                        title="Create new task for this project"
+                        disabled>
+                    <i class="fas fa-plus"></i>
+                </button>
+                {% endif %}
+            </div>
+
+            {% if form.fields.date %}
+                <div>
+                    {{ form.date|as_crispy_field }}
+                    <div class="flex gap-2 mt-1 mb-3">
+                        <button type="button" onclick="setQuickDate('today')" class="text-xs px-2.5 py-1 bg-slate-100 hover:bg-blue-50 hover:text-blue-600 border border-slate-200 rounded-lg text-slate-600 transition-colors">Today</button>
+                        <button type="button" onclick="setQuickDate('yesterday')" class="text-xs px-2.5 py-1 bg-slate-100 hover:bg-blue-50 hover:text-blue-600 border border-slate-200 rounded-lg text-slate-600 transition-colors">Yesterday</button>
+                    </div>
+                </div>
+            {% endif %}
+
+            {% if form.fields.hours %}
+                <div>
+                    {{ form.hours|as_crispy_field }}
+                    <div class="flex flex-wrap gap-1.5 mt-1 mb-3">
+                        <span class="text-xs text-slate-400 self-center mr-1">Quick Add:</span>
+                        <button type="button" onclick="setQuickHours(0.5)" class="text-xs px-2.5 py-1 bg-slate-100 hover:bg-blue-600 hover:text-white border border-slate-200 rounded-lg text-slate-700 transition-colors font-medium">+0.5 hr</button>
+                        <button type="button" onclick="setQuickHours(1.0)" class="text-xs px-2.5 py-1 bg-slate-100 hover:bg-blue-600 hover:text-white border border-slate-200 rounded-lg text-slate-700 transition-colors font-medium">+1 hr</button>
+                        <button type="button" onclick="setQuickHours(2.0)" class="text-xs px-2.5 py-1 bg-slate-100 hover:bg-blue-600 hover:text-white border border-slate-200 rounded-lg text-slate-700 transition-colors font-medium">+2 hrs</button>
+                        <button type="button" onclick="setQuickHours(4.0)" class="text-xs px-2.5 py-1 bg-slate-100 hover:bg-blue-600 hover:text-white border border-slate-200 rounded-lg text-slate-700 transition-colors font-medium">+4 hrs</button>
+                        <button type="button" onclick="setQuickHours(8.0)" class="text-xs px-2.5 py-1 bg-slate-100 hover:bg-blue-600 hover:text-white border border-slate-200 rounded-lg text-slate-700 transition-colors font-medium">+8 hrs</button>
+                    </div>
+                </div>
+            {% endif %}
+
+            {% if form.fields.description %}
+                {{ form.description|as_crispy_field }}
+            {% endif %}
+
+            {% if form.fields.billable %}
+                {{ form.billable|as_crispy_field }}
+            {% endif %}
+
+            <script>
+            function setQuickHours(val) {
+                const hoursInput = document.getElementById('id_hours');
+                if (hoursInput) {
+                    hoursInput.value = val;
+                }
+            }
+
+            function setQuickDate(type) {
+                const dateInput = document.getElementById('id_date');
+                if (!dateInput) return;
+                const d = new Date();
+                if (type === 'yesterday') {
+                    d.setDate(d.getDate() - 1);
+                }
+                const year = d.getFullYear();
+                const month = String(d.getMonth() + 1).padStart(2, '0');
+                const day = String(d.getDate()).padStart(2, '0');
+                dateInput.value = `${year}-${month}-${day}`;
+            }
+
+            (function initTimesheetForm() {
+                const projectSelect = document.getElementById('id_project');
+                const taskSelect = document.getElementById('id_task');
+                const addTaskBtn = document.getElementById('addTaskBtn');
+
+                if (!projectSelect || !taskSelect) return;
+
+                // Enable/disable add task button based on selected project
+                if (addTaskBtn) {
+                    addTaskBtn.disabled = !projectSelect.value;
+                }
+
+                // Update task options dynamically ONLY when project select changes manually
+                projectSelect.addEventListener('change', function() {
+                    const projectId = this.value;
+                    if (addTaskBtn) addTaskBtn.disabled = !projectId;
+
+                    if (!projectId) {
+                        taskSelect.innerHTML = '<option value="">---------</option>';
+                        return;
+                    }
+
+                    fetch(`/tasks/by-project/${projectId}/`)
+                        .then(res => res.json())
+                        .then(data => {
+                            let options = '<option value="">---------</option>';
+                            if (data.tasks && data.tasks.length > 0) {
+                                data.tasks.forEach(t => {
+                                    options += `<option value="${t.id}">${t.title}</option>`;
+                                });
+                            }
+                            taskSelect.innerHTML = options;
+                        })
+                        .catch(err => console.error("Error loading tasks:", err));
+                });
+            })();
+            </script>
+
+        <!-- ================= PROJECT ================= -->
+        {% elif 'project_code' in form.fields %}
+
+            {{ form.name|as_crispy_field }}
+            {{ form.project_code|as_crispy_field }}
+            {{ form.status|as_crispy_field }}
+            {{ form.description|as_crispy_field }}
+
+            <div class="grid grid-cols-2 gap-4">
+                {{ form.start_date|as_crispy_field }}
+                {{ form.end_date|as_crispy_field }}
+            </div>
+
+            <!-- ===== Milestones ===== -->
+            <h4 class="text-base font-bold text-slate-900 mt-6 mb-3 pt-3 border-t border-slate-100">Milestones</h4>
+
+            {{ milestone_formset.management_form }}
+
+            <div id="milestone-container">
+                {% for milestone in milestone_formset %}
+                <div class="bg-slate-50 border border-slate-200 p-4 rounded-xl mb-3">
+                    {{ milestone.id }}
+                    {{ milestone.name|as_crispy_field }}
+
+                    <div class="grid grid-cols-2 gap-4">
+                        {{ milestone.start_date|as_crispy_field }}
+                        {{ milestone.due_date|as_crispy_field }}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <button type="button" id="add-milestone"
+                class="mt-2 bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 px-4 py-2 rounded-xl text-xs font-semibold transition-colors">
+                + Add Milestone
+            </button>
+
+            <!-- ===== Documents ===== -->
+            <h4 class="text-base font-bold text-slate-900 mt-6 mb-3 pt-3 border-t border-slate-100">Documents</h4>
+
+            {{ document_formset.management_form }}
+
+            <div id="document-container">
+                {% for doc in document_formset %}
+                <div class="bg-slate-50 border border-slate-200 p-4 rounded-xl mb-3 document-form">
+                    {{ doc.id }}
+                    {{ doc.name|as_crispy_field }}
+
+                    {% if doc.instance.pk and doc.instance.file %}
+                        <p class="text-xs text-emerald-600 mb-2 font-medium">
+                            Existing:
+                            <a href="{{ doc.instance.file.url }}" target="_blank" class="underline">
+                                {{ doc.instance.file.name }}
+                            </a>
+                        </p>
+                    {% endif %}
+
+                    {{ doc.file|as_crispy_field }}
+                </div>
+                {% endfor %}
+            </div>
+
+            <button type="button" id="add-document"
+                class="mt-2 bg-purple-50 text-purple-700 border border-purple-200 hover:bg-purple-100 px-4 py-2 rounded-xl text-xs font-semibold transition-colors">
+                + Add Document
+            </button>
+
+            <!-- ===== empty template forms ===== -->
+            <div id="empty-milestone-form" class="hidden">
+                <div class="bg-slate-50 border border-slate-200 p-4 rounded-xl mb-3">
+                    {{ milestone_formset.empty_form.id }}
+                    {{ milestone_formset.empty_form.name|as_crispy_field }}
+
+                    <div class="grid grid-cols-2 gap-4">
+                        {{ milestone_formset.empty_form.start_date|as_crispy_field }}
+                        {{ milestone_formset.empty_form.due_date|as_crispy_field }}
+                    </div>
+                </div>
+            </div>
+            <div id="empty-document-form" class="hidden">
+                <div class="bg-slate-50 border border-slate-200 p-4 rounded-xl mb-3 document-form">
+                    {{ document_formset.empty_form.id }}
+                    {{ document_formset.empty_form.name|as_crispy_field }}
+                    {{ document_formset.empty_form.file|as_crispy_field }}
+                </div>
+            </div>
+
+        <!-- ================= ALLOCATION ================= -->
+        {% else %}
+
+            {{ form.employee|as_crispy_field }}
+            {{ form.project|as_crispy_field }}
+            {{ form.role_in_project|as_crispy_field }}
+            <div class="grid grid-cols-2 gap-4">
+                {{ form.start_date|as_crispy_field }}
+                {{ form.end_date|as_crispy_field }}
+            </div>
+        {% endif %}
+
     </div>
 
-    <button type="button" id="add-document"
-        class="mt-4 bg-purple-600 px-4 py-2 rounded-lg text-sm">
-        + Add Document
-    </button>
-<!-- ===== empty code===== -->
-  <div id="empty-milestone-form" class="hidden">
-    <div class="bg-slate-900 p-4 rounded-lg mb-3">
-        {{ milestone_formset.empty_form.id }}
-        {{ milestone_formset.empty_form.name|as_crispy_field }}
+    <!-- ===== Buttons ===== -->
+    <div class="mt-8 flex justify-end space-x-3 pt-4 border-t border-slate-100">
+        <button type="button" onclick="closeModal()"
+            class="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl text-sm transition-colors">
+            Cancel
+        </button>
 
-        <div class="grid grid-cols-2 gap-4">
-            {{ milestone_formset.empty_form.start_date|as_crispy_field }}
-            {{ milestone_formset.empty_form.due_date|as_crispy_field }}
-        </div>
+        <button type="submit"
+            class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl text-sm shadow-xs transition-colors">
+            Save
+        </button>
     </div>
-</div>
- <div id="empty-document-form" class="hidden">
-    <div class="bg-slate-900 p-4 rounded-lg mb-3 document-form">
-        {{ document_formset.empty_form.id }}
-        {{ document_formset.empty_form.name|as_crispy_field }}
-        {{ document_formset.empty_form.file|as_crispy_field }}
-    </div>
-</div>
-<!-- ================= ALLOCATION ================= -->
-{% else %}
-CC
-    {{ form.employee|as_crispy_field }}
-    {{ form.project|as_crispy_field }}
-    {{ form.role_in_project|as_crispy_field }}
-                <div class="grid grid-cols-2 gap-4">
-
-    {{ form.start_date|as_crispy_field }}
-    {{ form.end_date|as_crispy_field }}
-</div>
-{% endif %}
-
-</div>
-
-<!-- ===== Buttons ===== -->
-<div class="mt-8 flex justify-end space-x-3">
-    <button type="button" onclick="closeModal()"
-        class="px-6 py-2 bg-slate-700 text-white rounded-lg">
-        Cancel
-    </button>
-
-    <button type="submit"
-        class="px-6 py-2 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg font-bold">
-        Save
-    </button>
-</div>
 
 </form>

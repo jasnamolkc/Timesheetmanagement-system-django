@@ -1,64 +1,62 @@
-<div class="p-6">
-    <h2 class="text-xl font-bold mb-4 text-white">
-        Allocate Employee
-    </h2>
-
-
-<p class="text-sm text-slate-400 mb-4">
-    Project:: <strong>{{ project.name }}</strong>
-</p>
+<div class="mb-4 flex items-center justify-between pb-3 border-b border-slate-100">
+    <div>
+        <h2 class="text-lg font-bold text-slate-900">
+            Allocate Employee
+        </h2>
+        <p class="text-xs text-slate-500 mt-0.5">Project: <strong class="text-blue-600 font-semibold">{{ project.name }}</strong></p>
+    </div>
+    <button type="button" onclick="closeModal()" class="text-slate-400 hover:text-slate-600 p-1">✕</button>
+</div>
 
 <form method="POST" action="{% url 'allocate_employee' project.id %}">
     {% csrf_token %}
 
-    <!-- Employee -->
-    <label class="block mb-1 text-sm text-slate-300">Employee</label>
-    <select name="employee"
-    class="w-full bg-slate-800 border border-slate-700 p-2 rounded mb-4 text-white focus:ring-2 focus:ring-blue-500">
-    <!-- Default placeholder -->
-    <option value="" selected disabled>Select an employee</option>
+    <div class="space-y-4">
+        <!-- Employee -->
+        <div>
+            <label class="block mb-1.5 text-xs font-semibold text-slate-700 uppercase">Select Employee</label>
+            <select name="employee"
+                class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2.5 text-sm text-slate-900 focus:ring-2 focus:ring-blue-500">
+                <option value="" selected disabled>Select an employee</option>
+                {% for employee in employees %}
+                    <option value="{{ employee.id }}">
+                        {{ employee.user.get_full_name|default:employee.user.username }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
 
-    {% for employee in employees %}
-        <option value="{{ employee.id }}">
-            {{ employee.user.username }}
-        </option>
-    {% endfor %}
-</select>
+        <!-- Start Date -->
+        <div>
+            <label class="block mb-1.5 text-xs font-semibold text-slate-700 uppercase">Start Date</label>
+            <input
+                type="date"
+                name="start_date"
+                required
+                class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-sm text-slate-900 focus:ring-2 focus:ring-blue-500"
+            >
+        </div>
 
-    <!-- Allocation Percentage -->
-    <!-- <label class="block mb-1 text-sm text-slate-300">Allocation %</label>
-    <input
-        type="number"
-        name="allocation_percentage"
-        min="1"
-        max="100"
-        required
-        class="w-full bg-slate-800 border border-slate-700 text-white p-2 rounded mb-4 focus:ring-2 focus:ring-blue-500"
-    > -->
+        <!-- End Date -->
+        <div>
+            <label class="block mb-1.5 text-xs font-semibold text-slate-700 uppercase">End Date</label>
+            <input
+                type="date"
+                name="end_date"
+                required
+                class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-sm text-slate-900 focus:ring-2 focus:ring-blue-500"
+            >
+        </div>
+    </div>
 
-    <!-- Start Date -->
-    <label class="block mb-1 text-sm text-slate-300">Start Date</label>
-    <input
-        type="date"
-        name="start_date"
-        required
-        class="w-full bg-slate-800 border border-slate-700 text-white p-2 rounded mb-4 focus:ring-2 focus:ring-blue-500"
-    >
-
-    <!-- End Date -->
-    <label class="block mb-1 text-sm text-slate-300">End Date</label>
-    <input
-        type="date"
-        name="end_date"
-        required
-        class="w-full bg-slate-800 border border-slate-700 text-white p-2 rounded mb-4 focus:ring-2 focus:ring-blue-500"
-    >
-
-    <button type="submit"
-        class="mt-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
-        Assign
-    </button>
+    <div class="mt-6 flex justify-end space-x-3 pt-3 border-t border-slate-100">
+        <button type="button" onclick="closeModal()"
+            class="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl text-sm transition-colors">
+            Cancel
+        </button>
+        <button type="submit"
+            class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-5 py-2.5 rounded-xl text-sm shadow-xs transition-colors">
+            Assign Employee
+        </button>
+    </div>
 </form>
-
-
-</div>

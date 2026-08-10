@@ -6,25 +6,33 @@
 <div class="max-w-5xl mx-auto">
 
     <!-- Header -->
-    <div class="flex items-center justify-between mb-6">
-        <h2 class="text-3xl font-bold text-white">
-            {{ task.title }}
-        </h2>
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+        <div>
+            <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+                {{ task.title }}
+            </h2>
+            <p class="text-slate-500 text-sm mt-1">Detailed overview of task attributes and attachments</p>
+        </div>
 
-        <div class="flex gap-3">
+        <div class="flex gap-2.5 items-center">
 
             <a href="{% url 'task_page' %}"
-               class="bg-slate-700 hover:bg-slate-600 px-4 py-2 rounded-lg text-sm">
+               class="bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 font-semibold px-4 py-2 rounded-xl text-sm shadow-xs transition-colors">
                 ← Back
             </a>
 
+            <a onclick="openModal('{% url 'timesheet_create' %}?project={{ task.project.id }}&task={{ task.id }}')"
+               class="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-4 py-2 rounded-xl text-sm cursor-pointer shadow-xs transition-colors flex items-center gap-1.5">
+                <i class="fas fa-clock"></i> Log Time
+            </a>
+
             <a onclick="openModal('{% url 'task_update' task.id %}')"
-               class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg text-sm cursor-pointer">
+               class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded-xl text-sm cursor-pointer shadow-xs transition-colors">
                 Edit
             </a>
 
             <a onclick="openModal('{% url 'task_delete' task.id %}')"
-               class="bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg text-sm cursor-pointer">
+               class="bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 font-semibold px-4 py-2 rounded-xl text-sm cursor-pointer transition-colors">
                 Delete
             </a>
 
@@ -32,41 +40,41 @@
     </div>
 
     <!-- Main Card -->
-    <div class="bg-slate-800 border border-slate-700 rounded-xl p-6 shadow-lg">
+    <div class="bg-white border border-slate-200 rounded-2xl p-6 sm:p-8 shadow-xs">
 
         <!-- Grid Info -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
 
-            <div>
-                <p class="text-slate-400 text-sm">Project</p>
-                <p class="text-white font-medium">{{ task.project.name }}</p>
+            <div class="bg-slate-50/70 p-4 rounded-xl border border-slate-100">
+                <p class="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">Project</p>
+                <p class="text-slate-900 font-bold text-base">{{ task.project.name }}</p>
             </div>
 
-            <div>
-                <p class="text-slate-400 text-sm">Milestone</p>
-                <p class="text-white font-medium">
+            <div class="bg-slate-50/70 p-4 rounded-xl border border-slate-100">
+                <p class="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">Milestone</p>
+                <p class="text-slate-900 font-semibold">
                     {% if task.milestone %}
                         {{ task.milestone.name }}
                     {% else %}
-                        <span class="text-slate-400">No milestone</span>
+                        <span class="text-slate-400 italic">No milestone</span>
                     {% endif %}
                 </p>
             </div>
 
-            <div>
-                <p class="text-slate-400 text-sm">Assigned To</p>
-                <p class="text-white font-medium">
+            <div class="bg-slate-50/70 p-4 rounded-xl border border-slate-100">
+                <p class="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">Assigned To</p>
+                <p class="text-slate-900 font-semibold">
                     {% if task.assigned_to %}
                         {{ task.assigned_to.user.get_full_name|default:task.assigned_to.user.username }}
                     {% else %}
-                        <span class="text-slate-400">Unassigned</span>
+                        <span class="text-slate-400 italic">Unassigned</span>
                     {% endif %}
                 </p>
             </div>
 
-            <div>
-                <p class="text-slate-400 text-sm">Created By</p>
-                <p class="text-white font-medium">
+            <div class="bg-slate-50/70 p-4 rounded-xl border border-slate-100">
+                <p class="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">Created By</p>
+                <p class="text-slate-900 font-semibold">
                     {% if task.created_by %}
                         {{ task.created_by.get_full_name|default:task.created_by.username }}
                     {% else %}
@@ -75,55 +83,57 @@
                 </p>
             </div>
 
-            <div>
-                <p class="text-slate-400 text-sm">Status</p>
-
-                {% if task.status == "COMPLETED" %}
-                    <span class="text-green-400 bg-green-400/10 px-3 py-1 rounded text-xs">
-                        Completed
-                    </span>
-                {% elif task.status == "IN_PROGRESS" %}
-                    <span class="text-blue-400 bg-blue-400/10 px-3 py-1 rounded text-xs">
-                        In Progress
-                    </span>
-                {% else %}
-                    <span class="text-yellow-400 bg-yellow-400/10 px-3 py-1 rounded text-xs">
-                        Pending
-                    </span>
-                {% endif %}
+            <div class="bg-slate-50/70 p-4 rounded-xl border border-slate-100">
+                <p class="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">Status</p>
+                <div class="mt-0.5">
+                    {% if task.status == "COMPLETED" %}
+                        <span class="px-3 py-1 text-xs font-bold bg-emerald-50 text-emerald-700 rounded-full border border-emerald-200">
+                            Completed
+                        </span>
+                    {% elif task.status == "IN_PROGRESS" %}
+                        <span class="px-3 py-1 text-xs font-bold bg-blue-50 text-blue-700 rounded-full border border-blue-200">
+                            In Progress
+                        </span>
+                    {% else %}
+                        <span class="px-3 py-1 text-xs font-bold bg-amber-50 text-amber-700 rounded-full border border-amber-200">
+                            Pending
+                        </span>
+                    {% endif %}
+                </div>
             </div>
 
-            <div>
-                <p class="text-slate-400 text-sm">Estimated Hours</p>
-                <p class="text-white font-medium">{{ task.estimated_hours }}</p>
+            <div class="bg-slate-50/70 p-4 rounded-xl border border-slate-100">
+                <p class="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">Estimated Hours</p>
+                <p class="text-slate-900 font-bold text-base">{{ task.estimated_hours }} hrs</p>
             </div>
 
         </div>
 
         <!-- Description -->
-        <div class="mt-6">
-            <p class="text-slate-400 text-sm mb-2">Description</p>
-            <div class="bg-slate-900 border border-slate-700 rounded-lg p-4 text-slate-200">
+        <div class="mt-8">
+            <p class="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2">Description</p>
+            <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 text-slate-700 text-sm leading-relaxed">
                 {{ task.description|default:"No description provided." }}
             </div>
         </div>
 
         <!-- Images -->
         <div class="mt-8">
-            <p class="text-slate-400 text-sm mb-3">Attachments</p>
+            <p class="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-3">Attachments</p>
 
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                 {% for img in task.images.all %}
-                    <img src="{{ img.image.url }}"
-                         class="rounded-lg border border-slate-700 object-cover w-full h-32">
+                    <a href="{{ img.image.url }}" target="_blank" class="block overflow-hidden rounded-xl border border-slate-200 shadow-xs hover:shadow-md transition-shadow">
+                        <img src="{{ img.image.url }}" class="object-cover w-full h-32 hover:scale-105 transition-transform duration-200">
+                    </a>
                 {% empty %}
-                    <p class="text-slate-400">No images uploaded</p>
+                    <p class="text-slate-400 text-sm italic col-span-full">No attachments uploaded for this task.</p>
                 {% endfor %}
             </div>
         </div>
 
         <!-- Meta Info -->
-        <div class="mt-8 border-t border-slate-700 pt-4 text-sm text-slate-400 flex justify-between">
+        <div class="mt-8 border-t border-slate-100 pt-4 text-xs text-slate-400 flex justify-between">
             <span>Created at: {{ task.created_at }}</span>
         </div>
 
